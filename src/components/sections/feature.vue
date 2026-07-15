@@ -4,10 +4,10 @@
 
 <div class="heading">
 
-<span>OUR SERVICES</span>
+<span>LAYANAN KAMI</span>
 
 <h2>
-One Platform,
+Satu platform,
 Many Possibilities.
 </h2>
 
@@ -15,7 +15,6 @@ Many Possibilities.
 Semua layanan sekolah terintegrasi
 dalam satu website modern.
 </p>
-
 </div>
 
 <div class="grid">
@@ -120,7 +119,7 @@ icon:Bot
 
 {
 
-title:"Career Center",
+title:"Karir Center",
 
 badge:"AKTIF",
 

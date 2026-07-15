@@ -88,7 +88,9 @@ window.removeEventListener("scroll",scroll)
 </script>
 
 <style scoped>
-
+.menu {
+color: black;
+}
 .navbar{
 
 position:fixed;

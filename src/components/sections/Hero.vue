@@ -79,7 +79,9 @@
 </template>
 
 <style scoped>
-
+.secondary {
+color: black;
+}
 .hero{
 
 position:relative;
@@ -476,9 +478,15 @@ padding:140px 24px 80px;
 
 .container{
 
+display:grid;
+
 grid-template-columns:1fr;
 
 gap:50px;
+
+width:100%;
+
+max-width:100%;
 
 }
 
@@ -515,6 +523,8 @@ width:100%;
 }
 
 .right{
+
+width:100%;
 
 display:flex;
 

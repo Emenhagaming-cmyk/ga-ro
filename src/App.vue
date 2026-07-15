@@ -21,9 +21,41 @@ import BackgroundFX from "./components/common/BackgroundFX.vue"
 
 <Hero/>
 
-<Journey/>
-<Feature/>
+<!--<Journey/>-->
+<!--<Feature/>-->
 
 </div>
 
 </template>
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+html,
+body,
+#app{
+
+margin:0;
+padding:0;
+
+width:100%;
+
+overflow-x:hidden;
+
+font-family:"Quicksand",sans-serif;
+
+background:#F8FAFF;
+
+}
+
+.page{
+
+width:100%;
+
+overflow-x:hidden;
+
+}
+
+</style>
