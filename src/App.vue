@@ -1,52 +1,29 @@
-<template>
-  <LoadingScreen />
-
-  <main class="page">
-
-    <h1></h1>
-
-  </main>
-</template>
-
 <script setup>
-import LoadingScreen from "./components/loading/LoadingScreen.vue";
+import CursorGlow from "./components/common/CursorGlow.vue";
+import LoadingScreen from "./components/loading/LoadingScreen.vue"
+import Navbar from "./components/layout/Navbar.vue"
+import Hero from "./components/sections/Hero.vue"
+import Feature from "./components/sections/feature.vue"
+import Journey from "./components/sections/Journey.vue"
+import BackgroundFX from "./components/common/BackgroundFX.vue"
+
 </script>
 
-<style>
+<template>
 
-body{
+<LoadingScreen/>
+<BackgroundFX/>
+<CursorGlow/>
 
-margin:0;
-background:#090909;
-font-family:Poppins,sans-serif;
+<div class="page">
 
-}
+<Navbar/>
 
-.page{
+<Hero/>
 
-height:100vh;
+<Journey/>
+<Feature/>
 
-display:flex;
-justify-content:center;
-align-items:center;
+</div>
 
-color:white;
-
-opacity:0;
-
-animation:pageFade 1s forwards;
-animation-delay:7.8s;
-
-}
-
-@keyframes pageFade{
-
-to{
-
-opacity:1;
-
-}
-
-}
-
-</style>
+</template>

@@ -1,5 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+
+
+*{
+    font-family: 'QuickSand';
+}
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'QuickSand';
   line-height: 1.5;
   font-weight: 400;
 
@@ -23,6 +29,7 @@ a:hover {
 }
 
 body {
+  font-family: 'Quicksand';
   margin: 0;
   display: flex;
   place-items: center;
@@ -58,11 +65,34 @@ button:focus-visible {
   padding: 2em;
 }
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+html,
+body,
+#app{
+
+margin:0;
+
+padding:0;
+
+width:100%;
+
+min-height:100%;
+
+}
+
+body{
+
+background:#F7F9FC;
+
+overflow-x:hidden;
+
+font-family:"Poppins",sans-serif;
+
+}
+
+#app{
+
+width:100%;
+
 }
 
 @media (prefers-color-scheme: light) {
