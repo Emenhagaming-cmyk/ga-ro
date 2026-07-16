@@ -69,7 +69,7 @@
     </p>
 
     <button class="learn">
-      Learn More →
+      Learn More 
     </button>
 
   </div>
@@ -402,29 +402,63 @@ color:#6B7280;
 
 .learn{
 
-margin-top:24px;
+display:inline-flex;
 
-background:none;
+align-items:center;
 
-border:none;
+gap:10px;
 
-padding:0;
+width:max-content;
+
+margin-top:28px;
+
+padding:14px 22px;
+
+border-radius:999px;
+
+background:#5B7FFF;
+
+color:#fff;
 
 font-weight:700;
 
-color:#5B7FFF;
+font-size:15px;
+
+text-decoration:none;
+
+border:none;
 
 cursor:pointer;
 
-font-size:16px;
+box-shadow:
+0 12px 30px rgba(91,127,255,.25);
 
-transition:.3s;
+transition:.35s;
 
 }
 
 .learn:hover{
 
-transform:translateX(6px);
+transform:translateY(-4px);
+
+box-shadow:
+0 20px 40px rgba(91,127,255,.35);
+
+}
+
+.learn::after{
+
+content:"→";
+
+font-size:18px;
+
+transition:.35s;
+
+}
+
+.learn:hover::after{
+
+transform:translateX(5px);
 
 }
 
