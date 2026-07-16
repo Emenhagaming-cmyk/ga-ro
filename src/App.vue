@@ -21,8 +21,8 @@ import BackgroundFX from "./components/common/BackgroundFX.vue"
 
 <Hero/>
 
-<!--<Journey/>-->
-<!--<Feature/>-->
+<Journey/>
+<Feature/>
 
 </div>
 

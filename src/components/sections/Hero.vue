@@ -48,20 +48,33 @@
       <!-- RIGHT -->
       <div class="right">
 
-        <div class="ai-card">
+        <div class="profile-card">
 
-          <div class="status">
-            <span></span>
-            ONLINE
-          </div>
+  <div class="top-line"></div>
 
-          <h2>ChatBot</h2>
+  <div class="content">
 
-          <p>
-            Siap membantu menjawab seputar informasi sekolah
-          </p>
+    <span class="mini-title">
+      PROFIL SEKOLAH
+    </span>
 
-        </div>
+    <h2>
+      SMK Bahrul Ulum
+    </h2>
+
+    <p>
+      Menciptakan generasi yang berkarakter,
+      religius, mandiri, gotong royong,
+      dan berintegritas.
+    </p>
+
+    <button class="learn">
+      Learn More →
+    </button>
+
+  </div>
+
+</div>
 
       </div>
 
@@ -316,19 +329,102 @@ border:1px solid #E5E7EB;
 
 /* AI Card */
 
-.ai-card{
+.profile-card{
 
 background:white;
 
-padding:35px;
-
 border-radius:30px;
 
-box-shadow:0 20px 60px rgba(0,0,0,.08);
-
-position:relative;
-
 overflow:hidden;
+
+box-shadow:
+0 18px 45px rgba(0,0,0,.08);
+
+transition:.35s;
+
+}
+
+.profile-card:hover{
+
+transform:translateY(-8px);
+
+}
+
+.top-line{
+
+height:8px;
+
+background:linear-gradient(
+90deg,
+#5B7FFF,
+#7BA8FF
+);
+
+}
+
+.content{
+
+padding:32px;
+
+}
+
+.mini-title{
+
+font-size:13px;
+
+font-weight:700;
+
+letter-spacing:2px;
+
+color:#5B7FFF;
+
+}
+
+.profile-card h2{
+
+margin:14px 0;
+
+font-size:34px;
+
+color:#202330;
+
+}
+
+.profile-card p{
+
+margin:0;
+
+line-height:1.8;
+
+color:#6B7280;
+
+}
+
+.learn{
+
+margin-top:24px;
+
+background:none;
+
+border:none;
+
+padding:0;
+
+font-weight:700;
+
+color:#5B7FFF;
+
+cursor:pointer;
+
+font-size:16px;
+
+transition:.3s;
+
+}
+
+.learn:hover{
+
+transform:translateX(6px);
 
 }
 
