@@ -1,19 +1,35 @@
 <script setup>
-import { sendMessage } from "../services/chat"
+import { ref } from "vue"
+import { sendMessage } from "@/services/chat"
 
-const test = async () => {
+const reply = ref("")
 
-  console.log("Button diklik 🔥")
+async function testApi() {
+  const history = [
+    {
+      role: "system",
+      content: "Kamu adalah AI sekolah."
+    },
+    {
+      role: "user",
+      content: "Halo"
+    }
+  ]
 
-  const data = await sendMessage("Halo")
+  const data = await sendMessage(history)
 
-  console.log(data)
-
+  reply.value = data.reply
 }
 </script>
 
 <template>
-  <button @click="test">
-    Test API
-  </button>
+  <div style="padding:20px">
+
+    <button @click="testApi">
+      Test API
+    </button>
+
+    <p>{{ reply }}</p>
+
+  </div>
 </template>
