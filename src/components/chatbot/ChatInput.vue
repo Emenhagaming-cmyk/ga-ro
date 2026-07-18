@@ -32,9 +32,21 @@ placeholder="Ketik pesan..."
 
 />
 
-<button @click="send">
+<button class="send" @click="send">
 
-➜
+<svg
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="2">
+
+<path
+d="M22 2L11 13"/>
+
+<path
+d="M22 2L15 22L11 13L2 9L22 2"/>
+
+</svg>
 
 </button>
 
@@ -43,7 +55,43 @@ placeholder="Ketik pesan..."
 </template>
 
 <style scoped>
+.send{
 
+width:52px;
+height:52px;
+
+border:none;
+
+border-radius:50%;
+
+background:#5B7FFF;
+
+color:white;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.send svg{
+
+width:22px;
+height:22px;
+
+}
+
+.send:hover{
+
+transform:scale(.95);
+
+background:#4f46e5;
+
+}
 .input-box{
 
 display:flex;

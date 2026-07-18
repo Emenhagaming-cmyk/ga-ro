@@ -1,21 +1,21 @@
 <template>
-  <header class="header">
+  <header class="chat-header">
 
-    <button class="back" @click="$router.back()">
-      ←
-    </button>
+    <button class="back-btn" @click="$router.push('/')">
+    <
+</button>
 
     <div class="info">
 
-      <img src="/cet.png" class="avatar">
+      <img src="/ch.png" class="avatar">
 
       <div>
 
-        <h3>AI Sekolah</h3>
+        <h3>BISA</h3>
 
-        <span>
-          <i></i>
-          Online
+        <span class="status">
+          <i class="dot"></i>
+          onglen
         </span>
 
       </div>
@@ -26,91 +26,78 @@
 </template>
 
 <style scoped>
-
-.header{
-
-height:70px;
-
-padding:0 18px;
-
+.status{
 display:flex;
-
 align-items:center;
-
-gap:16px;
-
-background:white;
-
-border-bottom:1px solid #EEF2F7;
-
+gap:8px;
+font-size:.9rem;
+color:#666;
 }
 
-.back{
+.dot{
+width:8px;
+height:8px;
+border-radius:50%;
+background:#22c55e;
+box-shadow:0 0 12px #22c55e;
 
-border:none;
+}
+.chat-header{
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 72px;
+  padding: 0 18px;
+  color: black;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(18px);
+  border-bottom:1px solid #eee;
+  z-index:20;
+}
 
-background:none;
+.back-btn{
+  position:absolute;
+  left:18px;
+  width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: black;
+  border:none;
+  background:#fff;
+  border-radius:50px;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
+  cursor:pointer;
+}
 
-font-size:28px;
-
-cursor:pointer;
-
+.back-btn svg{
+width:18px;
+height:18px;
+stroke: currentColor;
+}
+.back-btn:hover{
+transform:scale(.95);
 }
 
 .info{
-
-display:flex;
-
-align-items:center;
-
-gap:14px;
-
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  gap:14px;
 }
 
 .avatar{
-
-width:48px;
-
-height:48px;
-
-border-radius:16px;
-
+width:50px;
+height:50px;
+border-radius:50px;
 object-fit:cover;
-
+box-shadow:0 10px 25px rgba(0,0,0,.12);
 }
 
 h3{
-
 margin:0;
-
 font-size:18px;
-
 }
-
-span{
-
-display:flex;
-
-align-items:center;
-
-gap:6px;
-
-font-size:13px;
-
-color:#777;
-
-}
-
-i{
-
-width:8px;
-
-height:8px;
-
-background:#22C55E;
-
-border-radius:50%;
-
-}
-
 </style>

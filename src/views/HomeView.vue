@@ -1,4 +1,5 @@
 <script setup>
+  import { ref } from "vue"
 import CursorGlow from "../components/common/CursorGlow.vue"
 import LoadingScreen from "@/components/loading/LoadingScreen.vue"
 import Navbar from "@/components/layout/Navbar.vue"
@@ -8,12 +9,19 @@ import Journey from "@/components/sections/Journey.vue"
 import BackgroundFX from "@/components/common/BackgroundFX.vue"
 import FloatingAi from "@/components/chatbot/FloatingAi.vue"
 
+const showIntro = ref(
+  !sessionStorage.getItem("intro")
+)
+
+if(showIntro.value){
+    sessionStorage.setItem("intro","true")
+}
 </script>
 
 <template>
 
 <FloatingAi/>
-<LoadingScreen/>
+<LoadingScreen v-if="showIntro" @finish="showIntro = false"/>
 <BackgroundFX/>
 <CursorGlow/>
 

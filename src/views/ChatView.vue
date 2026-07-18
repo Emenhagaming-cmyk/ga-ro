@@ -29,7 +29,7 @@ setTimeout(()=>{
 
 messages.value.push({
 role:"assistant",
-content:"Ini masih dummy response 😎"
+content:"basori"
 })
 
 loading.value=false
