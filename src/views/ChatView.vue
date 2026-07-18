@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from "vue"
 
-import ChatHeader from "@/components/chat/ChatHeader.vue"
-import ChatInput from "@/components/chat/ChatInput.vue"
-
-import { sendMessage } from "@/services/chat"
+import ChatHeader from "@/components/chatbot/ChatHeader.vue"
+import ChatMessages from "@/components/chatbot/ChatMessages.vue"
+import ChatInput from "@/components/chatbot/ChatInput.vue"
+import TypingIndicator from "@/components/chatbot/TypingIndicator.vue"
+import { sendMessage } from "@/services/chat.js"
 
 const messages = ref([
   {

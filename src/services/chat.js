@@ -1,14 +1,28 @@
-export async function sendMessage(history) {
+export async function sendMessage(message){
 
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
+  const res = await fetch("/api/chat",{
+
+    method:"POST",
+
+    headers:{
+      "Content-Type":"application/json"
     },
-    body: JSON.stringify({
-      history
+
+    body:JSON.stringify({
+
+      history:[
+        {
+          role:"user",
+          content:message
+        }
+      ],
+
+      user:"guest"
+
     })
+
   })
 
   return await res.json()
+
 }
