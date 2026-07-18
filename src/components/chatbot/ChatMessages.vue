@@ -71,7 +71,7 @@ align-self:flex-end;
 }
 
 .assistant{
-
+color: black;
 background:white;
 
 border:1px solid #EEF2F7;
