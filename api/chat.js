@@ -1,12 +1,5 @@
-const test = async () => {
-  console.log("Tombol diklik")
-
-  try {
-    const data = await sendMessage("Halo")
-    console.log("Respon:", data)
-    alert(JSON.stringify(data))
-  } catch (err) {
-    console.error(err)
-    alert(err.message)
-  }
+export default async function handler(req, res) {
+  return res.status(200).json({
+    reply: "API berhasil jalan!"
+  })
 }
