@@ -59,7 +59,7 @@ border-top:1px solid #EEF2F7;
 }
 
 input{
-
+color: black;
 flex:1;
 
 height:52px;
