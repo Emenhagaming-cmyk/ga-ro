@@ -2,7 +2,7 @@
   <header class="chat-header">
 
     <button class="back-btn" @click="$router.push('/')">
-    <
+    <i class="fas fa-angle-left"></i>
 </button>
 
     <div class="info">

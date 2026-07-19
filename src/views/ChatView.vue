@@ -49,22 +49,21 @@ async function handleSend(text){
 
   <ChatHeader/>
 
-  <div class="messages">
-
-    <div
-      v-for="(msg,index) in messages"
-      :key="index"
-      :class="['bubble',msg.role]"
-    >
-
-      {{ msg.content }}
-
-    </div>
-
-  </div>
+  <ChatMessages :messages="messages" />
 
   <ChatInput @send="handleSend"/>
 
 </div>
 
 </template>
+<style scoped>
+
+.chat-page{
+height:100dvh;
+display:flex;
+flex-direction:column;
+background:#F5F7FC;
+overflow:hidden;
+}
+
+</style>
