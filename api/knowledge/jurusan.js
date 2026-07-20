@@ -5,18 +5,33 @@ export default {
   keywords: [
     "jurusan",
     "rpl",
-    "tkj",
-    "akl",
-    "mpls"
   ],
 
   content: `
 # JURUSAN
 
-Belum ada data jurusan.
+Rekayasa Perangkat Lunak (RPL), atau yang juga dikenal sebagai Software Engineering, adalah jurusan yang mempelajari proses perancangan, pembuatan, pengembangan, pengujian, serta pemeliharaan perangkat lunak (software). Jurusan ini membekali siswa dengan keterampilan untuk mengembangkan berbagai jenis aplikasi, seperti aplikasi web, aplikasi Android, hingga sistem informasi.
 
-Jika pengguna bertanya,
-katakan jurusan saat ini adalah rekayasa perangkat lunak.
+Materi yang dipelajari meliputi:
+- Dasar Pemrograman
+- Pemrograman Web (HTML, CSS, JavaScript)
+- Pengembangan Aplikasi
+- Android Studio (Pembuatan Aplikasi Android)
+- Database (MySQL)
+- Git dan GitHub
+- UI/UX Dasar
+- Pengujian Perangkat Lunak
+- Dasar Jaringan Komputer
+
+Lulusan RPL memiliki peluang karier sebagai:
+- Web Developer
+- Mobile App Developer
+- Software Developer
+- UI/UX Designer
+- Database Administrator
+- Quality Assurance (QA)
+- System Analyst
+
+Jika pengguna bertanya tentang jurusan, jelaskan bahwa jurusan yang tersedia adalah Rekayasa Perangkat Lunak (RPL) atau Software Engineering, lalu berikan penjelasan sesuai informasi di atas.
 `
-
 }
