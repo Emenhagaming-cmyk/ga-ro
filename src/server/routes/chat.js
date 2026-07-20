@@ -1,5 +1,3 @@
 import systemPrompt from "../prompts/systemPrompt"
 import knowledge from "../data/knowledge.js"
-import { schoolKnowledge } from "./knowledge/index.js"
-import { getKnowledge } from "./knowledge/router.js"
 import { getKnowledge } from "./knowledge/registry.js"
