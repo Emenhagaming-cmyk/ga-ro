@@ -1,9 +1,9 @@
-import school from "./school.js"
-import jurusan from "./jurusan.js"
-import ppdb from "./ppdb.js"
-import faq from "./faq.js"
-import kontak from "./kontak.js"
-import tataTertib from "./tataTertib.js"
+import  { school } from "./school.js"
+import { jurusan }  from "./jurusan.js"
+import { ppdb }from "./ppdb.js"
+import { faq } from "./faq.js"
+import { kontak } from "./kontak.js"
+import { tataTertib } from "./tataTertib.js"
 
 const modules = [
   school,
