@@ -9,9 +9,15 @@ export default async function handler(req, res) {
   const API_KEY = process.env.GROQ_API_KEY
 
   const { history } = req.body
-
+    const latestMessage =
+  history[history.length - 1]?.content || ""
+  
+const knowledge =
+  getKnowledge(latestMessage)
   try{
-
+    console.log("===== KNOWLEDGE =====")
+console.log(knowledge)
+console.log("=====================")
     const response = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
@@ -20,11 +26,20 @@ export default async function handler(req, res) {
           "Content-Type":"application/json",
           "Authorization":"Bearer " + API_KEY
         },
-        body:JSON.stringify({
-          model:"llama-3.3-70b-versatile",
-          messages:history,
-          temperature:0.7
-        })
+        body: JSON.stringify({
+  model: "llama-3.3-70b-versatile",
+
+  messages: [
+    {
+      role: "system",
+      content: Knowledge
+    },
+
+    ...history
+  ],
+
+  temperature: 0.7
+})
       }
     )
 

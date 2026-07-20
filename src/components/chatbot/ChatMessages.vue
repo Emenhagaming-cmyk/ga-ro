@@ -1,4 +1,5 @@
 <script setup>
+import { marked } from "marked"
 
 defineProps({
 messages:Array
@@ -19,8 +20,7 @@ v-for="(msg,index) in messages"
 :class="['bubble',msg.role]"
 
 >
-
-{{msg.content}}
+<div v-html="marked(msg.content)"></div>
 
 </div>
 
@@ -31,19 +31,14 @@ v-for="(msg,index) in messages"
 <style scoped>
 
 .messages{
-
+-webkit-overflow-scrolling:touch;
+padding-bottom:20px;
 flex:1;
-
 padding:20px;
-
 display:flex;
-
 flex-direction:column;
-
 gap:14px;
-
 overflow-y:auto;
-
 }
 
 .bubble{

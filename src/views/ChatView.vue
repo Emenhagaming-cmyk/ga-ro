@@ -1,11 +1,12 @@
 <script setup>
-import { ref } from "vue"
-
+import { ref, nextTick } from "vue"
 import ChatHeader from "@/components/chatbot/ChatHeader.vue"
 import ChatMessages from "@/components/chatbot/ChatMessages.vue"
 import ChatInput from "@/components/chatbot/ChatInput.vue"
 import TypingIndicator from "@/components/chatbot/TypingIndicator.vue"
 import { sendMessage } from "@/services/chat.js"
+
+const messageBox = ref(null)
 
 const messages = ref([
   {
@@ -21,7 +22,6 @@ async function handleSend(text){
     role:"user",
     content:text
   })
-
   try{
 
     const data = await sendMessage(text)
@@ -30,14 +30,24 @@ async function handleSend(text){
       role:"assistant",
       content:data.reply
     })
+  await nextTick()
 
+messageBox.value?.$el.scrollTo({
+  top: messageBox.value.$el.scrollHeight,
+  behavior: "smooth"
+})
   }catch(e){
 
     messages.value.push({
       role:"assistant",
       content:"Maaf, BISA sedang mengalami gangguan."
     })
+      await nextTick()
 
+messageBox.value?.$el.scrollTo({
+  top: messageBox.value.$el.scrollHeight,
+  behavior: "smooth"
+})
   }
 
 }
@@ -49,8 +59,8 @@ async function handleSend(text){
 
   <ChatHeader/>
 
-  <ChatMessages :messages="messages" />
-
+  <ChatMessages ref="messageBox" :messages="messages" />
+<TypingIndicator v-if="typing" />
   <ChatInput @send="handleSend"/>
 
 </div>
@@ -59,7 +69,11 @@ async function handleSend(text){
 <style scoped>
 
 .chat-page{
-height:100dvh;
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
 display:flex;
 flex-direction:column;
 background:#F5F7FC;
