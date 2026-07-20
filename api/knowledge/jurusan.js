@@ -5,10 +5,12 @@ export default {
   keywords: [
     "jurusan",
     "rpl",
+    
   ],
 
   content: `
 # JURUSAN
+
 
 Rekayasa Perangkat Lunak (RPL), atau yang juga dikenal sebagai Software Engineering, adalah jurusan yang mempelajari proses perancangan, pembuatan, pengembangan, pengujian, serta pemeliharaan perangkat lunak (software). Jurusan ini membekali siswa dengan keterampilan untuk mengembangkan berbagai jenis aplikasi, seperti aplikasi web, aplikasi Android, hingga sistem informasi.
 
