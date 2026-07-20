@@ -1,9 +1,9 @@
-import  { school } from "./school.js"
-import { jurusan }  from "./jurusan.js"
-import { ppdb }from "./ppdb.js"
-import { faq } from "./faq.js"
-import { kontak } from "./kontak.js"
-import { tataTertib } from "./tataTertib.js"
+import school from "./school.js"
+import jurusan from "./jurusan.js"
+import ppdb from "./ppdb.js"
+import faq from "./faq.js"
+import kontak from "./kontak.js"
+import tataTertib from "./tataTertib.js"
 
 const modules = [
   school,
@@ -14,21 +14,21 @@ const modules = [
   tataTertib
 ]
 
-export function getKnowledge(question){
+export function getKnowledge(question) {
 
   const text = question.toLowerCase()
 
   const result = [school.content]
 
-  for(const module of modules){
+  for (const module of modules) {
 
-    if(module.name === "school") continue
+    if (module.name === "school") continue
 
     const match = module.keywords.some(keyword =>
       text.includes(keyword)
     )
 
-    if(match){
+    if (match) {
       result.push(module.content)
     }
 
