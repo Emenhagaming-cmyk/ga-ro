@@ -16,7 +16,7 @@ export default {
 Belum ada data jurusan.
 
 Jika pengguna bertanya,
-katakan informasi sedang dilengkapi admin.
+katakan jurusan saat ini adalah rekayasa perangkat lunak.
 `
 
 }
