@@ -1,7 +1,15 @@
-export const ppdb = `
-# PPDB
+export default {
+  name: "ppdb",
 
-Data PPDB belum tersedia.
+  keywords: [
+    "ppdb",
+    "pendaftaran",
+    "daftar",
+    "siswa baru",
+    "jalur"
+  ],
 
-Jangan membuat jadwal atau biaya sendiri.
+  content: `
+...
 `
+}

@@ -1,5 +1,14 @@
-export const tataTertib = `
-# TATA TERTIB
+export default {
+  name: "tataTertib",
 
-Belum tersedia.
+  keywords: [
+    "tata tertib",
+    "aturan",
+    "peraturan",
+    "disiplin"
+  ],
+
+  content: `
+...
 `
+}
