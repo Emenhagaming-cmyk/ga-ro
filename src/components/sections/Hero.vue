@@ -48,20 +48,33 @@
       <!-- RIGHT -->
       <div class="right">
 
-        <div class="ai-card">
+        <div class="profile-card">
 
-          <div class="status">
-            <span></span>
-            ONLINE
-          </div>
+  <div class="top-line"></div>
 
-          <h2>ChatBot</h2>
+  <div class="content">
 
-          <p>
-            Siap membantu menjawab seputar informasi sekolah
-          </p>
+    <span class="mini-title">
+      PROFIL SEKOLAH
+    </span>
 
-        </div>
+    <h2>
+      SMK Bahrul Ulum
+    </h2>
+
+    <p>
+      Menciptakan generasi yang berkarakter,
+      religius, mandiri, gotong royong,
+      dan berintegritas.
+    </p>
+
+    <button class="learn">
+      Learn More 
+    </button>
+
+  </div>
+
+</div>
 
       </div>
 
@@ -79,11 +92,9 @@
 </template>
 
 <style scoped>
-
 .secondary {
-  color: black;
+color: black;
 }
-
 .hero{
 
 position:relative;
@@ -318,19 +329,136 @@ border:1px solid #E5E7EB;
 
 /* AI Card */
 
-.ai-card{
+.profile-card{
 
 background:white;
 
-padding:35px;
-
 border-radius:30px;
 
-box-shadow:0 20px 60px rgba(0,0,0,.08);
-
-position:relative;
-
 overflow:hidden;
+
+box-shadow:
+0 18px 45px rgba(0,0,0,.08);
+
+transition:.35s;
+
+}
+
+.profile-card:hover{
+
+transform:translateY(-8px);
+
+}
+
+.top-line{
+
+height:8px;
+
+background:linear-gradient(
+90deg,
+#5B7FFF,
+#7BA8FF
+);
+
+}
+
+.content{
+
+padding:32px;
+
+}
+
+.mini-title{
+
+font-size:13px;
+
+font-weight:700;
+
+letter-spacing:2px;
+
+color:#5B7FFF;
+
+}
+
+.profile-card h2{
+
+margin:14px 0;
+
+font-size:34px;
+
+color:#202330;
+
+}
+
+.profile-card p{
+
+margin:0;
+
+line-height:1.8;
+
+color:#6B7280;
+
+}
+
+.learn{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:10px;
+
+width:max-content;
+
+margin-top:28px;
+
+padding:14px 22px;
+
+border-radius:999px;
+
+background:#5B7FFF;
+
+color:#fff;
+
+font-weight:700;
+
+font-size:15px;
+
+text-decoration:none;
+
+border:none;
+
+cursor:pointer;
+
+box-shadow:
+0 12px 30px rgba(91,127,255,.25);
+
+transition:.35s;
+
+}
+
+.learn:hover{
+
+transform:translateY(-4px);
+
+box-shadow:
+0 20px 40px rgba(91,127,255,.35);
+
+}
+
+.learn::after{
+
+content:"→";
+
+font-size:18px;
+
+transition:.35s;
+
+}
+
+.learn:hover::after{
+
+transform:translateX(5px);
 
 }
 
@@ -480,9 +608,15 @@ padding:140px 24px 80px;
 
 .container{
 
+display:grid;
+
 grid-template-columns:1fr;
 
 gap:50px;
+
+width:100%;
+
+max-width:100%;
 
 }
 
@@ -519,6 +653,8 @@ width:100%;
 }
 
 .right{
+
+width:100%;
 
 display:flex;
 

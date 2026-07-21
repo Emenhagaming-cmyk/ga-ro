@@ -7,7 +7,7 @@
 <span>SERVICE KAMI</span>
 
 <h2>
-One Platform,
+Satu platform,
 Many Possibilities.
 </h2>
 
@@ -15,7 +15,6 @@ Many Possibilities.
 Semua layanan sekolah terintegrasi
 dalam satu website modern.
 </p>
-
 </div>
 
 <div class="grid">
@@ -120,7 +119,7 @@ icon:Bot
 
 {
 
-title:"Career Center",
+title:"Karir Center",
 
 badge:"AKTIF",
 
@@ -213,7 +212,7 @@ gap:32px;
 
 position:relative;
 
-height:280px;
+min-height:260px;
 
 }
 
@@ -247,6 +246,10 @@ opacity:.6;
 
 position:relative;
 
+display:flex;
+
+flex-direction:column;
+
 height:100%;
 
 background:white;
@@ -258,7 +261,6 @@ padding:34px;
 box-sizing:border-box;
 
 box-shadow:
-
 0 20px 50px rgba(0,0,0,.07);
 
 border:1px solid #EDF1FA;
@@ -359,11 +361,27 @@ color:#6B7280;
 
 a{
 
+margin-top:auto;
+
+display:inline-flex;
+
+align-items:center;
+
+gap:8px;
+
 font-weight:700;
 
 color:#5B7FFF;
 
 text-decoration:none;
+
+transition:.3s;
+
+}
+
+a:hover{
+
+transform:translateX(6px);
 
 }
 

@@ -1,0 +1,1 @@
+import { getKnowledge } from "./knowledge/registry.js"

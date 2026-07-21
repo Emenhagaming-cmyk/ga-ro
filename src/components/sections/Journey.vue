@@ -47,12 +47,13 @@ class="step"
 </template>
 
 <style scoped>
+  *{
+box-sizing:border-box;
+}
 .journey{
-
+overflow:hidden;
 padding:140px 7%;
-
 position:relative;
-
 }
 
 .title{
@@ -100,13 +101,10 @@ font-size:18px;
 }
 
 .timeline{
-
+overflow:hidden;
 position:relative;
-
 max-width:900px;
-
 margin:auto;
-
 }
 
 .timeline::before{
@@ -175,10 +173,10 @@ z-index:5;
 
 .card{
 
-width:360px;
-
+width: 100%;
+max-width: 360px;
 background:white;
-
+box-sizing: border-box;
 padding:30px;
 
 border-radius:24px;
@@ -236,12 +234,13 @@ left:18px;
 }
 
 .step,
-
 .step.right{
 
 justify-content:flex-start;
 
-padding-left:55px;
+padding-left:40px;
+
+padding-right:16px;
 
 }
 
