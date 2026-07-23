@@ -107,11 +107,14 @@ icon:GraduationCap
 
 {
 
-title:"ChatBot",
 
-badge:"ONLINE",
+  
 
-desc:"ChatBot hadir untuk membantu anda menjawab pertanyaan tentang informasi sekolah.",
+title:"Koperasi",
+
+badge:"TERSEDIA",
+
+desc:"Koperasi sekolah menyediakan berbagai kebutuhan siswa dan guru.",
 
 icon:Bot
 

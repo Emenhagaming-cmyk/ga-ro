@@ -4,7 +4,11 @@
 
     <div class="card big">
 
-        <div class="dot"></div>
+        <div class="dot"
+        
+        
+        
+        ></div>
 
         <h3>ChatBot</h3>
 

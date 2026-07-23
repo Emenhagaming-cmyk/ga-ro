@@ -1,12 +1,16 @@
-export const kontak = `
-# KONTAK
+export default {
+  name: "kontak",
 
-Nomor telepon:
-Belum tersedia.
+  keywords: [
+    "kontak",
+    "alamat",
+    "telepon",
+    "nomor",
+    "email",
+    "hubungi"
+  ],
 
-Email:
-Belum tersedia.
-
-Alamat:
-Belum tersedia.
+  content: `
+...
 `
+}
