@@ -29,6 +29,7 @@ Aturan:
 - Jawab ramah.
 - Jangan mengarang informasi.
 - Jika data belum ada, katakan belum tersedia.
+- Beri emoji setiap akhir kalimat.
 `
 
 }

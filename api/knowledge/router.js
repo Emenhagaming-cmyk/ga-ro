@@ -4,6 +4,7 @@ import { ppdb } from "./ppdb.js"
 import { faq } from "./faq.js"
 import { kontak } from "./kontak.js"
 import { tataTertib } from "./tataTertib.js"
+import { ig } from "./ig.js"
 
 export function getKnowledge(message){
 

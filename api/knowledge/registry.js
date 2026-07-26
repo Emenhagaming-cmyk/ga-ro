@@ -4,6 +4,7 @@ import ppdb from "./ppdb.js"
 import faq from "./faq.js"
 import kontak from "./kontak.js"
 import tataTertib from "./tataTertib.js"
+import ig from "./ig.js"
 
 const modules = [
   school,
@@ -11,7 +12,8 @@ const modules = [
   ppdb,
   faq,
   kontak,
-  tataTertib
+  tataTertib,
+  ig
 ]
 
 export function getKnowledge(question) {
