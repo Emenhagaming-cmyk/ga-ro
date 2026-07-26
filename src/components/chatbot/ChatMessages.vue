@@ -1,12 +1,34 @@
 <script setup>
 import { marked } from "marked"
 
-defineProps({
-messages:Array
+marked.use({
+  renderer: {
+    link({ href, title, tokens }) {
+      const text = this.parser.parseInline(tokens)
+
+      return `
+        <a
+          href="${href}"
+          target="_blank"
+          rel="noopener noreferrer"
+          ${title ? `title="${title}"` : ""}
+        >
+          ${text}
+        </a>
+      `
+    }
+  }
 })
 
-</script>
+defineProps({
+  messages: Array
+})
+import { marked } from "marked"
 
+defineProps({
+ messages:Array
+})
+</script>
 <template>
 
 <div class="messages">
@@ -29,7 +51,15 @@ v-for="(msg,index) in messages"
 </template>
 
 <style scoped>
+.assistant a{
+  color:#5B7FFF;
+  font-weight:600;
+  text-decoration:none;
+}
 
+.assistant a:hover{
+  text-decoration:underline;
+}
 .messages{
 -webkit-overflow-scrolling:touch;
 padding-bottom:20px;
