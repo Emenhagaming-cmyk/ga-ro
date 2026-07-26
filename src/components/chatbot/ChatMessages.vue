@@ -24,10 +24,6 @@ defineProps({
   messages: Array
 })
 
-defineProps({
- messages:Array
-})
-
 </script>
 
 <template>
