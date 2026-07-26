@@ -2,7 +2,7 @@ export default {
   name: "ppdb",
 
   keywords: [
-    "ppdb",
+    "spmb",
     "pendaftaran",
     "daftar",
     "siswa baru",
@@ -10,6 +10,6 @@ export default {
   ],
 
   content: `
-...
+  
 `
 }
