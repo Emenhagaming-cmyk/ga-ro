@@ -23,12 +23,13 @@ marked.use({
 defineProps({
   messages: Array
 })
-import { marked } from "marked"
 
 defineProps({
  messages:Array
 })
+
 </script>
+
 <template>
 
 <div class="messages">
