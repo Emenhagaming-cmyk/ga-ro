@@ -1,31 +1,35 @@
 <script setup>
 import { marked } from "marked"
-
-marked.use({
-  renderer: {
-    link({ href, title, tokens }) {
-      const text = this.parser.parseInline(tokens)
-
-      return `
-        <a
-          href="${href}"
-          target="_blank"
-          rel="noopener noreferrer"
-          ${title ? `title="${title}"` : ""}
-        >
-          ${text}
-        </a>
-      `
-    }
-  }
-})
+import school from "@/config/school"
 
 defineProps({
-  messages: Array
+  messages:Array
 })
 
-</script>
+function renderMessage(text){
 
+  // Instagram
+  text = text.replace(
+    new RegExp(`@${school.instagram}`, "gi"),
+    `[@${school.instagram}](https://instagram.com/${school.instagram})`
+  )
+
+  // Email
+  text = text.replace(
+    new RegExp(school.email.replace(".", "\\."), "gi"),
+    `[${school.email}](mailto:${school.email})`
+  )
+
+  // Nomor Telepon
+  text = text.replace(
+    /\(031\)\s*9953\s*9925/g,
+    `[${school.phone}](tel:${school.phone.replace(/\D/g,"")})`
+  )
+
+  return marked(text)
+
+}
+</script>
 <template>
 
 <div class="messages">
@@ -39,7 +43,7 @@ v-for="(msg,index) in messages"
 :class="['bubble',msg.role]"
 
 >
-<div v-html="marked(msg.content)"></div>
+<div v-html="renderMessage(msg.content)"></div>
 
 </div>
 
@@ -55,6 +59,16 @@ v-for="(msg,index) in messages"
 }
 
 .assistant a:hover{
+  text-decoration:underline;
+}
+.assistant :deep(a){
+  color:#2F80ED;
+  font-weight:600;
+  text-decoration:none;
+  transition:.2s;
+}
+
+.assistant :deep(a:hover){
   text-decoration:underline;
 }
 .messages{
