@@ -105,22 +105,23 @@ const items = [
 /* ---- heading ---- */
 
 .heading {
-  display: grid;
-  grid-template-columns: 1fr 1.35fr;
-  column-gap: 7%;
-  align-items: end;
-  margin-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto 64px;
+  text-align: center;
 }
 
 .eyebrow {
-  align-self: start;
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
+  justify-content: center;
   color: #3a6450;
+  font-family: "Quicksand", sans-serif;
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
@@ -130,25 +131,28 @@ const items = [
 }
 
 .heading h2 {
-  margin: 0;
-  font-size: clamp(38px, 5vw, 68px);
-  font-weight: 650;
-  letter-spacing: -0.055em;
-  line-height: 0.98;
+  margin: 20px 0 0;
+  font-family: "Quicksand", sans-serif;
+  font-size: clamp(38px, 5vw, 66px);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
 }
 
 .heading h2 em {
   color: #3a6450;
-  font-family: Georgia, serif;
-  font-weight: 400;
+  font-family: inherit;
+  font-style: normal;
+  font-weight: 500;
 }
 
 .heading p {
-  max-width: 330px;
-  grid-column: 2;
-  margin: 28px 0 0;
+  max-width: 520px;
+  margin: 22px 0 0;
   color: #6c7a6e;
+  font-family: "Quicksand", sans-serif;
   font-size: 15px;
+  font-weight: 500;
   line-height: 1.75;
 }
 
@@ -333,9 +337,9 @@ const items = [
 
 @media (max-width: 900px) {
   .feature { padding: 90px 6%; }
-  .heading { display: block; margin-bottom: 42px; }
-  .heading h2 { margin-top: 24px; }
-  .heading p { margin-top: 22px; }
+  .heading { margin-bottom: 42px; }
+  .heading h2 { margin-top: 20px; }
+  .heading p { margin-top: 20px; }
   .bento { grid-template-columns: repeat(2, 1fr); grid-auto-rows: auto; }
   .big, .wide, .medium, .small {
     grid-column: span 1;

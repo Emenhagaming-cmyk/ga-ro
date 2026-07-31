@@ -3,6 +3,7 @@
 import CursorGlow from "../components/common/CursorGlow.vue"
 import LoadingScreen from "@/components/loading/LoadingScreen.vue"
 import Navbar from "@/components/layout/Navbar.vue"
+import Footer from "@/components/layout/Footer.vue"
 import Hero from "@/components/sections/Hero.vue"
 import Feature from "@/components/sections/feature.vue"
 import BackgroundFX from "@/components/common/BackgroundFX.vue"
@@ -40,6 +41,8 @@ if(showIntro.value){
       <!-- <Journey /> -->
 
       <Feature />
+
+      <Footer />
 
     </div>
 
