@@ -1,0 +1,24 @@
+{
+  "keywords":[
+    "jurusan",
+    "rpl"
+  ],
+
+  "priority":80,
+
+  "data":{
+
+    "list":[
+
+      {
+
+        "nama":"RPL",
+
+        "deskripsi":"..."
+
+      }
+
+    ]
+
+  }
+}

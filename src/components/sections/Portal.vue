@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <section class="portal">
 
     <div class="heading">
@@ -217,4 +217,4 @@ font-size:34px;
 
 }
 
-</style>
+</style> -->

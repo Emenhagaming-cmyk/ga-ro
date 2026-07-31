@@ -1,0 +1,34 @@
+{
+  "keywords":[
+    "sekolah",
+    "kontak",
+    "alamat",
+    "email",
+    "telepon",
+    "nomor",
+    "instagram",
+    "ig",
+    "maps",
+    "lokasi"
+  ],
+
+  "priority":100,
+
+  "data":{
+
+    "nama":"SMK Bahrul Ulum Surabaya",
+
+    "alamat":"Jl. Banyu Urip Kidul Molin IIB/69, Putat Jaya, Sawahan, Surabaya",
+
+    "email":"smk.bahrululum@gmail.com",
+
+    "telepon":"(031) 9953 9925",
+
+    "instagram":"smkbu.sby",
+
+    "maps":"https://maps.app.goo.gl/EiMXnGQWQCSyBTof8",
+
+    "website":"https://smkbahrululumsurabaya.sch.id/"
+
+  }
+}

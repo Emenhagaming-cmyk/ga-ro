@@ -5,7 +5,6 @@ import LoadingScreen from "@/components/loading/LoadingScreen.vue"
 import Navbar from "@/components/layout/Navbar.vue"
 import Hero from "@/components/sections/Hero.vue"
 import Feature from "@/components/sections/feature.vue"
-import Journey from "@/components/sections/Journey.vue"
 import BackgroundFX from "@/components/common/BackgroundFX.vue"
 import FloatingAi from "@/components/chatbot/FloatingAi.vue"
 
@@ -19,22 +18,32 @@ if(showIntro.value){
 </script>
 
 <template>
+  <div class="page-wrapper">
 
-<FloatingAi/>
-<LoadingScreen v-if="showIntro" @finish="showIntro = false"/>
-<BackgroundFX/>
-<CursorGlow/>
+    <FloatingAi />
 
-<div class="page">
+    <LoadingScreen
+      v-if="showIntro"
+      @finish="showIntro = false"
+    />
 
-<Navbar/>
+    <BackgroundFX />
+    <CursorGlow />
 
-<Hero/>
+    <div class="page">
 
-<Journey/>
-<Feature/>
-</div>
+      <Navbar />
 
+      <Hero />
+
+      <!-- nanti Journey dihapus -->
+      <!-- <Journey /> -->
+
+      <Feature />
+
+    </div>
+
+  </div>
 </template>
 <style>
 

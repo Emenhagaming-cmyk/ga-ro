@@ -11,10 +11,9 @@ export default async function handler(req, res) {
 
   const { history } = req.body
     const latestMessage =
-  history[history.length - 1]?.content || ""
+  history.at(-1)?.content || ""
   
-const knowledge =
-  getKnowledge(latestMessage)
+const knowledge = getKnowledge(latestMessage)
   try{
     console.log("===== KNOWLEDGE =====")
 console.log(knowledge)

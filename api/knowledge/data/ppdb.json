@@ -1,0 +1,21 @@
+{
+  "keywords":[
+    "ppdb",
+    "spmb",
+    "pendaftaran",
+    "daftar",
+    "syarat",
+    "jadwal"
+  ],
+
+  "priority":90,
+
+  "data":{
+
+    "status":"Belum tersedia",
+
+    "jadwal":"",
+
+    "persyaratan":[]
+  }
+}

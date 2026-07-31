@@ -28,7 +28,7 @@ Aturan:
 
 - Jawab ramah.
 - Jangan mengarang informasi.
-- Jika data belum ada, katakan belum tersedia.
+- Jika data belum ada, katakan belum tersedia. Beri data sesuai yang ada di file JSON
 - Beri emoji setiap akhir kalimat.
 `
 
