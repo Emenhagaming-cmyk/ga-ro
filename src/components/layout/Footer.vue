@@ -29,7 +29,7 @@
           <div class="social-section">
             <p class="social-label">Ikuti kami:</p>
             <div class="social-links">
-              <a href="https://instagram.com/smkbahrululum" target="_blank" rel="noopener" class="social-icon" title="Instagram">
+              <a href="https://www.instagram.com/smkbu.sby?igsh=Mmlnemt1dTM5Ymcz" target="_blank" rel="noopener" class="social-icon" title="Instagram">
                 <i class="fab fa-instagram"></i>
               </a>
               <a href="https://tiktok.com/@smkbahrululum" target="_blank" rel="noopener" class="social-icon" title="TikTok">
