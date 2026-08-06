@@ -1,30 +1,45 @@
+<script setup>
+const BACKEND = "http://localhost:8000";
+
+const scrollToSection = (id) => {
+  const target = document.getElementById(id);
+
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+};
+</script>
+
 <template>
-  <section class="hero">
+  <section class="hero" id="top">
     <div class="grid"></div>
-    <div class="blur blur1"></div>
-    <div class="blur blur2"></div>
+    <div class="ambient ambient1"></div>
+    <div class="ambient ambient2"></div>
 
     <div class="container">
       <div class="left">
         <span class="badge">SMK Bahrul Ulum</span>
 
         <h1>
-          Belajar.<br>
-          Berkarya.<br>
+          Belajar.<br />
+          Berkarya.<br />
           Berkembang.
         </h1>
 
         <div class="bg-word">SCHOOL</div>
 
         <p>
-          Platform digital sekolah yang menghubungkan
-          SPMB, Career Center, Produk Siswa,
-          dan ChatBot dalam satu tempat.
+          Platform digital sekolah yang menghubungkan SPMB, Career Center,
+          Produk Siswa, dan ChatBot dalam satu tempat.
         </p>
 
         <div class="buttons">
-          <button class="primary">Jelajahi</button>
-          <button class="secondary">SPMB</button>
+          <a :href="`${BACKEND}/login`" class="primary btn-login">
+            Login
+          </a>
+          <a :href="`${BACKEND}/register`" class="secondary btn-register">
+            Daftar
+          </a>
         </div>
       </div>
 
@@ -37,11 +52,17 @@
             <h2>SMK Bahrul Ulum</h2>
 
             <p>
-              Membentuk generasi berkarakter, religius, mandiri,
-              gotong royong, dan berintegritas.
+              Membentuk generasi berkarakter, religius, mandiri, gotong royong,
+              dan berintegritas.
             </p>
 
-            <button class="learn" type="button">Kenali sekolah <span>→</span></button>
+            <button
+              class="learn"
+              type="button"
+              @click="scrollToSection('layanan')"
+            >
+              Kenali sekolah <span></span>
+            </button>
           </div>
         </article>
       </div>
@@ -57,56 +78,66 @@
 <style scoped>
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: 88vh;
   overflow: hidden;
   background: #f2f4f1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 120px 7%;
+  padding: 96px 7%;
   color: #1c2a23;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(125, 184, 141, 0.14),
+      transparent 28%
+    ),
+    #f2f4f1;
 }
 
 .grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(58, 100, 80, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(58, 100, 80, 0.04) 1px, transparent 1px);
-  background-size: 76px 76px;
+    linear-gradient(rgba(58, 100, 80, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(58, 100, 80, 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  pointer-events: none;
 }
 
-.blur {
+.ambient {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.45;
+  opacity: 0.38;
+  pointer-events: none;
 }
 
-.blur1 {
-  width: 300px;
-  height: 300px;
+.ambient1 {
+  width: 240px;
+  height: 240px;
   background: #7db88d;
-  left: -70px;
-  top: 150px;
+  left: -60px;
+  top: 140px;
+  filter: blur(70px);
 }
 
-.blur2 {
-  width: 340px;
-  height: 340px;
-  background: #a8c9a8;
-  right: -110px;
-  bottom: 90px;
+.ambient2 {
+  width: 280px;
+  height: 280px;
+  background: #c7d9c3;
+  right: -90px;
+  bottom: 80px;
+  filter: blur(70px);
 }
 
 .container {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1300px;
+  max-width: 1180px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 430px;
-  gap: 72px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 56px;
   align-items: center;
 }
 
@@ -125,112 +156,139 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.16em;
+  border: 1px solid rgba(58, 100, 80, 0.08);
 }
 
 h1 {
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   color: #1c2a23;
-  font-size: clamp(64px, 8vw, 92px);
-  line-height: 0.95;
-  letter-spacing: -0.06em;
+  font-size: clamp(48px, 6vw, 68px);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
   position: relative;
   z-index: 2;
+  font-weight: 800;
 }
 
 .bg-word {
   position: absolute;
-  top: 72px;
+  top: 52px;
   left: -8px;
   color: #3a6450;
-  opacity: 0.05;
-  font-size: clamp(110px, 14vw, 170px);
+  opacity: 0.06;
+  font-size: clamp(90px, 11vw, 130px);
   font-weight: 800;
   pointer-events: none;
+  user-select: none;
 }
 
 p {
-  margin-top: 34px;
-  max-width: 620px;
-  color: #6c7a6e;
-  font-size: 19px;
-  line-height: 1.9;
+  margin-top: 24px;
+  max-width: 560px;
+  color: #647067;
+  font-size: 17px;
+  line-height: 1.75;
 }
 
 .buttons {
   display: flex;
-  gap: 18px;
-  margin-top: 42px;
+  gap: 14px;
+  margin-top: 32px;
 }
 
 button {
-  height: 58px;
-  padding: 0 30px;
-  border-radius: 16px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
   font-family: inherit;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.28s ease, box-shadow 0.28s ease, background 0.28s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.btn-login,
+.btn-register,
+.btn-dashboard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .primary {
   border: none;
   background: #3a6450;
   color: #fff;
-  box-shadow: 0 16px 34px rgba(58, 100, 80, 0.22);
+  box-shadow: 0 10px 24px rgba(58, 100, 80, 0.17);
 }
 
 .primary:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .secondary {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid #dfe4dd;
   color: #1c2a23;
-  backdrop-filter: blur(10px);
 }
 
 .secondary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 26px rgba(28, 42, 35, 0.07);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(28, 42, 35, 0.06);
 }
 
 .profile-card {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.9);
+  background: #fbfcfa;
   border: 1px solid #dfe4dd;
-  border-radius: 6px;
-  box-shadow: 0 20px 40px rgba(35, 55, 42, 0.09);
-  backdrop-filter: blur(16px);
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  border-radius: 22px;
+  box-shadow: 0 12px 24px rgba(35, 55, 42, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .profile-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 26px 50px rgba(35, 55, 42, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(35, 55, 42, 0.08);
 }
 
 .profile-card::before {
   content: "";
   position: absolute;
-  width: 220px;
-  height: 220px;
-  right: -104px;
-  top: -116px;
+  width: 180px;
+  height: 180px;
+  right: -70px;
+  top: -90px;
   border-radius: 50%;
-  background: #e8f0e6;
+  background: rgba(125, 184, 141, 0.12);
 }
 
 .card-accent {
   position: relative;
-  height: 6px;
+  height: 5px;
   background: linear-gradient(90deg, #2a5238 0%, #3a6450 58%, #7db88d 100%);
 }
 
 .content {
   position: relative;
-  padding: 26px 28px;
+  padding: 22px 24px;
 }
 
 .mini-title {
@@ -243,9 +301,9 @@ button {
 }
 
 .profile-card h2 {
-  margin: 16px 0 12px;
+  margin: 14px 0 10px;
   color: #1c2a23;
-  font-size: 32px;
+  font-size: 27px;
   line-height: 1.1;
   letter-spacing: -0.045em;
 }
@@ -253,8 +311,8 @@ button {
 .profile-card p {
   margin: 0;
   color: #6c7a6e;
-  font-size: 15px;
-  line-height: 1.8;
+  font-size: 14px;
+  line-height: 1.75;
 }
 
 .learn {
@@ -263,13 +321,13 @@ button {
   gap: 9px;
   width: max-content;
   height: auto;
-  margin-top: 22px;
+  margin-top: 18px;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   color: #3a6450;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   box-shadow: none;
 }
@@ -300,6 +358,7 @@ button {
   font-size: 13px;
   letter-spacing: 0.16em;
   color: #6c7a6e;
+  user-select: none;
 }
 
 .line {
@@ -307,36 +366,45 @@ button {
   width: 2px;
   height: 50px;
   background: #3a6450;
-  animation: scroll 1.6s infinite;
+  animation: scroll 1.6s ease-in-out infinite;
 }
 
 @keyframes scroll {
-  0% { transform: scaleY(0); transform-origin: top; }
-  50% { transform: scaleY(1); transform-origin: top; }
-  100% { transform: scaleY(0); transform-origin: bottom; }
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  50% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
 }
 
 @media (max-width: 900px) {
   .hero {
-    padding: 140px 24px 84px;
+    padding: 120px 24px 72px;
   }
 
   .container {
     grid-template-columns: 1fr;
-    gap: 44px;
+    gap: 36px;
   }
 
   h1 {
-    font-size: clamp(52px, 12vw, 66px);
+    font-size: clamp(42px, 10vw, 54px);
   }
 
   .bg-word {
-    top: 58px;
+    top: 44px;
     left: -4px;
   }
 
   p {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .buttons {
@@ -348,7 +416,7 @@ button {
   }
 
   .content {
-    padding: 26px 28px;
+    padding: 22px 24px;
   }
 
   .school-mark {
@@ -358,7 +426,7 @@ button {
   }
 
   .profile-card h2 {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .school-stats {
@@ -369,7 +437,7 @@ button {
 
 @media (max-width: 520px) {
   .hero {
-    padding: 128px 18px 76px;
+    padding: 108px 18px 64px;
   }
 
   .badge {
@@ -377,7 +445,7 @@ button {
   }
 
   .profile-card h2 {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .scroll {

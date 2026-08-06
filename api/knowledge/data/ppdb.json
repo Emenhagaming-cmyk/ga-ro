@@ -5,17 +5,34 @@
     "pendaftaran",
     "daftar",
     "syarat",
-    "jadwal"
+    "jadwal",
+    "cara daftar",
+    "biaya",
+    "penerimaan",
+    "admisi"
   ],
 
   "priority":90,
 
   "data":{
-
+    "nama":"PPDB (Penerimaan Peserta Didik Baru)",
     "status":"Belum tersedia",
 
-    "jadwal":"",
+    "jadwal":{
+      "pembukaan":"Akan diumumkan di website resmi",
+      "pendaftaran":"Akan diumumkan di website resmi",
+      "pengumuman":"Akan diumumkan di website resmi"
+    },
 
-    "persyaratan":[]
+    "persyaratan":[
+      "Lulusan SMP/MTs atau sederajat",
+      "Fotokopi ijazah atau surat keterangan lulus",
+      "Fotokopi akta kelahiran",
+      "Fotokopi KTP atau kartu identitas lainnya",
+      "Pas foto 3x4 (4 lembar)"
+    ],
+
+    "cara_pendaftaran":"Menunggu informasi lebih lanjut dari sekolah",
+    "biaya":"Informasi biaya akan diumumkan saat PPDB dibuka"
   }
 }

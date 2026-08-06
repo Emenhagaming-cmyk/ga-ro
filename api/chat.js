@@ -9,6 +9,12 @@ export default async function handler(req, res) {
 
   const API_KEY = process.env.GROQ_API_KEY
 
+  if (!API_KEY) {
+    return res.status(200).json({
+      reply: "Asisten BISA belum diaktifkan Hubungi admin sekolah untuk info lebih lanjut."
+    })
+  }
+
   const { history } = req.body
     const latestMessage =
   history.at(-1)?.content || ""

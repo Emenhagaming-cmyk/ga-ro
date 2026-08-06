@@ -11,7 +11,7 @@ const messageBox = ref(null)
 const messages = ref([
   {
     role: "assistant",
-    content: "Halo 👋 Saya BISA. Ada yang bisa saya bantu hari ini?"
+    content: "Halo Saya BISA. Ada yang bisa saya bantu hari ini?"
   }
 ])
 

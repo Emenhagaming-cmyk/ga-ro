@@ -9,15 +9,20 @@
     "instagram",
     "ig",
     "maps",
-    "lokasi"
+    "lokasi",
+    "dimana",
+    "hubungi",
+    "tempat",
+    "gedung"
   ],
 
   "priority":100,
 
   "data":{
-
     "nama":"SMK Bahrul Ulum Surabaya",
-
+    "akronim":"SMKBU",
+    "status":"Sekolah Menengah Kejuruan Swasta",
+    
     "alamat":"Jl. Banyu Urip Kidul Molin IIB/69, Putat Jaya, Sawahan, Surabaya",
 
     "email":"smk.bahrululum@gmail.com",
@@ -28,7 +33,26 @@
 
     "maps":"https://maps.app.goo.gl/EiMXnGQWQCSyBTof8",
 
-    "website":"https://smkbahrululumsurabaya.sch.id/"
-
+    "website":"https://smkbahrululumsurabaya.sch.id/",
+    
+    "visi":"Menjadi sekolah kejuruan yang unggul dalam menghasilkan SDM yang berkualitas, berkarakter, dan kompeten",
+    
+    "misi":[
+      "Menyelenggarakan pembelajaran yang efektif dan inovatif",
+      "Mengembangkan kompetensi peserta didik sesuai dengan dunia kerja",
+      "Membina karakter dan kepribadian yang baik",
+      "Membangun kemitraan dengan industri dan institusi lainnya"
+    ],
+    
+    "fasilitas":[
+      "Laboratorium komputer",
+      "Laboratorium jaringan",
+      "Studio multimedia",
+      "Perpustakaan digital",
+      "Aula serba guna",
+      "Lapangan olahraga",
+      "Koperasi sekolah",
+      "Kantin"
+    ]
   }
 }

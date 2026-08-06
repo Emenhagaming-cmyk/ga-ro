@@ -1,5 +1,5 @@
 <template>
-  <footer class="site-footer">
+  <footer class="site-footer" id="contact">
     <div class="container">
       <div class="footer-content">
         <div class="footer-col col-brand">
@@ -13,11 +13,10 @@
           </div>
 
           <nav class="footer-nav">
-            <a href="#home">Home</a>
-            <a href="#services">Services</a>
-            <a href="#journey">Journey</a>
-            <a href="#gallery">Gallery</a>
-            <a href="#contact">Contact</a>
+            <a href="#top">Beranda</a>
+            <a href="#layanan">Layanan</a>
+            <a href="#tentang">Tentang</a>
+            <a href="#contact">Kontak</a>
           </nav>
         </div>
 
@@ -46,7 +45,7 @@
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.8287046373536!2d112.72071842346976!3d-7.275732192633451!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fb537daf6c61%3A0xbce04c09ffdd1941!2sSMK%20Bahrul%20Ulum!5e0!3m2!1sid!2sid!4v1722437908735"
               style="border:0;"
-              allowfullscreen=""
+              allowfullscreen
               loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
               title="Google Maps - SMK Bahrul Ulum"
@@ -69,7 +68,7 @@
 .site-footer {
   background: #fbfcfa;
   color: #1c2a23;
-  padding: 60px 7% 40px;
+  padding: 48px 7% 32px;
   position: relative;
 }
 
@@ -271,7 +270,7 @@ color:#8B95A5;
 
 @media (max-width: 768px) {
   .site-footer {
-    padding: 48px 5% 32px;
+    padding: 40px 5% 28px;
   }
 
   .footer-content {
@@ -305,7 +304,7 @@ color:#8B95A5;
 
 @media (max-width: 520px) {
   .site-footer {
-    padding: 40px 5% 24px;
+    padding: 32px 5% 20px;
   }
 
   .footer-content {

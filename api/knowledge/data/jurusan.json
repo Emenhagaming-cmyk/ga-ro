@@ -1,24 +1,25 @@
 {
   "keywords":[
     "jurusan",
-    "rpl"
+    "rpl",
+    "program",
+    "konsentrasi",
+    "keahlian",
+    "bidang studi",
+    "peminatan",
+    "kompetensi"
   ],
 
   "priority":80,
 
   "data":{
-
+    "nama":"Jurusan & Program Keahlian",
     "list":[
-
       {
-
-        "nama":"RPL",
-
-        "deskripsi":"..."
-
+        "nama":"RPL (Rekayasa Perangkat Lunak)",
+        "deskripsi":"Program keahlian untuk mengembangkan skill pemrograman, web development, dan aplikasi mobile",
+        "mata_pelajaran":["Pemrograman", "Database", "Web Development", "Mobile Development", "UI/UX Design"]
       }
-
     ]
-
   }
 }

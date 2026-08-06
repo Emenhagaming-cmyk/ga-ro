@@ -3,12 +3,35 @@
     "koperasi",
     "seragam",
     "dasi",
-    "atribut"
+    "atribut",
+    "jas",
+    "sepatu",
+    "perlengkapan",
+    "jualan",
+    "toko",
+    "beli"
   ],
 
   "priority":70,
 
   "data":{
-
+    "nama":"Koperasi Sekolah",
+    "deskripsi":"Unit koperasi menyediakan kebutuhan seragam, atribut, dan perlengkapan sekolah",
+    "produk":[
+      {
+        "kategori":"Seragam",
+        "items":["Seragam putih biru", "Seragam olahraga", "Seragam pramuka"]
+      },
+      {
+        "kategori":"Atribut",
+        "items":["Dasi", "Tali pinggang", "Badge jurusan", "Kaos dalam"]
+      },
+      {
+        "kategori":"Perlengkapan Sekolah",
+        "items":["Tas sekolah", "Sepatu", "Kaus kaki", "Topi"]
+      }
+    ],
+    "jam_operasional":"Sesuai jam sekolah",
+    "lokasi":"Di dalam lingkungan sekolah"
   }
 }
