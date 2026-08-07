@@ -1,15 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
 
 *,
-*::before,
 *::after {
-    font-family: 'Quicksand', sans-serif;
-    font-style: normal;
-    font-weight: inherit;
+  font-family: "Quicksand", sans-serif;
+  font-style: normal;
+  font-weight: inherit;
+}
+
+*::before {
+  font-style: normal;
+  font-weight: inherit;
+}
+
+.fab,
+.fas,
+.far,
+.fa,
+.fa-brands,
+.fa-solid,
+.fa-regular,
+.fa-classic {
+  font-family: var(--_fa-family, "Font Awesome 7 Free");
 }
 
 :root {
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-style: normal;
@@ -34,9 +49,9 @@ body,
 }
 
 body {
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
   font-style: normal;
-  background: #F7F9FC;
+  background: #f7f9fc;
   overflow-x: hidden;
 }
 

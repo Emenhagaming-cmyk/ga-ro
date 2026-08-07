@@ -151,6 +151,12 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - ✅ Mobile: accordion expand/collapse untuk "Layanan"
 - ✅ Build passes
 
+### Sesi 12e — Fix Footer Icons (Font Awesome 7)
+- ✅ Root cause: `*` selector di `style.css` override `font-family` ke Quicksand
+- ✅ Tambah restore rule `font-family: var(--_fa-family)` untuk FA classes di `style.css`
+- ✅ Tambah explicit `font-family` di scoped Footer.vue untuk `.contact-link i` (FA7 Free) dan `.social-icon i` (FA7 Brands)
+- ✅ Build passes
+
 ### Sesi 12d — Dropdown Tentang Sekolah + Hapus Emoji
 - ✅ "Tentang Sekolah" keluar dari dropdown Layanan, jadi nav link sendiri dengan dropdown
 - ✅ Dropdown Tentang: Profil Sekolah, Visi & Misi, Sejarah Sekolah

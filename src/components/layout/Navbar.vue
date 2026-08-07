@@ -5,14 +5,14 @@
 
       <div>
         <h2>SMK Bahrul Ulum</h2>
-        <span>Smart School</span>
+        <span class="pp">Surabaya</span>
       </div>
     </a>
 
     <nav class="desktop-nav">
       <a href="#top">Beranda</a>
-      <div class="nav-dropdown" ref="dropdownRef">
-        <button class="dropdown-trigger" type="button" @click="toggleDropdown">
+      <div class="nav-dropdown" ref="dropdownRef" @mouseenter="dropdownOpen = true" @mouseleave="dropdownOpen = false">
+        <button class="dropdown-trigger" type="button">
           Layanan
           <svg class="chevron" :class="{ open: dropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
@@ -20,51 +20,57 @@
           <a :href="spmbTarget()" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">SPMB Online</span>
-              <span class="di-desc">Daftar peserta didik baru</span>
-            </span>
-          </a>
-          <a href="/berita" class="dropdown-item">
-            <span class="di-text">
-              <span class="di-title">Berita</span>
-              <span class="di-desc">Kabar & pengumuman terbaru</span>
             </span>
           </a>
           <a href="/koperasi" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Koperasi</span>
-              <span class="di-desc">Belanja kebutuhan siswa</span>
             </span>
           </a>
           <a href="/produk-siswa" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Produk Siswa</span>
-              <span class="di-desc">Karya & portofolio siswa</span>
             </span>
           </a>
         </div>
       </div>
-      <div class="nav-dropdown" ref="tentangDropdownRef">
-        <button class="dropdown-trigger" type="button" @click="toggleTentangDropdown">
-          Tentang Sekolah
+      <div class="nav-dropdown" ref="informasiDropdownRef" @mouseenter="informasiDropdownOpen = true" @mouseleave="informasiDropdownOpen = false">
+        <button class="dropdown-trigger" type="button">
+          Informasi
+          <svg class="chevron" :class="{ open: informasiDropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dropdown-panel" :class="{ open: informasiDropdownOpen }">
+          <a href="/berita" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">Berita</span>
+            </span>
+          </a>
+          <a href="/kelulusan" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">Kelulusan</span>
+            </span>
+          </a>
+        </div>
+      </div>
+      <div class="nav-dropdown" ref="tentangDropdownRef" @mouseenter="tentangDropdownOpen = true" @mouseleave="tentangDropdownOpen = false">
+        <button class="dropdown-trigger" type="button">
+          Tentang
           <svg class="chevron" :class="{ open: tentangDropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="dropdown-panel" :class="{ open: tentangDropdownOpen }">
           <a href="#tentang" class="dropdown-item" @click="closeTentangDropdown">
             <span class="di-text">
               <span class="di-title">Profil Sekolah</span>
-              <span class="di-desc">Kenali SMK Bahrul Ulum lebih dekat</span>
             </span>
           </a>
           <a href="#tentang" class="dropdown-item" @click="closeTentangDropdown">
             <span class="di-text">
               <span class="di-title">Visi & Misi</span>
-              <span class="di-desc">Arah dan tujuan pendidikan</span>
             </span>
           </a>
           <a href="#tentang" class="dropdown-item" @click="closeTentangDropdown">
             <span class="di-text">
               <span class="di-title">Sejarah Sekolah</span>
-              <span class="di-desc">Perjalanan sejak berdiri</span>
             </span>
           </a>
         </div>
@@ -99,9 +105,18 @@
           </button>
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
             <a :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
-            <a href="/berita" @click="closeMenu">Berita</a>
             <a href="/koperasi" @click="closeMenu">Koperasi</a>
             <a href="/produk-siswa" @click="closeMenu">Produk Siswa</a>
+          </div>
+        </div>
+        <div class="mobile-dropdown">
+          <button class="mobile-dropdown-trigger" type="button" @click="informasiOpen = !informasiOpen">
+            Informasi
+            <svg class="chevron" :class="{ open: informasiOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-dropdown-items" :class="{ open: informasiOpen }">
+            <a href="/berita" @click="closeMenu">Berita</a>
+            <a href="/kelulusan" @click="closeMenu">Kelulusan</a>
           </div>
         </div>
         <div class="mobile-dropdown">
@@ -129,10 +144,13 @@ import { useAuthSession } from "@/composable/useAuthSession";
 const scrolled = ref(false);
 const menuOpen = ref(false);
 const dropdownOpen = ref(false);
+const informasiDropdownOpen = ref(false);
 const tentangDropdownOpen = ref(false);
 const layananOpen = ref(false);
+const informasiOpen = ref(false);
 const tentangOpen = ref(false);
 const dropdownRef = ref(null);
+const informasiDropdownRef = ref(null);
 const tentangDropdownRef = ref(null);
 const { spmbTarget } = useAuthSession();
 
@@ -143,19 +161,11 @@ const toggleMenu = () => {
 const closeMenu = () => {
   menuOpen.value = false;
   layananOpen.value = false;
-};
-
-const toggleDropdown = () => {
-  dropdownOpen.value = !dropdownOpen.value;
-  tentangDropdownOpen.value = false;
+  informasiOpen.value = false;
+  tentangOpen.value = false;
 };
 
 const closeDropdown = () => {
-  dropdownOpen.value = false;
-};
-
-const toggleTentangDropdown = () => {
-  tentangDropdownOpen.value = !tentangDropdownOpen.value;
   dropdownOpen.value = false;
 };
 
@@ -182,27 +192,20 @@ const handleScroll = () => {
   scrolled.value = window.scrollY > 80;
 };
 
-const handleClickOutside = (e) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
-    dropdownOpen.value = false;
-  }
-  if (tentangDropdownRef.value && !tentangDropdownRef.value.contains(e.target)) {
-    tentangDropdownOpen.value = false;
-  }
-};
-
 onMounted(() => {
   window.addEventListener("scroll", handleScroll);
-  document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
-  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
 <style scoped>
+.pp {
+ gap: 4px;
+  font-size: 13px;
+}
 .navbar {
   position: fixed;
   left: 50%;
@@ -264,6 +267,7 @@ onUnmounted(() => {
 .desktop-nav {
   display: flex;
   gap: 28px;
+  align-items: center;
 }
 
 .desktop-nav a {
@@ -272,6 +276,7 @@ onUnmounted(() => {
   font-weight: 700;
   font-size: 15px;
   font-style: normal;
+  line-height: 1;
   transition: color 0.25s ease;
 }
 
@@ -283,6 +288,15 @@ onUnmounted(() => {
   position: relative;
 }
 
+.nav-dropdown::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 14px;
+}
+
 .dropdown-trigger {
   display: inline-flex;
   align-items: center;
@@ -292,12 +306,13 @@ onUnmounted(() => {
   outline: none;
   color: #5b6475;
   font-family: inherit;
-  font-weight: 400;
+  font-weight: 700;
   font-size: 15px;
   font-style: normal;
   cursor: pointer;
   padding: 0;
   transition: color 0.25s ease;
+  line-height: 1;
 }
 
 .dropdown-trigger:hover {
@@ -323,7 +338,7 @@ onUnmounted(() => {
   top: calc(100% + 14px);
   left: 50%;
   transform: translateX(-50%) translateY(6px);
-  min-width: 260px;
+  width: max-content;
   padding: 10px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.96);

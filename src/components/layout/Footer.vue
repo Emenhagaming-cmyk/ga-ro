@@ -176,6 +176,8 @@
 .contact-link i {
   font-size: 18px;
   color: #3a6450;
+  font-family: "Font Awesome 7 Free";
+  font-weight: 900;
 }
 
 .social-section {
@@ -205,6 +207,11 @@
   font-size: 18px;
   transition: all 0.2s ease;
   background: #fff;
+}
+
+.social-icon i {
+  font-family: "Font Awesome 7 Brands";
+  font-weight: 400;
 }
 
 .social-icon:hover {

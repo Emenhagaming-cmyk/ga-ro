@@ -17,19 +17,19 @@ const scrollToSection = (id) => {
     <div class="ambient ambient2"></div>
 
     <div class="container">
-      <span class="badge">SMK Bahrul Ulum</span>
 
       <h1>
-        Belajar.<br />
-        Berkarya.<br />
-        Berkembang.
+        Selamat Datang Di<br />
+      </h1>
+
+      <h1 class="warna">
+        SMK Bahrul Ulum<br />
       </h1>
 
       <div class="bg-word">SCHOOL</div>
 
       <p>
-        Platform digital sekolah yang menghubungkan SPMB, Career Center,
-        Produk Siswa, dan ChatBot dalam satu tempat.
+        SMK Bahrul Ulum Surabaya adalah sekolah menengah kejuruan yang berfokus pada pengembangan keterampilan dan pengetahuan siswa dalam berbagai bidang keahlian. Dengan kurikulum yang inovatif dan fasilitas modern, SMK Bahrul Ulum Surabaya mempersiapkan siswa untuk menghadapi tantangan dunia kerja dan membekali mereka dengan keterampilan praktis yang relevan dengan industri saat ini.
       </p>
 
       <div class="buttons">
@@ -41,15 +41,13 @@ const scrollToSection = (id) => {
         </a>
       </div>
     </div>
-
-    <div class="scroll">
-      Scroll
-      <div class="line"></div>
-    </div>
   </section>
 </template>
 
 <style scoped>
+.warna{
+  color: #04944e;
+}
 .hero {
   position: relative;
   min-height: 88vh;
@@ -58,7 +56,7 @@ const scrollToSection = (id) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 96px 7%;
+  padding: 140px 7% 96px;
   color: #1c2a23;
   background:
     radial-gradient(
@@ -222,19 +220,6 @@ button {
   box-shadow: 0 8px 18px rgba(28, 42, 35, 0.06);
 }
 
-.scroll {
-  position: absolute;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 13px;
-  letter-spacing: 0.16em;
-  color: #6c7a6e;
-  user-select: none;
-}
 
 .line {
   margin-top: 10px;
@@ -261,7 +246,7 @@ button {
 
 @media (max-width: 900px) {
   .hero {
-    padding: 120px 24px 72px;
+    padding: 160px 24px 72px;
   }
 
   h1 {
@@ -289,7 +274,7 @@ button {
 
 @media (max-width: 520px) {
   .hero {
-    padding: 108px 18px 64px;
+    padding: 140px 18px 64px;
   }
 
   .badge {
