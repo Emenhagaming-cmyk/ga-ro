@@ -17,54 +17,28 @@ const scrollToSection = (id) => {
     <div class="ambient ambient2"></div>
 
     <div class="container">
-      <div class="left">
-        <span class="badge">SMK Bahrul Ulum</span>
+      <span class="badge">SMK Bahrul Ulum</span>
 
-        <h1>
-          Belajar.<br />
-          Berkarya.<br />
-          Berkembang.
-        </h1>
+      <h1>
+        Belajar.<br />
+        Berkarya.<br />
+        Berkembang.
+      </h1>
 
-        <div class="bg-word">SCHOOL</div>
+      <div class="bg-word">SCHOOL</div>
 
-        <p>
-          Platform digital sekolah yang menghubungkan SPMB, Career Center,
-          Produk Siswa, dan ChatBot dalam satu tempat.
-        </p>
+      <p>
+        Platform digital sekolah yang menghubungkan SPMB, Career Center,
+        Produk Siswa, dan ChatBot dalam satu tempat.
+      </p>
 
-        <div class="buttons">
-          <a :href="`${BACKEND}/login`" class="primary btn-login">
-            Login
-          </a>
-          <a :href="`${BACKEND}/register`" class="secondary btn-register">
-            Daftar
-          </a>
-        </div>
-      </div>
-
-      <div class="right">
-        <article class="profile-card">
-          <div class="card-accent"></div>
-          <div class="content">
-            <span class="mini-title">Profil sekolah</span>
-
-            <h2>SMK Bahrul Ulum</h2>
-
-            <p>
-              Membentuk generasi berkarakter, religius, mandiri, gotong royong,
-              dan berintegritas.
-            </p>
-
-            <button
-              class="learn"
-              type="button"
-              @click="scrollToSection('layanan')"
-            >
-              Kenali sekolah <span></span>
-            </button>
-          </div>
-        </article>
+      <div class="buttons">
+        <a :href="`${BACKEND}/login`" class="primary btn-login">
+          Login
+        </a>
+        <a :href="`${BACKEND}/register`" class="secondary btn-register">
+          Daftar
+        </a>
       </div>
     </div>
 
@@ -135,14 +109,10 @@ const scrollToSection = (id) => {
   z-index: 2;
   width: 100%;
   max-width: 1180px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 56px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-}
-
-.left {
-  position: relative;
+  text-align: center;
 }
 
 .badge {
@@ -252,101 +222,6 @@ button {
   box-shadow: 0 8px 18px rgba(28, 42, 35, 0.06);
 }
 
-.profile-card {
-  position: relative;
-  overflow: hidden;
-  background: #fbfcfa;
-  border: 1px solid #dfe4dd;
-  border-radius: 22px;
-  box-shadow: 0 12px 24px rgba(35, 55, 42, 0.06);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.profile-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(35, 55, 42, 0.08);
-}
-
-.profile-card::before {
-  content: "";
-  position: absolute;
-  width: 180px;
-  height: 180px;
-  right: -70px;
-  top: -90px;
-  border-radius: 50%;
-  background: rgba(125, 184, 141, 0.12);
-}
-
-.card-accent {
-  position: relative;
-  height: 5px;
-  background: linear-gradient(90deg, #2a5238 0%, #3a6450 58%, #7db88d 100%);
-}
-
-.content {
-  position: relative;
-  padding: 22px 24px;
-}
-
-.mini-title {
-  display: inline-flex;
-  color: #3a6450;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.profile-card h2 {
-  margin: 14px 0 10px;
-  color: #1c2a23;
-  font-size: 27px;
-  line-height: 1.1;
-  letter-spacing: -0.045em;
-}
-
-.profile-card p {
-  margin: 0;
-  color: #6c7a6e;
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.learn {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  width: max-content;
-  height: auto;
-  margin-top: 18px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #3a6450;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: none;
-}
-
-.learn span {
-  font-size: 18px;
-  line-height: 1;
-  transition: transform 0.25s ease;
-}
-
-.learn:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.learn:hover span {
-  transform: translateX(4px);
-}
-
 .scroll {
   position: absolute;
   bottom: 28px;
@@ -389,11 +264,6 @@ button {
     padding: 120px 24px 72px;
   }
 
-  .container {
-    grid-template-columns: 1fr;
-    gap: 36px;
-  }
-
   h1 {
     font-size: clamp(42px, 10vw, 54px);
   }
@@ -411,27 +281,9 @@ button {
     flex-direction: column;
   }
 
-  button {
+  .btn-login,
+  .btn-register {
     width: 100%;
-  }
-
-  .content {
-    padding: 22px 24px;
-  }
-
-  .school-mark {
-    width: 48px;
-    height: 48px;
-    font-size: 15px;
-  }
-
-  .profile-card h2 {
-    font-size: 24px;
-  }
-
-  .school-stats {
-    gap: 0;
-    margin: 20px 0 22px;
   }
 }
 
@@ -442,10 +294,6 @@ button {
 
   .badge {
     font-size: 12px;
-  }
-
-  .profile-card h2 {
-    font-size: 24px;
   }
 
   .scroll {

@@ -137,6 +137,28 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - ✅ Verifikasi: `php artisan route:list` (25 routes OK), `npm run build` (sukses)
 - Tidak ada kode Vue yang perlu diubah — referensi `localhost:8000` adalah URL backend, bukan path filesystem
 
+### Sesi 12b — Hero Centered
+- ✅ Hapus profile card (`.right` div) dari `Hero.vue`
+- ✅ Layout `.container` ubah dari grid 2 kolom → flex column centered, `text-align: center`
+- ✅ Hapus CSS profile-card yang tidak terpakai (~70 baris)
+- ✅ Responsive: button full-width di mobile
+- ✅ Build passes
+
+### Sesi 12c — Dropdown Menu Navbar
+- ✅ Tambah dropdown "Layanan" di desktop nav (klik, bukan hover)
+- ✅ 5 item dropdown: SPMB, Berita, Tentang Sekolah, Koperasi, Produk Siswa
+- ✅ Dropdown panel: icon + title + description per item, chevron rotate, click outside to close
+- ✅ Mobile: accordion expand/collapse untuk "Layanan"
+- ✅ Build passes
+
+### Sesi 12d — Dropdown Tentang Sekolah + Hapus Emoji
+- ✅ "Tentang Sekolah" keluar dari dropdown Layanan, jadi nav link sendiri dengan dropdown
+- ✅ Dropdown Tentang: Profil Sekolah, Visi & Misi, Sejarah Sekolah
+- ✅ Hapus semua emoji/icon dari dropdown items
+- ✅ Mobile: dua accordion (Layanan + Tentang Sekolah)
+- ✅ Klik satu dropdown → dropdown lain tutup; klik luar → semua tutup
+- ✅ Build passes
+
 ---
 
 ## ✅ VERIFIKASI TERUJI (terkini)

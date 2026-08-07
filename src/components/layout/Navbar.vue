@@ -11,9 +11,64 @@
 
     <nav class="desktop-nav">
       <a href="#top">Beranda</a>
-      <a href="#layanan">Layanan</a>
-      <a href="/berita">Berita</a>
-      <a href="#tentang">Tentang</a>
+      <div class="nav-dropdown" ref="dropdownRef">
+        <button class="dropdown-trigger" type="button" @click="toggleDropdown">
+          Layanan
+          <svg class="chevron" :class="{ open: dropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dropdown-panel" :class="{ open: dropdownOpen }">
+          <a :href="spmbTarget()" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">SPMB Online</span>
+              <span class="di-desc">Daftar peserta didik baru</span>
+            </span>
+          </a>
+          <a href="/berita" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">Berita</span>
+              <span class="di-desc">Kabar & pengumuman terbaru</span>
+            </span>
+          </a>
+          <a href="/koperasi" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">Koperasi</span>
+              <span class="di-desc">Belanja kebutuhan siswa</span>
+            </span>
+          </a>
+          <a href="/produk-siswa" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">Produk Siswa</span>
+              <span class="di-desc">Karya & portofolio siswa</span>
+            </span>
+          </a>
+        </div>
+      </div>
+      <div class="nav-dropdown" ref="tentangDropdownRef">
+        <button class="dropdown-trigger" type="button" @click="toggleTentangDropdown">
+          Tentang Sekolah
+          <svg class="chevron" :class="{ open: tentangDropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dropdown-panel" :class="{ open: tentangDropdownOpen }">
+          <a href="#tentang" class="dropdown-item" @click="closeTentangDropdown">
+            <span class="di-text">
+              <span class="di-title">Profil Sekolah</span>
+              <span class="di-desc">Kenali SMK Bahrul Ulum lebih dekat</span>
+            </span>
+          </a>
+          <a href="#tentang" class="dropdown-item" @click="closeTentangDropdown">
+            <span class="di-text">
+              <span class="di-title">Visi & Misi</span>
+              <span class="di-desc">Arah dan tujuan pendidikan</span>
+            </span>
+          </a>
+          <a href="#tentang" class="dropdown-item" @click="closeTentangDropdown">
+            <span class="di-text">
+              <span class="di-title">Sejarah Sekolah</span>
+              <span class="di-desc">Perjalanan sejak berdiri</span>
+            </span>
+          </a>
+        </div>
+      </div>
       <a href="#contact">Kontak</a>
     </nav>
 
@@ -37,9 +92,29 @@
     <Transition name="mobile-menu">
       <nav v-if="menuOpen" class="mobile-nav">
         <a href="#top" @click="closeMenu">Beranda</a>
-        <a href="#layanan" @click="closeMenu">Layanan</a>
-        <a href="/berita">Berita</a>
-        <a href="#tentang" @click="closeMenu">Tentang</a>
+        <div class="mobile-dropdown">
+          <button class="mobile-dropdown-trigger" type="button" @click="layananOpen = !layananOpen">
+            Layanan
+            <svg class="chevron" :class="{ open: layananOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
+            <a :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
+            <a href="/berita" @click="closeMenu">Berita</a>
+            <a href="/koperasi" @click="closeMenu">Koperasi</a>
+            <a href="/produk-siswa" @click="closeMenu">Produk Siswa</a>
+          </div>
+        </div>
+        <div class="mobile-dropdown">
+          <button class="mobile-dropdown-trigger" type="button" @click="tentangOpen = !tentangOpen">
+            Tentang Sekolah
+            <svg class="chevron" :class="{ open: tentangOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="mobile-dropdown-items" :class="{ open: tentangOpen }">
+            <a href="#tentang" @click="closeMenu">Profil Sekolah</a>
+            <a href="#tentang" @click="closeMenu">Visi & Misi</a>
+            <a href="#tentang" @click="closeMenu">Sejarah Sekolah</a>
+          </div>
+        </div>
         <a href="#contact" @click="closeMenu">Kontak</a>
         <a :href="spmbTarget()" class="mobile-ppdb">SPMB</a>
       </nav>
@@ -53,6 +128,12 @@ import { useAuthSession } from "@/composable/useAuthSession";
 
 const scrolled = ref(false);
 const menuOpen = ref(false);
+const dropdownOpen = ref(false);
+const tentangDropdownOpen = ref(false);
+const layananOpen = ref(false);
+const tentangOpen = ref(false);
+const dropdownRef = ref(null);
+const tentangDropdownRef = ref(null);
 const { spmbTarget } = useAuthSession();
 
 const toggleMenu = () => {
@@ -61,6 +142,25 @@ const toggleMenu = () => {
 
 const closeMenu = () => {
   menuOpen.value = false;
+  layananOpen.value = false;
+};
+
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value;
+  tentangDropdownOpen.value = false;
+};
+
+const closeDropdown = () => {
+  dropdownOpen.value = false;
+};
+
+const toggleTentangDropdown = () => {
+  tentangDropdownOpen.value = !tentangDropdownOpen.value;
+  dropdownOpen.value = false;
+};
+
+const closeTentangDropdown = () => {
+  tentangDropdownOpen.value = false;
 };
 
 const goSPMB = () => {
@@ -82,12 +182,23 @@ const handleScroll = () => {
   scrolled.value = window.scrollY > 80;
 };
 
+const handleClickOutside = (e) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    dropdownOpen.value = false;
+  }
+  if (tentangDropdownRef.value && !tentangDropdownRef.value.contains(e.target)) {
+    tentangDropdownOpen.value = false;
+  }
+};
+
 onMounted(() => {
   window.addEventListener("scroll", handleScroll);
+  document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
@@ -106,7 +217,6 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   border-radius: 28px;
-  border: 1px solid rgba(223, 228, 221, 0.9);
   box-shadow: 0 16px 36px rgba(28, 42, 35, 0.08);
   transition: all 0.35s ease;
   z-index: 999;
@@ -141,12 +251,14 @@ onUnmounted(() => {
   font-size: 20px;
   font-weight: 800;
   color: #1c2a23;
+  font-style: normal;
 }
 
 .logo span {
   font-size: 13px;
   color: #3a6450;
   font-weight: 600;
+  font-style: normal;
 }
 
 .desktop-nav {
@@ -159,11 +271,120 @@ onUnmounted(() => {
   color: #5b6475;
   font-weight: 700;
   font-size: 15px;
+  font-style: normal;
   transition: color 0.25s ease;
 }
 
 .desktop-nav a:hover {
   color: #3a6450;
+}
+
+.nav-dropdown {
+  position: relative;
+}
+
+.dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  outline: none;
+  color: #5b6475;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 15px;
+  font-style: normal;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.25s ease;
+}
+
+.dropdown-trigger:hover {
+  color: #3a6450;
+}
+
+.dropdown-trigger:focus,
+.dropdown-trigger:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  min-width: 260px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 40px rgba(35, 55, 42, 0.12);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  z-index: 1000;
+}
+
+.dropdown-panel::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.dropdown-panel.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #1c2a23;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: #e8f0e6;
+}
+
+.di-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.di-title {
+  font-size: 14px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1.2;
+}
+
+.di-desc {
+  font-size: 12px;
+  color: #6c7a6e;
+  line-height: 1.3;
 }
 
 .ppdb {
@@ -174,6 +395,7 @@ onUnmounted(() => {
   background: #3a6450;
   color: white;
   font-weight: 700;
+  font-style: normal;
   cursor: pointer;
   transition:
     transform 0.3s ease,
@@ -191,7 +413,6 @@ onUnmounted(() => {
   width: 42px;
   height: 42px;
   padding: 0;
-  border: 1px solid #dfe4dd;
   border-radius: 12px;
   background: #fff;
   cursor: pointer;
@@ -257,7 +478,6 @@ onUnmounted(() => {
     flex-direction: column;
     gap: 4px;
     padding: 12px;
-    border: 1px solid rgba(223, 228, 221, 0.95);
     border-radius: 20px;
     background: rgba(251, 252, 250, 0.98);
     box-shadow: 0 18px 38px rgba(35, 55, 42, 0.12);
@@ -270,6 +490,7 @@ onUnmounted(() => {
     color: #1c2a23;
     font-size: 15px;
     font-weight: 700;
+    font-style: normal;
     text-decoration: none;
     transition:
       background 0.2s ease,
@@ -291,6 +512,60 @@ onUnmounted(() => {
   .mobile-nav .mobile-ppdb:hover {
     background: #2a5238;
     color: #fff;
+  }
+
+  .mobile-dropdown {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 13px 15px;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: #1c2a23;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+  }
+
+  .mobile-dropdown-trigger:hover {
+    background: #e8f0e6;
+  }
+
+  .mobile-dropdown-items {
+    display: flex;
+    flex-direction: column;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+
+  .mobile-dropdown-items.open {
+    max-height: 300px;
+    padding: 4px 0 0;
+  }
+
+  .mobile-dropdown-items a {
+    padding: 10px 15px 10px 40px;
+    border-radius: 10px;
+    color: #3a6450;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+
+  .mobile-dropdown-items a:hover {
+    background: #e8f0e6;
   }
 
   .logo h2 {

@@ -56,7 +56,7 @@ onMounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 
 body {
-font-family: 'QuickSand';
+font-family: 'Quicksand', sans-serif;
 }
 
 .loading{
@@ -131,7 +131,7 @@ font-family: 'QuickSand';
     font-weight:500;
     letter-spacing:2px;
     text-align:center;
-    font-family: 'QuickSand';
+    font-family: 'Quicksand', sans-serif;
 
 }
 
@@ -142,7 +142,7 @@ font-family: 'QuickSand';
     font-size:13px;
     letter-spacing:3px;
     text-align:center;
-    font-family: 'QuickSand';
+    font-family: 'Quicksand', sans-serif;
 }
 
 @keyframes logoFade{
