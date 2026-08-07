@@ -84,15 +84,10 @@ const statusLabel = () => (session.value.status || "").toUpperCase();
           }}
         </a>
       </div>
-
       <Hero />
-
       <AboutSchool />
-
       <Feature />
-
       <News />
-
       <Footer />
     </div>
   </div>

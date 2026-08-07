@@ -5,7 +5,7 @@ Baca juga `PROGRESS.md` untuk status terakhir & TODO lanjutan.
 
 ## Struktur Proyek (2 bagian)
 
-- **Backend Laravel 12** → `C:\Users\LENOVO\form\form`
+- **Backend Laravel 12** → `C:\Users\LENOVO\lomba\ga-ro\backend`
   - Server: `php artisan serve --port=8000`
   - DB: MySQL Laragon, database `pendaftaran_db` (host 127.0.0.1, port 3306, user root, password kosong)
   - Auth: Laravel session (bukan Sanctum/API) — login/register/logout pakai blade
@@ -16,13 +16,13 @@ Baca juga `PROGRESS.md` untuk status terakhir & TODO lanjutan.
 - **Landing page Vue 3** → `C:\Users\LENOVO\lomba\ga-ro`
   - Server: `npm run dev` (port 5174)
   - File dashboard Vue lama (DashboardSiswa.vue, DashboardAdmin.vue, LoginView.vue, RegisterView.vue) TIDAK DIPAKAI — tidak aktif. Backend pakai Laravel blade.
-  - Logo sekolah: `C:\Users\LENOVO\lomba\ga-ro\public\logo.png` (copy juga ke `form\form\public\logo.png`)
+  - Logo sekolah: `C:\Users\LENOVO\lomba\ga-ro\public\logo.png` (copy juga ke `backend\public\logo.png`)
 
 ## Command Penting
 
 ```powershell
 # Backend
-cd C:\Users\LENOVO\form\form
+cd C:\Users\LENOVO\lomba\ga-ro\backend
 php artisan serve --port=8000
 php artisan migrate
 php artisan db:seed --class=AdminSeeder

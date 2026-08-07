@@ -42,7 +42,7 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - ✅ Rewrite `resources/views/pendaftaran/create.blade.php` — form multi-step (5 langkah) + sidebar progress
 - ✅ Navbar: logo.png + SVG icon Masuk
 - ✅ Perbaiki UI card "Butuh Bantuan?" + SVG headphone
-- ✅ Copy `logo.png` → `form\form\public\`
+- ✅ Copy `logo.png` → `backend\public\`
 
 ### Sesi 5 — Integrasi Backend dengan Form Baru (SESI UTAMA)
 - ✅ **Fresh start**: hapus semua data users & pendaftarans
@@ -130,6 +130,12 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - ✅ `.big-card-content`: `justify-content: center` → `flex-start` (heading di atas, bukan tengah)
 - ✅ `.image-wrapper`: `min-height: 250px` → `height: 300px`, `.big-card-image` align-items → `flex-start`
 - ✅ Build passes
+
+### Sesi 12 — Pemindahan Backend ke Monorepo
+- ✅ Backend dipindah dari `C:\Users\LENOVO\form\form` → `C:\Users\LENOVO\lomba\ga-ro\backend`
+- ✅ Update path di `AGENTS.md` (3 referensi), `PROGRESS.md` (1 referensi), `backend/IMPLEMENTATION_SUMMARY.md` (2 referensi)
+- ✅ Verifikasi: `php artisan route:list` (25 routes OK), `npm run build` (sukses)
+- Tidak ada kode Vue yang perlu diubah — referensi `localhost:8000` adalah URL backend, bukan path filesystem
 
 ---
 

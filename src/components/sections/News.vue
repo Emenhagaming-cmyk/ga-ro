@@ -28,7 +28,7 @@
           @click="goToDetail(news.slug)"
         >
           <div class="news-image">
-            <img :src="news.image" :alt="news.title" loading="lazy" />
+            <!-- <img :src="ber.png" :alt="news.title" loading="lazy" /> -->
             <span class="news-category" :style="{ backgroundColor: news.categoryColor }">
               {{ news.category }}
             </span>
@@ -54,13 +54,13 @@
 
       <div class="load-more" v-if="hasMore">
         <button @click="loadMore" class="btn-load-more">
-          Muat Lebih Banyak
+          Lihat Lebih Banyak
         </button>
       </div>
 
       <div class="view-all">
         <a :href="BACKEND + '/berita'" class="btn-view-all" target="_blank" rel="noopener">
-          Lihat Semua Berita di Website Sekolah ↗
+          Lihat Semua Berita di Website Sekolah
         </a>
       </div>
     </div>
@@ -85,7 +85,7 @@ async function fetchNews() {
     const res = await fetch("/data/news.json");
     allNews.value = await res.json();
   } catch (e) {
-    console.error("Failed to load news:", e);
+    console.error("gagal memuat berita silahkan coba lagi:", e);
     allNews.value = [];
   }
 }
