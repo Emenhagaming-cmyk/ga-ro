@@ -188,6 +188,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composable/useAuth';
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 const router = useRouter();
 const { user, logout, getAuthHeader } = useAuth();
 
@@ -235,7 +237,7 @@ onMounted(async () => {
 
 const fetchPendaftarans = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/pendaftaran', {
+    const response = await fetch(`${BACKEND}/api/pendaftaran`, {
       headers: getAuthHeader()
     });
 
@@ -264,7 +266,7 @@ const handleStatusUpdate = async () => {
   error.value = '';
 
   try {
-    const response = await fetch(`http://localhost:8000/api/pendaftaran/${selectedItem.value.id}/status`, {
+    const response = await fetch(`${BACKEND}/api/pendaftaran/${selectedItem.value.id}/status`, {
       method: 'PUT',
       headers: getAuthHeader(),
       body: JSON.stringify({ status: newStatus.value })
@@ -294,7 +296,7 @@ const deleteItem = async (id) => {
   if (!confirm('Yakin ingin menghapus data ini?')) return;
 
   try {
-    const response = await fetch(`http://localhost:8000/api/pendaftaran/${id}`, {
+    const response = await fetch(`${BACKEND}/api/pendaftaran/${id}`, {
       method: 'DELETE',
       headers: getAuthHeader()
     });
@@ -309,7 +311,7 @@ const deleteItem = async (id) => {
 
 const handleLogout = async () => {
   try {
-    await fetch('http://localhost:8000/api/logout', {
+    await fetch(`${BACKEND}/api/logout`, {
       method: 'POST',
       headers: getAuthHeader()
     });

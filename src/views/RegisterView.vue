@@ -236,6 +236,8 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 const router = useRouter();
 
 const currentStep = ref(1);
@@ -319,7 +321,7 @@ const handleSubmit = async () => {
   error.value = '';
 
   try {
-    const response = await fetch('http://localhost:8000/api/register', {
+    const response = await fetch(`${BACKEND}/api/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

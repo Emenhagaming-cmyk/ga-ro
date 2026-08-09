@@ -151,6 +151,22 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - ✅ Mobile: accordion expand/collapse untuk "Layanan"
 - ✅ Build passes
 
+### Sesi 12g — Deploy Backend Laravel ke Vercel (vercel-php)
+- ✅ Buat `backend/api/index.php` — forwarder ke public/index.php (Vercel entrypoint)
+- ✅ Buat `backend/vercel.json` — functions: vercel-php@0.7.4 (PHP 8.3), routes: semua ke api/index.php, env: /tmp cache, cookie session, stderr log
+- ✅ Buat `backend/.vercelignore` — vendor, node_modules, .env, storage logs, tests
+- ✅ Edit `config/filesystems.php` — public disk root pakai `env('PUBLIC_DISK_ROOT')` untuk serverless
+- ✅ Buat `backend/.env.deploy` — template koneksi TiDB Cloud (user isi host/user/password sendiri)
+- ✅ Build passes
+- **Next**: User signup TiDB Cloud → isi credential di .env.deploy → run migrate + seed dari PC → push ke GitHub → deploy di Vercel (root dir: backend)
+
+### Sesi 12f — Deployment Setup (Render + Dockerfile)
+- ✅ Buat `backend/Dockerfile` untuk PHP 8.2 + Laravel 12 + SQLite
+- ✅ Centralize backend URL: semua `localhost:8000` pakai `import.meta.env.VITE_BACKEND_URL` (6 file: useAuthSession, Hero, News, DashboardAdmin, DashboardSiswa, LoginView, RegisterView)
+- ✅ Update CORS middleware: `FRONTEND_URL` env var, handle OPTIONS preflight, 204 response
+- ✅ Build passes
+- **Next**: Deploy backend ke Render, set env vars `FRONTEND_URL` + `APP_URL`, set `VITE_BACKEND_URL` di Vercel
+
 ### Sesi 12e — Fix Footer Icons (Font Awesome 7)
 - ✅ Root cause: `*` selector di `style.css` override `font-family` ke Quicksand
 - ✅ Tambah restore rule `font-family: var(--_fa-family)` untuk FA classes di `style.css`

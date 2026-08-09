@@ -1,6 +1,6 @@
 import { ref } from "vue";
 
-const BACKEND = "http://localhost:8000";
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const STORAGE_KEY = "spmb_session_status";
 
 const session = ref(

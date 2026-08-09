@@ -163,6 +163,8 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composable/useAuth';
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 const router = useRouter();
 const { user, logout, getAuthHeader } = useAuth();
 
@@ -198,7 +200,7 @@ onMounted(async () => {
 
 const fetchPendaftaran = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/pendaftaran/my', {
+    const response = await fetch(`${BACKEND}/api/pendaftaran/my`, {
       headers: getAuthHeader()
     });
 
@@ -221,7 +223,7 @@ const handleUpdateForm = async () => {
   error.value = '';
 
   try {
-    const response = await fetch(`http://localhost:8000/api/pendaftaran/${pendaftaran.value.id}`, {
+    const response = await fetch(`${BACKEND}/api/pendaftaran/${pendaftaran.value.id}`, {
       method: 'PUT',
       headers: getAuthHeader(),
       body: JSON.stringify(formData.value)
@@ -246,7 +248,7 @@ const handleUpdateForm = async () => {
 
 const handleLogout = async () => {
   try {
-    await fetch('http://localhost:8000/api/logout', {
+    await fetch(`${BACKEND}/api/logout`, {
       method: 'POST',
       headers: getAuthHeader()
     });

@@ -1,5 +1,6 @@
 <script setup>
-const BACKEND = "http://localhost:8000";
+import { useAuthSession } from "@/composable/useAuthSession";
+const { BACKEND } = useAuthSession();
 
 const scrollToSection = (id) => {
   const target = document.getElementById(id);
@@ -19,17 +20,15 @@ const scrollToSection = (id) => {
     <div class="container">
 
       <h1>
-        Selamat Datang Di<br />
-      </h1>
-
-      <h1 class="warna">
-        SMK Bahrul Ulum<br />
+        Belajar<br />
+        Berkarya<br />
+        Berprestasi
       </h1>
 
       <div class="bg-word">SCHOOL</div>
 
       <p>
-        SMK Bahrul Ulum Surabaya adalah sekolah menengah kejuruan yang berfokus pada pengembangan keterampilan dan pengetahuan siswa dalam berbagai bidang keahlian. Dengan kurikulum yang inovatif dan fasilitas modern, SMK Bahrul Ulum Surabaya mempersiapkan siswa untuk menghadapi tantangan dunia kerja dan membekali mereka dengan keterampilan praktis yang relevan dengan industri saat ini.
+        SMK Bahrul Ulum Surabaya adalah sekolah menengah kejuruan yang berfokus pada pengembangan keterampilan dan pengetahuan siswa dalam berbagai bidang keahlian. Dengan kurikulum yang inovatif dan fasilitas modern.
       </p>
 
       <div class="buttons">

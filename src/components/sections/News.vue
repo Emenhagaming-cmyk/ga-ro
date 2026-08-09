@@ -70,8 +70,9 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthSession } from "@/composable/useAuthSession";
 
-const BACKEND = "http://localhost:8000";
+const { BACKEND } = useAuthSession();
 const router = useRouter();
 
 const allNews = ref([]);
