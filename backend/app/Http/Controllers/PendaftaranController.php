@@ -141,6 +141,12 @@ public function index(RegistrationInsightService $insightService)
             'status_updated_at' => now()
         ]);
 
+        if ($validated['status'] === 'diterima') {
+            $pendaftaran->user->update(['role' => 'siswa']);
+        } elseif (in_array($validated['status'], ['ditolak', 'baru'])) {
+            $pendaftaran->user->update(['role' => 'pendaftar']);
+        }
+
         return back()->with('success', 'Status berhasil diperbarui.');
     }
 

@@ -46,7 +46,7 @@ pointer-events:none;
 
 z-index:-2;
 
-background:#F8FAFF;
+background:#f2f4f1;
 
 }
 
@@ -59,9 +59,9 @@ inset:0;
 
 background-image:
 
-linear-gradient(rgba(91,127,255,.05) 1px,transparent 1px),
+linear-gradient(rgba(58,100,80,0.035) 1px,transparent 1px),
 
-linear-gradient(90deg,rgba(91,127,255,.05) 1px,transparent 1px);
+linear-gradient(90deg,rgba(58,100,80,0.035) 1px,transparent 1px);
 
 background-size:70px 70px;
 
@@ -78,7 +78,7 @@ height:7px;
 
 border-radius:50%;
 
-background:#5B7FFF;
+background:#7db88d;
 
 opacity:.18;
 
@@ -96,7 +96,7 @@ position:absolute;
 
 border:
 
-1px solid rgba(91,127,255,.08);
+1px solid rgba(58,100,80,0.08);
 
 border-radius:50%;
 

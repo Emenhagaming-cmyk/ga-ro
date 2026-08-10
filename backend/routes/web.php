@@ -28,6 +28,7 @@ Route::post('/pendaftaran', [PendaftaranController::class, 'store'])->name('pend
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard-siswa', [PendaftaranController::class, 'myDashboard'])->name('dashboard.siswa');
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
+    Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa');
 });
 
 // Admin only (akses via URL saja, tanpa button di UI)

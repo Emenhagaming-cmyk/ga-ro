@@ -53,12 +53,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
-
-body {
-font-family: 'Quicksand', sans-serif;
-}
-
 .loading{
     position:fixed;
     inset:0;
@@ -67,7 +61,7 @@ font-family: 'Quicksand', sans-serif;
     justify-content:center;
     align-items:center;
 
-    background:#050505;
+    background:radial-gradient(circle at top left, rgba(125,184,141,.12), transparent 40%), #1c2a23;
 
     z-index:9999;
 
@@ -138,7 +132,7 @@ font-family: 'Quicksand', sans-serif;
 .text p{
 
     margin:6px 0 0;
-    color:#8d8d8d;
+    color:rgba(255,255,255,.55);
     font-size:13px;
     letter-spacing:3px;
     text-align:center;

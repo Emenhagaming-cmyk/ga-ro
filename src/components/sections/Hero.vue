@@ -1,13 +1,12 @@
 <script setup>
+import { ref } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 const { BACKEND } = useAuthSession();
 
-const scrollToSection = (id) => {
-  const target = document.getElementById(id);
+const loginExpanded = ref(false);
 
-  if (target) {
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+const toggleLogin = () => {
+  loginExpanded.value = !loginExpanded.value;
 };
 </script>
 
@@ -32,21 +31,21 @@ const scrollToSection = (id) => {
       </p>
 
       <div class="buttons">
-        <a :href="`${BACKEND}/login`" class="primary btn-login">
-          Login
-        </a>
-        <a :href="`${BACKEND}/register`" class="secondary btn-register">
-          Daftar
-        </a>
+        <div class="btn-group-login">
+          <button class="primary btn-login" @click="toggleLogin">
+            Login
+          </button>
+          <div class="sub-buttons" :class="{ open: loginExpanded }">
+            <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
+            <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.warna{
-  color: #04944e;
-}
 .hero {
   position: relative;
   min-height: 88vh;
@@ -161,6 +160,56 @@ p {
   display: flex;
   gap: 14px;
   margin-top: 32px;
+  align-items: flex-start;
+}
+
+.btn-group-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sub-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
+  margin-top: 0;
+  width: 100%;
+  justify-content: center;
+}
+
+.sub-buttons.open {
+  max-height: 60px;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+.sub-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  background: rgba(58, 100, 80, 0.08);
+  color: #3a6450;
+  border: 1px solid rgba(58, 100, 80, 0.12);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.sub-btn:hover {
+  background: rgba(58, 100, 80, 0.15);
+  transform: translateY(-1px);
 }
 
 button {
@@ -268,6 +317,14 @@ button {
   .btn-login,
   .btn-register {
     width: 100%;
+  }
+
+  .sub-buttons {
+    width: 100%;
+  }
+
+  .sub-btn {
+    flex: 1;
   }
 }
 

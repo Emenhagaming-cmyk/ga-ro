@@ -28,10 +28,7 @@
   line-height: 1.5;
   font-weight: 400;
   font-style: normal;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: #1c2a23;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -51,17 +48,10 @@ body,
 body {
   font-family: "Quicksand", sans-serif;
   font-style: normal;
-  background: #f7f9fc;
+  background: #f2f4f1;
   overflow-x: hidden;
 }
 
 #app {
   width: 100%;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
 }

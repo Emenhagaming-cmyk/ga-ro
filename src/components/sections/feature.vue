@@ -21,7 +21,7 @@
             { featured: index === 0, clickable: item.href },
           ]"
           :id="index === 0 ? 'spmb' : undefined"
-          @click="item.href ? maybeNavigate(item.href) : undefined"
+          @click="index === 0 ? undefined : handleCardClick(item)"
         >
           <div v-if="index === 0" class="spmb-banner" aria-hidden="true">
             <img :src="item.banner || '/bu.jpg'" alt="SPMB Banner" />
@@ -56,6 +56,7 @@
             v-if="index === 0"
             :href="spmbTarget()"
             class="btn-daftar"
+            @click.prevent="handleDaftarClick"
           >
             Daftar sekarang <span aria-hidden="true"></span>
           </a>
@@ -79,6 +80,7 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { useAuthSession } from "@/composable/useAuthSession";
+import { useToast } from "@/composable/useToast";
 import {
   GraduationCap,
   BriefcaseBusiness,
@@ -93,7 +95,8 @@ import {
 } from "lucide-vue-next";
 
 const router = useRouter();
-const { spmbTarget } = useAuthSession();
+const { session, loaded, spmbTarget } = useAuthSession();
+const { showToast } = useToast();
 
 function maybeNavigate(href) {
   if (window.innerWidth > 900) {
@@ -106,6 +109,34 @@ function handleLinkClick(event, href) {
     event.preventDefault();
     router.push(href);
   }
+}
+
+function handleCardClick(item) {
+  const role = session.value.role;
+
+  if (item.href === "/koperasi" || item.href === "/produk-siswa" || item.href === "/career-center") {
+    if (role !== "siswa") {
+      showToast("Khusus siswa, silakan login terlebih dahulu");
+      return;
+    }
+  }
+
+  if (!item.href) return;
+
+  if (window.innerWidth > 900) {
+    router.push(item.href);
+  } else {
+    window.location.href = item.href;
+  }
+}
+
+function handleDaftarClick() {
+  const role = session.value.role;
+  if (role === "siswa") {
+    showToast("Anda sudah terdaftar sebagai siswa");
+    return;
+  }
+  window.location.href = spmbTarget();
 }
 
 const spmbChips = [
@@ -236,8 +267,8 @@ const items = [
   margin: 16px 0 0;
   font-family: "Quicksand", sans-serif;
   font-size: clamp(30px, 4vw, 48px);
-  font-weight: 700;
-  letter-spacing: -0.05em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   line-height: 1.08;
 }
 

@@ -76,7 +76,7 @@ right:0;
 bottom:0;
 display:flex;
 flex-direction:column;
-background:#F5F7FC;
+background:#f2f4f1;
 overflow:hidden;
 }
 

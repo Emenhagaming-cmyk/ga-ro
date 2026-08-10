@@ -419,7 +419,7 @@ onMounted(() => {
   overflow-y: auto;
   background: #fff;
   border-radius: 20px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 24px 60px rgba(35, 55, 42, 0.25);
 }
 
 .modal-close {

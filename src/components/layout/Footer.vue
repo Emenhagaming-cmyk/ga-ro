@@ -202,7 +202,7 @@
   width: 44px;
   height: 44px;
   border: 1px solid #dfe4dd;
-  border-radius: 6px;
+  border-radius: 12px;
   color: #3a6450;
   font-size: 18px;
   transition: all 0.2s ease;

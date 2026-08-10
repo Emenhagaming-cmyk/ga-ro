@@ -24,6 +24,7 @@ const routes = [
   {
     path: "/career-center",
     component: CareerCenterView,
+    meta: { requiresSiswa: true }
   },
   {
     path: "/berita",
@@ -32,10 +33,12 @@ const routes = [
   {
     path: "/koperasi",
     component: KoperasiView,
+    meta: { requiresSiswa: true }
   },
   {
     path: "/produk-siswa",
     component: ProdukSiswaView,
+    meta: { requiresSiswa: true }
   },
   {
     path: "/login",
@@ -67,17 +70,26 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const { isAuthenticated, user } = useAuth();
 
-  if (to.meta.requiresAuth) {
+  if (to.meta.requiresSiswa && user.value?.role !== "siswa") {
+    next("/");
+  } else if (to.meta.requiresAuth) {
     if (!isAuthenticated.value) {
-      next('/login');
+      next("/login");
     } else if (to.meta.role && user.value?.role !== to.meta.role) {
-      next('/login');
+      next("/");
     } else {
       next();
     }
   } else if (to.meta.requiresGuest) {
     if (isAuthenticated.value) {
-      next(user.value?.role === 'admin' ? '/dashboard-admin' : '/dashboard-siswa');
+      const role = user.value?.role;
+      if (role === "admin") {
+        next("/dashboard-admin");
+      } else if (role === "siswa") {
+        next("/");
+      } else {
+        next("/login");
+      }
     } else {
       next();
     }

@@ -239,7 +239,7 @@ function goBack() {
 }
 
 .product-card {
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
   background: #fff;
   border: 1px solid rgba(58, 100, 80, 0.1);

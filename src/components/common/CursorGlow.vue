@@ -52,7 +52,7 @@ transform:translate(-50%,-50%);
 background:
 radial-gradient(
 circle,
-rgba(91,127,255,.12),
+rgba(125,184,141,.14),
 transparent 70%
 );
 

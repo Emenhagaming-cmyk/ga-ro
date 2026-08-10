@@ -7,61 +7,63 @@
         <p>Kegiatan, prestasi, dan informasi penting untuk siswa, orang tua, dan masyarakat.</p>
       </div>
 
-      <div class="category-tabs" role="tablist" aria-label="Kategori berita">
-        <button
-          v-for="cat in categories"
-          :key="cat"
-          :class="['tab', { active: activeCategory === cat }]"
-          @click="activeCategory = cat"
-          role="tab"
-          :aria-selected="activeCategory === cat"
-        >
-          {{ cat }}
-        </button>
-      </div>
+      <div class="news-layout">
+        <aside class="category-sidebar">
+          <h3 class="sidebar-title">Kategori</h3>
+          <button
+            v-for="cat in categories"
+            :key="cat"
+            :class="['sidebar-btn', { active: activeCategory === cat }]"
+            @click="activeCategory = cat"
+          >
+            {{ cat }}
+          </button>
+        </aside>
 
-      <div class="news-grid">
-        <article
-          v-for="news in filteredNews"
-          :key="news.id"
-          class="news-card"
-          @click="goToDetail(news.slug)"
-        >
-          <div class="news-image">
-            <!-- <img :src="ber.png" :alt="news.title" loading="lazy" /> -->
-            <span class="news-category" :style="{ backgroundColor: news.categoryColor }">
-              {{ news.category }}
-            </span>
-            <span v-if="news.featured" class="featured-badge">Unggulan</span>
+        <div class="news-main">
+          <div class="news-grid">
+            <article
+              v-for="news in filteredNews"
+              :key="news.id"
+              class="news-card"
+              @click="goToDetail(news.slug)"
+            >
+              <div class="news-image">
+                <span class="news-category" :style="{ backgroundColor: news.categoryColor }">
+                  {{ news.category }}
+                </span>
+                <span v-if="news.featured" class="featured-badge">Unggulan</span>
+              </div>
+              <div class="news-content">
+                <time :datetime="news.publishedAt" class="news-date">
+                  {{ formatDate(news.publishedAt) }}
+                </time>
+                <h3 class="news-title">{{ news.title }}</h3>
+                <p class="news-excerpt">{{ news.excerpt }}</p>
+                <div class="news-meta">
+                  <span class="news-author">{{ news.author }}</span>
+                  <span class="news-read-time">{{ news.readTime }}</span>
+                </div>
+              </div>
+            </article>
           </div>
-          <div class="news-content">
-            <time :datetime="news.publishedAt" class="news-date">
-              {{ formatDate(news.publishedAt) }}
-            </time>
-            <h3 class="news-title">{{ news.title }}</h3>
-            <p class="news-excerpt">{{ news.excerpt }}</p>
-            <div class="news-meta">
-              <span class="news-author">{{ news.author }}</span>
-              <span class="news-read-time">{{ news.readTime }}</span>
-            </div>
+
+          <div v-if="filteredNews.length === 0" class="empty-state">
+            <p>Tidak ada berita di kategori ini.</p>
           </div>
-        </article>
-      </div>
 
-      <div v-if="filteredNews.length === 0" class="empty-state">
-        <p>Tidak ada berita di kategori ini.</p>
-      </div>
+          <div class="load-more" v-if="hasMore">
+            <button @click="loadMore" class="btn-load-more">
+              Lihat Lebih Banyak
+            </button>
+          </div>
 
-      <div class="load-more" v-if="hasMore">
-        <button @click="loadMore" class="btn-load-more">
-          Lihat Lebih Banyak
-        </button>
-      </div>
-
-      <div class="view-all">
-        <a :href="BACKEND + '/berita'" class="btn-view-all" target="_blank" rel="noopener">
-          Lihat Semua Berita di Website Sekolah
-        </a>
+          <div class="view-all">
+            <a :href="BACKEND + '/berita'" class="btn-view-all" target="_blank" rel="noopener">
+              Lihat Semua Berita di Website Sekolah
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -170,19 +172,42 @@ onMounted(() => {
   line-height: 1.7;
 }
 
-.category-tabs {
+.news-layout {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 32px;
+  gap: 32px;
+  align-items: flex-start;
 }
 
-.tab {
-  padding: 10px 20px;
-  border: 1px solid rgba(58, 100, 80, 0.18);
-  border-radius: 999px;
+.category-sidebar {
+  position: sticky;
+  top: 100px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
   background: #fff;
+  border: 1px solid rgba(58, 100, 80, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(35, 55, 42, 0.04);
+}
+
+.sidebar-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #1a2620;
+  letter-spacing: -0.01em;
+}
+
+.sidebar-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
   color: #5d7666;
   font-size: 13px;
   font-weight: 600;
@@ -190,15 +215,19 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.tab:hover {
-  border-color: #3a6450;
+.sidebar-btn:hover {
+  background: rgba(58, 100, 80, 0.08);
   color: #3a6450;
 }
 
-.tab.active {
+.sidebar-btn.active {
   background: #3a6450;
-  border-color: #3a6450;
   color: #fff;
+}
+
+.news-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .news-grid {
@@ -326,14 +355,12 @@ onMounted(() => {
 }
 
 .empty-state {
-  grid-column: 1 / -1;
   text-align: center;
   padding: 60px 20px;
   color: #8a9a8f;
 }
 
 .load-more {
-  grid-column: 1 / -1;
   text-align: center;
   margin-top: 8px;
 }
@@ -356,7 +383,6 @@ onMounted(() => {
 }
 
 .view-all {
-  grid-column: 1 / -1;
   text-align: center;
   margin-top: 24px;
 }
@@ -390,15 +416,28 @@ onMounted(() => {
   .news-section {
     padding: 60px 5%;
   }
-  .news-grid {
-    grid-template-columns: 1fr;
+  .news-layout {
+    flex-direction: column;
   }
-  .category-tabs {
+  .category-sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: unset;
+    padding: 14px;
     gap: 6px;
   }
-  .tab {
+  .sidebar-title {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .sidebar-btn {
+    width: auto;
     padding: 8px 16px;
     font-size: 12px;
+  }
+  .news-grid {
+    grid-template-columns: 1fr;
   }
 }
 

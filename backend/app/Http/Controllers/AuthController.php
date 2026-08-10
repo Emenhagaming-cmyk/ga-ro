@@ -32,7 +32,7 @@ class AuthController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'siswa',
+            'role' => 'pendaftar',
         ]);
 
         Auth::login($user);
@@ -66,6 +66,10 @@ class AuthController extends Controller
 
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->role === 'siswa') {
+            return redirect('/');
         }
 
         return redirect()->route('pendaftaran.create');
@@ -154,6 +158,14 @@ class AuthController extends Controller
     public function showResetForm(string $token)
     {
         return view('auth.reset-password', compact('token'));
+    }
+
+    public function showProfile()
+    {
+        $user = Auth::user();
+        $pendaftaran = \App\Models\Pendaftaran::where('user_id', $user->id)->first();
+
+        return view('auth.profile', compact('user', 'pendaftaran'));
     }
 
     public function resetPassword(Request $request)

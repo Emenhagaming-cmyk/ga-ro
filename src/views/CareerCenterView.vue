@@ -297,7 +297,7 @@ const goBack = () => window.history.back();
 
 .company-card {
   padding: 24px;
-  border-radius: 24px;
+  border-radius: 20px;
   background: #ffffff;
   border: 1px solid rgba(58, 100, 80, 0.12);
   box-shadow: 0 18px 40px rgba(35, 55, 42, 0.06);
@@ -312,8 +312,36 @@ const goBack = () => window.history.back();
 }
 
 .company-card.featured {
-  border-color: rgba(58, 100, 80, 0.2);
-  background: linear-gradient(180deg, #f3fbf5 0%, #ffffff 100%);
+  border-color: #1e3a2f;
+  background: #2b4a3c;
+}
+
+.company-card.featured .company-card-top h2,
+.company-card.featured .company-details span {
+  color: #fff;
+}
+
+.company-card.featured .company-card-top p,
+.company-card.featured .company-meta span,
+.company-card.featured .company-details strong {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.company-card.featured .company-label,
+.company-card.featured .company-badge {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.company-card.featured .company-details div {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.company-card.featured .company-meta a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .company-card-top {

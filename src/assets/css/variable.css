@@ -1,31 +1,44 @@
 :root{
 
   /* Color */
-  --primary:#2E8B57;
-  --primary-light:#EAF7F0;
+  --primary:#3a6450;
+  --primary-dark:#2a5238;
+  --primary-light:#e8f0e6;
+  --accent-glow:#7db88d;
 
-  --background:#F8FAFC;
-  --surface:#FFFFFF;
+  --background:#f2f4f1;
+  --background-page:#eef4ec;
+  --surface:#ffffff;
+  --surface-soft:#fbfcfa;
 
-  --text:#111827;
-  --text-secondary:#64748B;
+  --text:#1c2a23;
+  --text-secondary:#647067;
+  --text-muted:#96a098;
 
-  --border:#E5E7EB;
+  --border:#dfe4dd;
+  --border-strong:#d4dbd8;
+
+  /* Status */
+  --status-amber:#f39c12;
+  --status-orange:#e67e22;
+  --status-danger:#dc2626;
+  --status-success:#2a5238;
 
   /* Radius */
+  --radius-sm:10px;
+  --radius:16px;
+  --radius-lg:20px;
+  --radius-xl:24px;
+  --radius-pill:999px;
 
-  --radius-sm:12px;
-  --radius:20px;
-  --radius-lg:28px;
-
-  /* Shadow */
-
-  --shadow-sm:0 4px 12px rgba(0,0,0,.05);
-  --shadow:0 10px 30px rgba(0,0,0,.08);
+  /* Shadow (green-tinted) */
+  --shadow-sm:0 4px 12px rgba(35,55,42,.05);
+  --shadow:0 12px 28px rgba(35,55,42,.07);
+  --shadow-lg:0 20px 40px rgba(35,55,42,.12);
+  --shadow-cta:0 10px 24px rgba(58,100,80,.2);
 
   /* Layout */
-
-  --container:1200px;
+  --container:1180px;
 
   --transition:.25s ease;
 

@@ -227,3 +227,55 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 ## 🔄 PROMPT PEMBUKA UNTUK SESI BERIKUTNYA
 
 > "Baca AGENTS.md lalu PROGRESS.md. Jelaskan status proyek SPMB dan apa yang harus dilanjutkan hari ini. Kalau ada, lanjutkan dari TODO yang belum selesai."
+
+---
+
+## 🎨 Sesi 2026-08-10: Redesign Audit (taste-skill redesign framework)
+
+### Latar belakang
+User minta audit + upgrade desain pakai **redesign-skill** (Leonxlnx/taste-skill, desain skill yang sama dengan design-taste-frontend yang sudah terinstall di `.agents/skills/`). Audit menemukan tema biru legacy nyempil di tema hijau, token system mati, dan banyak inkonsistensi radius/shadow.
+
+### Yang dikerjakan
+1. **Token system dibangkitkan**: `src/assets/css/variable.css` ditulis ulang ke palet hijau (`--primary:#3a6450`, radius scale sm 10/16/20/24/pill, shadow hijau-tinted, bg page/section, status amber/orange). Diimport di `main.js` sebelum style.css.
+2. **style.css dibersihkan**: buang Vite boilerplate (`color-scheme: light dark`, `#242424`, `rgba(255,255,255,.87)`) — inilah yang bikin halaman blank/dark saat error lain muncul.
+3. **Tema biru dipadamkan**: CursorGlow (`rgba(91,127,255,.12)` → `rgba(125,184,141,.14)`), BackgroundFX (`#F8FAFF`/`#5B7FFF` → `#f2f4f1`/`#7db88d`, grid green 0.035), ChatView (`#F5F7FC` → `#f2f4f1`).
+4. **LoadingScreen**: `#050505` hitam murni → dark green `#1c2a23` + radial glow hijau; hapus double Google Fonts `@import`.
+5. **Radius normalisasi**: footer social icon 6px→12px, CareerCenter card 24px→20px, Koperasi product card 18px→20px.
+6. **Modal shadow hitam → hijau-tinted**: ProdukSiswaView + NewsView (`rgba(0,0,0,.25)` → `rgba(35,55,42,.25)`).
+7. **Featured card konsisten dark** (seperti SPMB feature.vue): CareerCenter `company-card.featured` → `#2b4a3c` + semua teks/badge/details di-override putih.
+8. **Heading scale seragam**: feature.vue h2 → weight 800, `-0.03em` (sama dengan Hero/About).
+9. **Dead code dihapus**: `.warna` (#04944e) di Hero.vue, `getCsrfToken` tak terpakai di LoginView.vue.
+10. **Status warna tokenisasi**: `--status-amber:#f39c12`, `--status-orange:#e67e22` di variable.css.
+
+### Verifikasi
+- `npm run build` ✅ clean (1796 modules)
+- Semua halaman: landing, /login, /koperasi, /produk-siswa, /career-center, /berita, /chat tidak disentuh logikanya
+
+### Catatan
+- DashboardSiswa/DashboardAdmin (Vue lama) masih ungu `#667eea` — TIDAK DISENTUH (tidak dipakai, sesuai AGENTS.md).
+- RegisterView (Vue) masih ungu — belum di-redesign, dan memang tidak dipakai (register pakai backend blade).
+- Tema jadi 100% hijau untuk semua halaman aktif.
+
+## 📋 Sesi 2026-08-09: Role-Based Access (siswa vs pendaftar)
+
+### Yang dikerjakan
+1. **Migration**: `2026_08_09_094358_add_pendaftar_role_to_users_table` — enum `('admin','siswa','pendaftar')`, semua user 'siswa' lama dikonversi ke 'pendaftar'. Migrasi berjalan di local + TiDB remote.
+2. **Register**: default role `'pendaftar'` (AuthController).
+3. **Login redirect by role**: admin→dashboard admin, siswa→landing `/`, pendaftar→form pendaftaran.
+4. **updateStatus**: admin mark `diterima` → user role otomatis jadi `siswa`; `ditolak`/`baru` → tetap `pendaftar`.
+5. **Backend /profil**: route (`role:siswa` middleware), controller `showProfile`, blade view `auth/profile.blade.php`.
+6. **Frontend Toast**: composable `useToast.js` + global toast di `App.vue`.
+7. **Navbar role-based**: siswa lihat Profil + Logout, tidak lihat SPMB, lihat Koperasi+Produk; pendaftar/guest lihat SPMB, tidak lihat Koperasi+Produk.
+8. **feature.vue bento**: SPMB clickable → toast jika siswa; Koperasi/Produk/Career Center → toast "Khusus siswa" jika bukan siswa.
+9. **Router guards**: `/koperasi`, `/produk-siswa`, `/career-center` butuh role siswa; redirect ke `/` jika bukan siswa.
+10. **DatabaseSeeder**: fix UserFactory error (comment out factory call), AdminSeeder tetap jalan.
+11. **Local migration:fresh + seed berjalan sukses**, frontend `npm run build` berhasil.
+
+### Status deployment Vercel
+- **DITUNDA** — user: "nanti aja minta tolong guru"
+- `.env.deploy` sudah siap dengan TiDB credentials + SSL cert
+- TiDB migration sudah jalan (semua 12 migration + AdminSeeder)
+
+### TODO berikutnya
+- Deploy Vercel + TiDB (user minta ditunda)
+- Update `IMPLEMENTATION_SUMMARY.md` jika ada perubahan signifikan

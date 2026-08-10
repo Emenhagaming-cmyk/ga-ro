@@ -17,17 +17,17 @@
           <svg class="chevron" :class="{ open: dropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="dropdown-panel" :class="{ open: dropdownOpen }">
-          <a :href="spmbTarget()" class="dropdown-item">
+          <a v-if="!isSiswa" :href="spmbTarget()" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">SPMB Online</span>
             </span>
           </a>
-          <a href="/koperasi" class="dropdown-item">
+          <a v-if="isSiswa" href="/koperasi" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Koperasi</span>
             </span>
           </a>
-          <a href="/produk-siswa" class="dropdown-item">
+          <a v-if="isSiswa" href="/produk-siswa" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Produk Siswa</span>
             </span>
@@ -78,9 +78,13 @@
       <a href="#contact">Kontak</a>
     </nav>
 
-    <button class="ppdb" type="button" @click="goSPMB">
-      SPMB
-    </button>
+    <div class="nav-right">
+      <a v-if="isSiswa" href="/profil" class="nav-profile-link">
+        <i class="fas fa-user-circle"></i> Profil
+      </a>
+      <button v-if="isLoggedIn" type="button" class="ppdb nav-logout" @click="doLogout">Logout</button>
+      <button v-if="!isSiswa" class="ppdb" type="button" @click="goSPMB">SPMB</button>
+    </div>
 
     <button
       class="menu"
@@ -104,9 +108,9 @@
             <svg class="chevron" :class="{ open: layananOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
-            <a :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
-            <a href="/koperasi" @click="closeMenu">Koperasi</a>
-            <a href="/produk-siswa" @click="closeMenu">Produk Siswa</a>
+            <a v-if="!isSiswa" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
+            <a v-if="isSiswa" href="/koperasi" @click="closeMenu">Koperasi</a>
+            <a v-if="isSiswa" href="/produk-siswa" @click="closeMenu">Produk Siswa</a>
           </div>
         </div>
         <div class="mobile-dropdown">
@@ -131,15 +135,23 @@
           </div>
         </div>
         <a href="#contact" @click="closeMenu">Kontak</a>
-        <a :href="spmbTarget()" class="mobile-ppdb">SPMB</a>
+        <div class="mobile-bottom">
+          <a v-if="isSiswa" href="/profil" class="mobile-profile" @click="closeMenu">
+            <i class="fas fa-user-circle"></i> Profil
+          </a>
+          <button v-if="isLoggedIn" type="button" class="mobile-ppdb mobile-logout" @click="doLogout">Logout</button>
+          <a v-if="!isSiswa" :href="spmbTarget()" class="mobile-ppdb" @click="closeMenu">SPMB</a>
+        </div>
       </nav>
     </Transition>
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
+
+const { session, loaded, spmbTarget } = useAuthSession();
 
 const scrolled = ref(false);
 const menuOpen = ref(false);
@@ -152,7 +164,10 @@ const tentangOpen = ref(false);
 const dropdownRef = ref(null);
 const informasiDropdownRef = ref(null);
 const tentangDropdownRef = ref(null);
-const { spmbTarget } = useAuthSession();
+
+const isLoggedIn = computed(() => loaded.value && session.value.logged_in);
+const isSiswa = computed(() => session.value.role === "siswa");
+const isPendaftar = computed(() => session.value.role === "pendaftar");
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value;
@@ -174,7 +189,7 @@ const closeTentangDropdown = () => {
 };
 
 const goSPMB = () => {
-  window.location.href = spmbTarget();
+  window.location.href = `/login`;
   closeMenu();
 };
 
@@ -190,6 +205,22 @@ const scrollToSection = (id) => {
 
 const handleScroll = () => {
   scrolled.value = window.scrollY > 80;
+};
+
+const doLogout = () => {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "/logout";
+  const csrf = document.querySelector('meta[name="csrf-token"]');
+  if (csrf) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "_token";
+    input.value = csrf.content;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
 };
 
 onMounted(() => {
@@ -474,9 +505,83 @@ onUnmounted(() => {
   transform: translateY(-10px);
 }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-profile-link {
+  padding: 0 14px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 16px;
+  background: #f0f4ef;
+  color: #3a6450;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.nav-profile-link:hover {
+  background: #e2ebe0;
+}
+
+.nav-login {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  background: #3a6450;
+  color: #fff !important;
+}
+
+.nav-logout {
+  background: transparent;
+  border: 2px solid #3a6450;
+  color: #3a6450;
+}
+
+.nav-logout:hover {
+  background: #3a6450;
+  color: #fff;
+}
+
+.mobile-bottom {
+  display: flex;
+  gap: 8px;
+}
+
+.mobile-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  height: 44px;
+  border-radius: 14px;
+  background: #f0f4ef;
+  color: #3a6450;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.mobile-login {
+  text-decoration: none;
+}
+
+.mobile-logout {
+  background: transparent;
+  border: 2px solid #3a6450;
+  color: #3a6450;
+}
+
 @media (max-width: 900px) {
   .desktop-nav,
-  .ppdb {
+  .ppdb,
+  .nav-right {
     display: none;
   }
 
@@ -518,14 +623,30 @@ onUnmounted(() => {
   }
 
   .mobile-nav .mobile-ppdb {
-    margin-top: 4px;
+    margin-top: 0;
     background: #3a6450;
     color: #fff;
     text-align: center;
+    text-decoration: none;
   }
 
   .mobile-nav .mobile-ppdb:hover {
     background: #2a5238;
+    color: #fff;
+  }
+
+  .mobile-nav .mobile-bottom {
+    margin-top: 4px;
+  }
+
+  .mobile-nav .mobile-logout {
+    background: transparent;
+    border: 2px solid #3a6450;
+    color: #3a6450;
+  }
+
+  .mobile-nav .mobile-logout:hover {
+    background: #3a6450;
     color: #fff;
   }
 
