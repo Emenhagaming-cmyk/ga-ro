@@ -1,9 +1,13 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
-const { BACKEND } = useAuthSession();
+const { BACKEND, session, loaded } = useAuthSession();
 
 const loginExpanded = ref(false);
+
+const isLoggedIn = computed(() => loaded.value && session.value.logged_in);
+const isSiswa = computed(() => session.value.role === "siswa");
+const isPendaftar = computed(() => session.value.role === "pendaftar");
 
 const toggleLogin = () => {
   loginExpanded.value = !loginExpanded.value;
@@ -18,28 +22,46 @@ const toggleLogin = () => {
 
     <div class="container">
 
+      <span class="badge">Pendaftaran SPMB Dibuka</span>
+
       <h1>
         Belajar<br />
         Berkarya<br />
         Berprestasi
       </h1>
 
-      <div class="bg-word">SCHOOL</div>
-
       <p>
-        SMK Bahrul Ulum Surabaya adalah sekolah menengah kejuruan yang berfokus pada pengembangan keterampilan dan pengetahuan siswa dalam berbagai bidang keahlian. Dengan kurikulum yang inovatif dan fasilitas modern.
+        Sekolah menengah kejuruan unggulan yang membekali siswa dengan keterampilan nyata untuk masa depan.
       </p>
 
+      <div class="bg-word">SCHOOL</div>
+
       <div class="buttons">
-        <div class="btn-group-login">
-          <button class="primary btn-login" @click="toggleLogin">
-            Login
-          </button>
-          <div class="sub-buttons" :class="{ open: loginExpanded }">
-            <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
-            <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+        <template v-if="!isLoggedIn">
+          <div class="btn-group-login">
+            <button class="primary btn-login" @click="toggleLogin">
+              Login
+            </button>
+            <div class="sub-buttons" :class="{ open: loginExpanded }">
+              <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
+              <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+            </div>
           </div>
-        </div>
+        </template>
+        <a
+          v-else-if="isSiswa"
+          :href="`${BACKEND}/dashboard-siswa`"
+          class="primary btn-login"
+        >
+          Dashboard Siswa
+        </a>
+        <a
+          v-else-if="isPendaftar"
+          :href="`${BACKEND}/pendaftaran/create`"
+          class="primary btn-login"
+        >
+          Lanjutkan Pendaftaran
+        </a>
       </div>
     </div>
   </section>
@@ -226,9 +248,7 @@ button {
     background 0.2s ease;
 }
 
-.btn-login,
-.btn-register,
-.btn-dashboard {
+.btn-login {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -257,6 +277,11 @@ button {
   transform: translateY(-2px);
 }
 
+.primary:active,
+.sub-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
 .secondary {
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid #dfe4dd;
@@ -269,26 +294,37 @@ button {
 }
 
 
-.line {
-  margin-top: 10px;
-  width: 2px;
-  height: 50px;
-  background: #3a6450;
-  animation: scroll 1.6s ease-in-out infinite;
+.badge,
+h1,
+p,
+.buttons {
+  animation: rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-@keyframes scroll {
-  0% {
-    transform: scaleY(0);
-    transform-origin: top;
+.badge {
+  animation-delay: 0.05s;
+}
+
+h1 {
+  animation-delay: 0.15s;
+}
+
+p {
+  animation-delay: 0.3s;
+}
+
+.buttons {
+  animation-delay: 0.45s;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
   }
-  50% {
-    transform: scaleY(1);
-    transform-origin: top;
-  }
-  100% {
-    transform: scaleY(0);
-    transform-origin: bottom;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -314,8 +350,7 @@ button {
     flex-direction: column;
   }
 
-  .btn-login,
-  .btn-register {
+  .btn-login {
     width: 100%;
   }
 
@@ -335,10 +370,6 @@ button {
 
   .badge {
     font-size: 12px;
-  }
-
-  .scroll {
-    display: none;
   }
 }
 </style>

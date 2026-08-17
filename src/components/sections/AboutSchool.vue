@@ -7,7 +7,7 @@ const schoolImage = "/sklh.jpg";
   <section class="about-school" id="tentang">
     <div class="container">
       <div class="grid-layout">
-        <div class="big-card">
+        <div class="big-card" v-reveal>
           <div class="big-card-content">
             <span class="section-label">Tentang Sekolah</span>
             <h2>Sejarah & Tentang Sekolah Kami</h2>
@@ -37,7 +37,7 @@ const schoolImage = "/sklh.jpg";
           </div>
         </div>
 
-        <div class="stats-card">
+        <div class="stats-card" v-reveal="0.15">
           <div class="stats-row">
             <div class="stat-item">
               <div class="stat-value">1.280</div>
@@ -207,6 +207,7 @@ h2 {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-label {

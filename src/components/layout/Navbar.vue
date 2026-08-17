@@ -22,14 +22,19 @@
               <span class="di-title">SPMB Online</span>
             </span>
           </a>
-          <a v-if="isSiswa" href="/koperasi" class="dropdown-item">
+          <a href="/koperasi" class="dropdown-item" @click="guardSiswa">
             <span class="di-text">
               <span class="di-title">Koperasi</span>
             </span>
           </a>
-          <a v-if="isSiswa" href="/produk-siswa" class="dropdown-item">
+          <a href="/produk-siswa" class="dropdown-item" @click="guardSiswa">
             <span class="di-text">
               <span class="di-title">Produk Siswa</span>
+            </span>
+          </a>
+          <a href="/career-center" class="dropdown-item" @click="guardSiswa">
+            <span class="di-text">
+              <span class="di-title">Career Center</span>
             </span>
           </a>
         </div>
@@ -48,6 +53,16 @@
           <a href="/kelulusan" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Kelulusan</span>
+            </span>
+          </a>
+          <a href="/e-learning" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">E-Learning</span>
+            </span>
+          </a>
+          <a href="/e-tracer" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">E-Tracer Study</span>
             </span>
           </a>
         </div>
@@ -82,7 +97,6 @@
       <a v-if="isSiswa" href="/profil" class="nav-profile-link">
         <i class="fas fa-user-circle"></i> Profil
       </a>
-      <button v-if="isLoggedIn" type="button" class="ppdb nav-logout" @click="doLogout">Logout</button>
       <button v-if="!isSiswa" class="ppdb" type="button" @click="goSPMB">SPMB</button>
     </div>
 
@@ -109,8 +123,9 @@
           </button>
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
             <a v-if="!isSiswa" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
-            <a v-if="isSiswa" href="/koperasi" @click="closeMenu">Koperasi</a>
-            <a v-if="isSiswa" href="/produk-siswa" @click="closeMenu">Produk Siswa</a>
+            <a href="/koperasi" @click="guardSiswa(); closeMenu()">Koperasi</a>
+            <a href="/produk-siswa" @click="guardSiswa(); closeMenu()">Produk Siswa</a>
+            <a href="/career-center" @click="guardSiswa(); closeMenu()">Career Center</a>
           </div>
         </div>
         <div class="mobile-dropdown">
@@ -121,6 +136,8 @@
           <div class="mobile-dropdown-items" :class="{ open: informasiOpen }">
             <a href="/berita" @click="closeMenu">Berita</a>
             <a href="/kelulusan" @click="closeMenu">Kelulusan</a>
+            <a href="/e-learning" @click="closeMenu">E-Learning</a>
+            <a href="/e-tracer" @click="closeMenu">E-Tracer Study</a>
           </div>
         </div>
         <div class="mobile-dropdown">
@@ -139,7 +156,6 @@
           <a v-if="isSiswa" href="/profil" class="mobile-profile" @click="closeMenu">
             <i class="fas fa-user-circle"></i> Profil
           </a>
-          <button v-if="isLoggedIn" type="button" class="mobile-ppdb mobile-logout" @click="doLogout">Logout</button>
           <a v-if="!isSiswa" :href="spmbTarget()" class="mobile-ppdb" @click="closeMenu">SPMB</a>
         </div>
       </nav>
@@ -150,10 +166,14 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
+import { useToast } from "@/composable/useToast";
 
-const { session, loaded, spmbTarget } = useAuthSession();
+const { session, loaded, spmbTarget, BACKEND } = useAuthSession();
+const { showToast } = useToast();
 
 const scrolled = ref(false);
+let scrollSentinel = null;
+let scrollObserver = null;
 const menuOpen = ref(false);
 const dropdownOpen = ref(false);
 const informasiDropdownOpen = ref(false);
@@ -193,6 +213,13 @@ const goSPMB = () => {
   closeMenu();
 };
 
+const guardSiswa = (event) => {
+  if (session.value.role !== "siswa") {
+    event.preventDefault();
+    showToast("Khusus siswa, silakan login terlebih dahulu");
+  }
+};
+
 const scrollToSection = (id) => {
   const target = document.getElementById(id);
 
@@ -203,33 +230,25 @@ const scrollToSection = (id) => {
   closeMenu();
 };
 
-const handleScroll = () => {
-  scrolled.value = window.scrollY > 80;
-};
-
-const doLogout = () => {
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "/logout";
-  const csrf = document.querySelector('meta[name="csrf-token"]');
-  if (csrf) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = "_token";
-    input.value = csrf.content;
-    form.appendChild(input);
-  }
-  document.body.appendChild(form);
-  form.submit();
-};
-
 onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
+  scrollSentinel = document.createElement("div");
+  scrollSentinel.style.cssText = "position:absolute;top:81px;left:0;width:1px;height:1px;pointer-events:none;";
+  document.body.appendChild(scrollSentinel);
+  scrollObserver = new IntersectionObserver(
+    ([entry]) => {
+      scrolled.value = !entry.isIntersecting;
+    },
+    { threshold: 0 }
+  );
+  scrollObserver.observe(scrollSentinel);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
+  scrollObserver?.disconnect();
+  scrollSentinel?.remove();
 });
+
+
 </script>
 
 <style scoped>
@@ -425,12 +444,14 @@ onUnmounted(() => {
   font-weight: 700;
   font-style: normal;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .di-desc {
   font-size: 12px;
   color: #6c7a6e;
   line-height: 1.3;
+  white-space: nowrap;
 }
 
 .ppdb {
@@ -530,14 +551,6 @@ onUnmounted(() => {
   background: #e2ebe0;
 }
 
-.nav-login {
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  background: #3a6450;
-  color: #fff !important;
-}
-
 .nav-logout {
   background: transparent;
   border: 2px solid #3a6450;
@@ -565,10 +578,6 @@ onUnmounted(() => {
   color: #3a6450;
   font-weight: 700;
   font-size: 14px;
-  text-decoration: none;
-}
-
-.mobile-login {
   text-decoration: none;
 }
 

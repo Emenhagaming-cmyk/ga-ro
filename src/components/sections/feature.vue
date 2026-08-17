@@ -1,8 +1,7 @@
 <template>
   <section id="layanan" class="feature">
     <div class="feature-shell">
-      <div class="heading">
-        <div class="eyebrow"><span>01</span><span>Layanan Digital</span></div>
+      <div class="heading" v-reveal>
         <h2>Satu Kotak<br /><em>Beragam Layanan</em></h2>
         <p>
           Satu ruang untuk menemukan informasi, layanan, dan peluang yang ada di
@@ -13,6 +12,7 @@
       <div class="bento">
         <div
           v-for="(item, index) in items"
+          v-reveal="0.06 * index"
           :key="item.title"
           :class="[
             'card',
@@ -245,26 +245,8 @@ const items = [
   text-align: center;
 }
 
-.eyebrow {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: center;
-  color: #3a6450;
-  font-family: "Quicksand", sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.eyebrow span:first-child {
-  color: #96a098;
-  font-variant-numeric: tabular-nums;
-}
-
 .heading h2 {
-  margin: 16px 0 0;
+  margin: 0;
   font-family: "Quicksand", sans-serif;
   font-size: clamp(30px, 4vw, 48px);
   font-weight: 800;
@@ -510,6 +492,7 @@ const items = [
   font-size: 13px;
   font-weight: 600;
   color: #fff;
+  font-variant-numeric: tabular-nums;
 }
 
 .counter-deadline {
@@ -573,6 +556,19 @@ const items = [
 
 .featured .btn-daftar:hover {
   transform: translateX(4px);
+}
+
+.featured .btn-daftar:active {
+  transform: translateX(4px) scale(0.97);
+}
+
+.featured .card-link:hover span {
+  transform: translate(2px, -2px);
+}
+
+.featured .card-link:active,
+.featured .card button:active {
+  transform: scale(0.97);
 }
 
 .featured::after {

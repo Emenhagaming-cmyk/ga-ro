@@ -50,6 +50,12 @@ class HandleTokenMismatch
             return redirect()->route('pendaftaran.create');
         }
 
+        if ($request->is('logout')) {
+            $session->save();
+            $frontend = env('FRONTEND_URL') ?: 'http://localhost:5174';
+            return redirect($frontend . '/?no-intro=1');
+        }
+
         $session->flash('error', 'Session berakhir. Silakan coba lagi.');
         $session->save();
 

@@ -81,7 +81,8 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        $frontend = env('FRONTEND_URL') ?: '/';
+        return redirect($frontend . '/?no-intro=1');
     }
 
     public function authStatus(Request $request)

@@ -1,7 +1,7 @@
 <template>
   <section class="news-section" id="berita">
     <div class="container">
-      <div class="section-header">
+      <div class="section-header" v-reveal>
         <span class="section-label">Berita & Pengumuman</span>
         <h2>Terbaru dari SMK Bahrul Ulum</h2>
         <p>Kegiatan, prestasi, dan informasi penting untuk siswa, orang tua, dan masyarakat.</p>
@@ -23,7 +23,8 @@
         <div class="news-main">
           <div class="news-grid">
             <article
-              v-for="news in filteredNews"
+              v-for="(news, index) in filteredNews"
+              v-reveal="0.05 * index"
               :key="news.id"
               class="news-card"
               @click="goToDetail(news.slug)"

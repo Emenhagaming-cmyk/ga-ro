@@ -4,18 +4,24 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
-## 📌 STATUS TERAKHIR (sesi 2026-08-04)
+## 📌 STATUS TERAKHIR (sesi 2026-08-17)
 
-**Sistem SPMB lengkap & berjalan end-to-end: register → form (multi-step) → dashboard siswa → dashboard admin (via URL `/admin`).**
+**Sistem SPMB lengkap + E-Learning + E-Tracer. Frontend Vue 3 punya 12 halaman, backend Laravel punya 19 routes.**
 
-- **419/CSRF diperbaiki tuntas** — token kadaluarsa pada submit form tidak lagi muncul halaman 419; data student disimpan draft otomatis ke session, redirect ke form, terisi ulang (teruji HTTP).
-- **Fitur admin rampung: F-A anti-duplikasi, F-B halaman detail, F-C export CSV, F-D quick-status** (semua teruji 200).
-- **Chatbot BISA AKTIF** dengan `GROQ_API_KEY` user — menjawab berbasis data knowledge `api/knowledge/**`, berjalan via vite middleware `/api/chat` (reuse `api/chat.js`). `src/server/` diarsipkan (tidak dijalankan).
-- **Frontend landing** dibenahi: logo, anchor, tombol Login/Daftar/SPMB → backend `localhost:8000`, build OK.
+- **12 halaman Vue**: Homepage, Berita, E-Learning (baru), E-Tracer Study (baru), Career Center, Koperasi, Produk Siswa, Chat, Login, Register, Dashboard Siswa, Dashboard Admin
+- **Navbar 3 dropdown**: Layanan (SPMB, Koperasi, Produk, Career), Informasi (Berita, Kelulusan, E-Learning, E-Tracer), Tentang (Profil, Visi Misi, Sejarah)
+- **Backend**: Multi-step form, admin dashboard (live polling + AI insight + CSV export), auth + reset password, draft persistence
+- **Build**: `npx vite build` ✅ sukses
 
-**Sisa pekerjaan / prioritas lanjutan (belum dikerjakan):**
-- [ ] Deployment (jika dibutuhkan): key `GROQ_API_KEY` harus diset di env produksi + pastikan `src/server/.env` TIDAK ikut ter-commit (menunggu izin user — user melarang sentuh `.env`)
-- [ ] Fine-tune UI form pendaftaran `create.blade.php` (cocokkan lebih dekat ke referensi desain jika diminta)
+**Sisa pekerjaan / prioritas lanjutan:**
+- [ ] Dynamic School Statistics (admin-managed) — disetujui user
+- [ ] Universal Search — disetujui user
+- [ ] Info SPMB Center (syarat/biaya/beasiswa/timeline)
+- [ ] Profil Sekolah (Visi Misi)
+- [ ] Fasilitas Sekolah
+- [ ] Hubungi Kami
+- [ ] Galeri Kegiatan
+- [ ] Deployment (Vercel + TiDB)
 
 ---
 
@@ -230,6 +236,119 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 🔒 Sesi 2026-08-11 (lanjutan 4): Fix logout 404
+
+### Yang dikerjakan
+- **Bug 1**: `doLogout` di Navbar.vue submit POST ke `/logout` relatif (localhost:5174 — vite) padahal route logout ada di backend (localhost:8000) → 404.
+- **Bug 2 (setelah fix 1)**: logout tidak jalan — landing page Vue tidak punya `<meta name="csrf-token">`, form POST tanpa `_token` → Laravel 419 (diredirect balik HandleTokenMismatch) → session tidak logout, button tetap ada.
+- **Fix final**: `doLogout` ditulis ulang mengikuti pola LoginView — fetch HTML `${BACKEND}/login` (credentials include), ambil `_token` via regex, lalu POST fetch `${BACKEND}/logout` dengan `X-Requested-With: XMLHttpRequest` + `_token`, redirect ke `res.url` (backend `/`). `sessionStorage spmb_session_status` dibersihkan sebelum redirect.
+- **Perbaikan lanjutan (request user)**: redirect logout DIUBAH — tidak lagi ke backend `/` (halaman formulir), tapi balik ke **landing page** (`/?no-intro=1` di origin frontend 5174) supaya button Login di hero muncul lagi & button Logout hilang. Jika `res.ok` false → fallback ke `${BACKEND}/login`.
+- **Akar masalah terakhir**: tombol logout di **form page blade** (`create.blade.php`) POST `route('logout')` → `AuthController::logout` masih `redirect('/')` (backend 8000). Fix: `return redirect(env('FRONTEND_URL', 'http://localhost:5174') . '/?no-intro=1')` — menyelesaikan SEMUA jalur logout (blade + Vue). ⚠️ Catatan: edit pertama sempat salah sasaran (mengubah redirect login siswa), sudah dikoreksi — login siswa tetap `redirect('/')`.
+- Build ✅ clean
+
+## 🧭 Sesi 2026-08-11 (lanjutan 3): Fix navbar halaman form (create.blade.php)
+
+### Yang dikerjakan
+- **Masalah**: navbar form page pakai link `/`, `#layanan`, `#about`, `#contact` — di-serve dari `localhost:8000` (Laravel), bukan frontend Vue → klik tidak redirect apa-apa.
+- **Fix**: 4 link desktop-nav diarahkan ke frontend landing `http://localhost:5174/?no-intro=1` (+ `#layanan`, `#tentang`, `#contact` — id section sesuai Vue, `#about` tidak ada di Vue jadi diganti `#tentang`). Konsisten dengan logo & tombol back yang sudah hardcode ke 5174.
+- Verifikasi: `php -l` OK
+
+## 🧭 Sesi 2026-08-11 (lanjutan): Smooth scroll navbar + restore dropdown Layanan
+
+### Yang dikerjakan
+1. **Smooth scroll** (style.css): `html { scroll-behavior: smooth }` + `scroll-margin-top: 96px` untuk `#layanan, #tentang, #berita, #contact` — klik Beranda/Layanan/Tentang/Kontak di navbar tidak lagi loncat kaku; section berhenti pas di bawah navbar fixed (74px + margin). Reduced-motion tetap auto (guard lama).
+2. **Dropdown Layanan di-restore "kayak semula"**: SPMB Online + Berita + Koperasi + Produk Siswa dengan `di-desc` (histori commit 7ae4f1a), lalu atas request user Berita diganti **Career Center** (Berita tetap di dropdown Informasi): SPMB Online (guest) · Koperasi · Produk Siswa · Career Center.
+
+## 🔑 Sesi 2026-08-11 (lanjutan 2): Hero login dinamis + dropdown Layanan untuk semua role
+
+### Yang dikerjakan
+1. **Hero button login hilang setelah login** (request user, screenshot tidak bisa dibaca model → dikonfirmasi lewat teks):
+   - Guest: toggle "Login" (+ sub-buttons Login Siswa/Pendaftar) — tetap
+   - Siswa: tombol "Dashboard Siswa" → `${BACKEND}/dashboard-siswa`
+   - Pendaftar: tombol "Lanjutkan Pendaftaran" → `${BACKEND}/pendaftaran/create`
+   - Admin: TIDAK ada tombol (aturan AGENTS.md: tidak boleh ada akses admin di navbar/halaman manapun)
+2. **Dropdown Layanan sekarang tampil untuk SEMUA role** (request user): Koperasi, Produk Siswa, Career Center tanpa `v-if="isSiswa"`. Klik oleh non-siswa → toast "Khusus siswa, silakan login terlebih dahulu" (pola sama dengan feature.vue bento) via `guardSiswa` + `useToast`. Mobile & desktop sinkron. Router guard `requiresSiswa` tetap sebagai safety net.
+
+### Fix dropdown render (lanjutan, request user)
+- `.di-title` & `.di-desc` diberi `white-space: nowrap` — panel (`width: max-content`) sekarang pasti selebar isinya, teks tidak pernah wrap 2 baris.
+
+### Verifikasi
+- `npm run build` ✅ clean
+
+## 🎬 Sesi 2026-08-11: Scroll Reveal Animation (taste-skill §5.C)
+
+### Yang dikerjakan
+1. **Directive global `v-reveal`** di `main.js` (IntersectionObserver, threshold 0.15, sekali jalan + disconnect):
+   - `v-reveal` → fade-up 24px, `v-reveal="0.06"` → stagger delay (detik)
+   - Auto-respect `prefers-reduced-motion` (skip observer, konten langsung terlihat)
+   - `transitionend` sekali → `transitionDelay` dibersihkan supaya hover transform card tetap responsif
+2. **CSS reveal** di `style.css` (satu-satunya stylesheet terimpor, selain variable.css):
+   - `.reveal`/`.revealed` pakai `cubic-bezier(0.16,1,0.3,1)` 0.7s, gated `@media (prefers-reduced-motion: no-preference)` + global reduce guard
+3. **Diterapkan di 3 section landing**:
+   - AboutSchool: big-card (0s) + stats-card (0.15s)
+   - feature.vue: heading (0s) + semua bento card (0.06 × index)
+   - News.vue: section-header (0s) + news-card (0.05 × index)
+4. **Koreksi penting**: `global.css`, `layout.css`, `components.css`, `animations.css` ternyata TIDAK PERNAH diimpor (dead files) — `text-wrap: balance` & reduced-motion guard yang kemarin ditaruh di `global.css` tidak berefek. Keduanya dipindah ke `style.css` (terimpor). File dead tidak dihapus (menunggu izin user).
+
+### Verifikasi
+- `npm run build` ✅ clean
+
+### Catatan
+- Mau effect lebih dramatis (parallax, GSAP pin, marquee) → bilang saja, tapi skill §5 bilang "motion must be motivated" — reveal ini cukup untuk MOTION dial 5
+
+## ⚡ Sesi 2026-08-10 (finish): Penerapan taste-skill audit-first — pass seluruh halaman
+
+### Yang dikerjakan (mekanik per skill §4-6)
+1. **`prefers-reduced-motion` guard** (mandatory §6.B — sebelumnya 0 ada): ditambahkan di `global.css` — matikan semua animasi/transition saat user set reduce motion.
+2. **`100vh` → `100dvh`** (§3.E viewport stability): 6 view aktif (HomeView, LoginView, ProdukSiswaView, NewsView, CareerCenterView, KoperasiView) — pakai fallback 2 baris (`100vh; 100dvh;`). Legacy DashboardSiswa/Admin/RegisterView TIDAK disentuh (AGENTS.md).
+3. **Scroll listener navbar → IntersectionObserver** (§5.D banned `window.addEventListener("scroll")`): sentinel 1px `position:absolute; top:81px` di body, observe threshold 0 → `scrolled` toggle. Cleanup di onUnmounted.
+4. **Dead CSS dihapus** (Navbar): `.nav-login`, `.mobile-login` (tombol login lama sudah tidak ada).
+
+### Audit lanjutan — lulus
+- Navbar height 74px (cap 80px ✓), glass fallback solid `rgba(255,255,255,.82)` ada
+- Eyebrow/section-label: tentang + berita = 2 (max 2 untuk 4 sections ✓)
+- Layout families: hero-centerd / split-card / bento / sidebar+grid = 4 berbeda ✓
+- Shadow tinted hijau konsisten, tidak ada pure black di komponen aktif
+- Footer cadence OK
+
+### Skipped (dokumentasi)
+- Dark mode (§6.C) TIDAK diterapkan — sekolah trust-first light-only; brand palet hijau muda; doting dark butuh overhaul besar & berisiko (bukan permintaan user)
+- Ikon campuran FA + lucide sudah jadi konvensi proyek — tidak dirapikan (scope besar, bukan permintaan user)
+
+### Verifikasi
+- `npm run build` ✅ clean
+- Perilaku navbar shrink tetap sama (threshold 81px ↔ sebelumnya 80px, setara)
+
+## 🎨 Sesi 2026-08-10 (lanjutan): Perbaikan v2 taste-skill (audit-first)
+
+### Yang dikerjakan
+1. **Hero.vue** (anti-center bias / hero stack discipline):
+   - Badge eyebrow dirender (`Pendaftaran SPMB Dibuka`) — CSS sudah ada tapi tidak dipakai
+   - Paragraf dipotong 31+ kata → 13 kata (rule v2: ≤20 kata)
+   - Secondary CTA **Info SPMB** ditambah (`spmbTarget()`, reuse composable) — 1 primary + 1 secondary
+   - Scroll indicator `.line` dirender (sebelumnya dead)
+   - Entry animation fade-up stagger (badge→h1→p→buttons→line, `@keyframes rise`); `.line` pakai comma-animations (rise + scroll) biar tidak saling override
+   - `:active` feedback (scale 0.98) pada primary/secondary/sub-btn
+   - Dead CSS dibuang: `.btn-register`, `.btn-dashboard`, selector `.scroll` (→ `.line`)
+2. **feature.vue**:
+   - Eyebrow "01 Layanan Digital" DIHAPUS (restraint §4.2 — hero badge + about + news sudah punya label; max 1 per 3 sections)
+   - `counter-main` → `font-variant-numeric: tabular-nums` (angka statistik)
+   - `:active` feedback di btn-daftar, card-link, card button (featured)
+3. **AboutSchool.vue**: `.stat-value` → tabular-nums
+4. **global.css**: `h1, h2, h3 { text-wrap: balance; }` (anti orphan/rag)
+
+### Verifikasi
+- `npm run build` ✅ clean (1796 modules, 31.29s)
+- Logika navigasi tidak berubah (`spmbTarget` reuse), role-gating tetap
+
+### Revisi user (minta revert sebagian)
+- Scroll indicator `.line` DIHAPUS + Secondary CTA "Info SPMB" DIHAPUS — posisi button login kembali seperti semula (hanya `.btn-group-login`). CSS-nya juga dibersihkan (`.line`, `@keyframes scroll`, `.btn-secondary`, media query terkait)
+- Badge eyebrow + entry fade-up + `:active` feedback tetap dipertahankan
+
+### Catatan
+- Centered hero dipertahankan — diperbolehkan skill v2 untuk brief manifesto/announcement
+- Eyebrow tersisa: AboutSchool (`Tentang Kami`?) + News (`Berita & Pengumuman`) — 2 label untuk 4 sections, masih dalam batas
+
 ## 🎨 Sesi 2026-08-10: Redesign Audit (taste-skill redesign framework)
 
 ### Latar belakang
@@ -279,3 +398,91 @@ User minta audit + upgrade desain pakai **redesign-skill** (Leonxlnx/taste-skill
 ### TODO berikutnya
 - Deploy Vercel + TiDB (user minta ditunda)
 - Update `IMPLEMENTATION_SUMMARY.md` jika ada perubahan signifikan
+## ?? Sesi 2026-08-13: Playwright e2e + FIX Bug Logout Navbar (CORS)
+
+### Yang dikerjakan
+1. **Playwright terpasang**: @playwright/test + Chromium (chrome + headless shell + ffmpeg + winldd) di root. playwright.config.js (ESM, webServer array: backend 8000 + frontend 5174, reuseExistingServer) + e2e/logout.spec.js (2 test logout).
+2. **Hambatan jaringan test**: fonts.google/gstatic + Google Maps iframe menggantung dari mesin ini ? load event tidak pernah fire ? timeout navigasi. Solusi test-side: page.route abort host Google (bukan ubah app).
+3. **BUG ASLI KETEMU (logout dari navbar Vue)**: doLogout ambil _token dari GET /login � tapi user sudah login ? redirect 302 ? / (form page) ? regex token gagal ? fallback ke /login tanpa logout (session tetap hidup). PLUS route / dan /logout TIDAK punya middleware CORS ? fetch cross-origin 5174 gagal ("Failed to fetch").
+4. **FIX**:
+   - Navbar.vue doLogout: sumber token GET /login ? GET / (form page selalu render _token).
+   - outes/web.php: route / ditambah Cors middleware; route /logout jadi middleware([Cors, 'auth']) (agar preflight OPTIONS + response headers CORS jalan).
+5. **Verifikasi e2e**: 2/2 lulus � blade logout & navbar logout; response POST /logout = 302 ? http://localhost:5174/?no-intro=1; bukti session mati: GET /dashboard-siswa ? redirect /login; hero landing kembali tampil tombol Login.
+6. .gitignore: tambah 	est-results + playwright-report.
+
+### Cara jalankan test
+```powershell
+cd C:\Users\LENOVO\lomba\ga-ro
+npx playwright test
+```
+(wajib: backend + MySQL jalan; akun siswa demo siswa/siswa123; network Google diblokir otomatis di test)
+
+---
+
+## 🧭 Sesi 2026-08-17: Analisis Web + Tambah E-Learning & E-Tracer
+
+### Yang dikerjakan
+
+1. **Analisis web sekolah lama** (`smkbahrululumsurabaya.sch.id`):
+   - Fetch semua halaman: Homepage, Berita, SPMB Info, Tracer Study, Kalender Akademik, Visi Misi, Fasilitas/Galeri, Hubungi Kami, e-Learning
+   - Hasil: 10 fitur web lama belum ada di web baru
+
+2. **Analisis web deployed** (`bhapppp.vercel.app`):
+   - Fetch HTML shell + `news.json` (6 artikel lengkap dengan konten)
+   - Konfirmasi: SPA Vue 3, subpages return 404 saat di-fetch langsung (client-side routing)
+
+3. **Perbandingan lengkap web lama vs web baru**:
+   - Web lama lebih baik di: Info SPMB, Tracer Study, Profil Sekolah, Fasilitas, Kontak, e-Learning, Galeri
+   - Web baru lebih baik di: Multi-step form, Dashboard admin, AI chatbot, Student Showcase, Career Center, Koperasi
+
+4. **Tambah E-Learning** (`/e-learning`):
+   - `src/views/ELearningView.vue` — 6 materi pembelajaran (HTML, MySQL, JavaScript, Jaringan, PHP, Relasi Tabel) dengan video + PDF download
+   - 3 kuis interaktif (Google Forms)
+   - Kategori: Pemrograman, Jaringan, Basis Data, Multimedia
+   - Fitur: search, filter kategori, responsive
+
+5. **Tambah E-Tracer Study** (`/e-tracer`):
+   - `src/views/ETracerView.vue` — form tracer study alumni lengkap
+   - Data diri: nama (dropdown 48 alumni), email, NIK, jenis kelamin, tempat/tanggal lahir, tahun lulus, no HP, pendidikan terakhir
+   - Status: Bekerja/Kuliah/PKL/Magang/Wirausaha/Mencari Kerja
+   - Data kuliah: nama universitas, tahun masuk
+   - Data bekerja: nama perusahaan, bidang, jabatan, alamat
+   - Data kependudukan: kecamatan, kelurahan, RT/RW, alamat domisili
+   - Statistik alumni: 42% bekerja, 38% kuliah, 5% PKL, 3% wirausaha
+   - Success banner + info banner
+
+6. **Update Router** (`src/router/index.js`):
+   - Import `ELearningView` dan `ETracerView`
+   - Tambah route `/e-learning` (public) dan `/e-tracer` (public)
+
+7. **Update Navbar** (`src/components/layout/Navbar.vue`):
+   - Dropdown "Informasi" desktop: Berita, Kelulusan, **E-Learning** (baru), **E-Tracer Study** (baru)
+   - Dropdown "Informasi" mobile: Berita, Kelulusan, **E-Learning** (baru), **E-Tracer Study** (baru)
+
+### Verifikasi
+- `npx vite build` ✅ sukses (1800 modules, 25.39s)
+- Semua halaman baru bisa diakses: `/e-learning`, `/e-tracer`
+
+### Fitur yang BELUM ada di web baru (dibanding web lama)
+| Fitur | Prioritas |
+|-------|-----------|
+| Info SPMB Center (syarat/biaya/beasiswa/timeline) | S |
+| Profil Sekolah (Visi Misi) | S |
+| Fasilitas Sekolah | A |
+| Hubungi Kami | A |
+| Galeri Kegiatan | B |
+| Brosur SPMB (PDF download) | B |
+
+### Fitur inovatif yang disetujui user
+| Fitur | Status |
+|-------|--------|
+| Dynamic School Statistics (admin-managed) | Disetujui, belum dikerjakan |
+| Universal Search | Disetujui, belum dikerjakan |
+
+### Navbar Dropdown "Informasi" (final)
+```
+Berita
+Kelulusan
+E-Learning
+E-Tracer Study
+```

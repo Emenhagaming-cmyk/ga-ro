@@ -115,6 +115,7 @@ body,
 .page-wrapper {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(
       circle at top left,

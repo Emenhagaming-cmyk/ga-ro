@@ -793,21 +793,19 @@
         </div>
 
         <nav class="desktop-nav">
-            <a href="/">Beranda</a>
-            <a href="#layanan">Layanan</a>
-            <a href="#about">Tentang</a>
-            <a href="#contact">Kontak</a>
+            <a href="http://localhost:5174/?no-intro=1">Beranda</a>
+            <a href="http://localhost:5174/?no-intro=1#layanan">Layanan</a>
+            <a href="http://localhost:5174/?no-intro=1#tentang">Tentang</a>
+            <a href="http://localhost:5174/?no-intro=1#contact">Kontak</a>
         </nav>
 
         @auth
-        @if (Auth::user()->role === 'siswa')
         <div class="nav-auth">
             <form action="{{ route('logout') }}" method="POST" style="margin:0;">
                 @csrf
                 <button type="submit" class="btn-logout">Logout</button>
             </form>
         </div>
-        @endif
         @endauth
     </header>
 

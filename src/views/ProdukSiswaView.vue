@@ -130,6 +130,7 @@ function goBack() {
 .produk-page {
   padding: 80px 7%;
   min-height: 100vh;
+  min-height: 100dvh;
   background: #eef4ec;
   color: #1c2a23;
 }

@@ -7,6 +7,8 @@ import CareerCenterView from "../views/CareerCenterView.vue";
 import NewsView from "../views/NewsView.vue";
 import KoperasiView from "../views/KoperasiView.vue";
 import ProdukSiswaView from "../views/ProdukSiswaView.vue";
+import ELearningView from "../views/ELearningView.vue";
+import ETracerView from "../views/ETracerView.vue";
 import LoginView from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
 import DashboardSiswa from "../views/DashboardSiswa.vue";
@@ -39,6 +41,14 @@ const routes = [
     path: "/produk-siswa",
     component: ProdukSiswaView,
     meta: { requiresSiswa: true }
+  },
+  {
+    path: "/e-learning",
+    component: ELearningView,
+  },
+  {
+    path: "/e-tracer",
+    component: ETracerView,
   },
   {
     path: "/login",
