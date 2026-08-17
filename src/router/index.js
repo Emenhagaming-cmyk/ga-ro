@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuth } from "../composable/useAuth";
+import { useAuthSession } from "../composable/useAuthSession";
 
 import HomeView from "../views/HomeView.vue";
 import ChatView from "../views/ChatView.vue";
@@ -9,15 +9,16 @@ import KoperasiView from "../views/KoperasiView.vue";
 import ProdukSiswaView from "../views/ProdukSiswaView.vue";
 import ELearningView from "../views/ELearningView.vue";
 import ETracerView from "../views/ETracerView.vue";
-import LoginView from "../views/LoginView.vue";
-import RegisterView from "../views/RegisterView.vue";
-import DashboardSiswa from "../views/DashboardSiswa.vue";
-import DashboardAdmin from "../views/DashboardAdmin.vue";
+import SpmbInfoView from "../views/SpmbInfoView.vue";
 
 const routes = [
   {
     path: "/",
     component: HomeView,
+  },
+  {
+    path: "/spmb-info",
+    component: SpmbInfoView,
   },
   {
     path: "/chat",
@@ -50,26 +51,6 @@ const routes = [
     path: "/e-tracer",
     component: ETracerView,
   },
-  {
-    path: "/login",
-    component: LoginView,
-    meta: { requiresGuest: true }
-  },
-  {
-    path: "/register",
-    component: RegisterView,
-    meta: { requiresGuest: true }
-  },
-  {
-    path: "/dashboard-siswa",
-    component: DashboardSiswa,
-    meta: { requiresAuth: true, role: 'siswa' }
-  },
-  {
-    path: "/dashboard-admin",
-    component: DashboardAdmin,
-    meta: { requiresAuth: true, role: 'admin' }
-  }
 ];
 
 const router = createRouter({
@@ -77,35 +58,17 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-  const { isAuthenticated, user } = useAuth();
+router.beforeEach(async (to) => {
+  const { session, fetchStatus } = useAuthSession();
 
-  if (to.meta.requiresSiswa && user.value?.role !== "siswa") {
-    next("/");
-  } else if (to.meta.requiresAuth) {
-    if (!isAuthenticated.value) {
-      next("/login");
-    } else if (to.meta.role && user.value?.role !== to.meta.role) {
-      next("/");
-    } else {
-      next();
+  if (to.meta.requiresSiswa) {
+    await fetchStatus();
+    if (session.value.role !== "siswa") {
+      return "/";
     }
-  } else if (to.meta.requiresGuest) {
-    if (isAuthenticated.value) {
-      const role = user.value?.role;
-      if (role === "admin") {
-        next("/dashboard-admin");
-      } else if (role === "siswa") {
-        next("/");
-      } else {
-        next("/login");
-      }
-    } else {
-      next();
-    }
-  } else {
-    next();
   }
+
+  return true;
 });
 
 export default router;

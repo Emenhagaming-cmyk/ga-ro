@@ -45,6 +45,11 @@
           <svg class="chevron" :class="{ open: informasiDropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="dropdown-panel" :class="{ open: informasiDropdownOpen }">
+          <a href="/spmb-info" class="dropdown-item">
+            <span class="di-text">
+              <span class="di-title">Informasi Biaya</span>
+            </span>
+          </a>
           <a href="/berita" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Berita</span>
@@ -94,8 +99,12 @@
     </nav>
 
     <div class="nav-right">
-      <a v-if="isSiswa" href="/profil" class="nav-profile-link">
-        <i class="fas fa-user-circle"></i> Profil
+      <a v-if="isSiswa" :href="BACKEND + '/profil'" class="nav-profile-link" :title="'Profil ' + session.name">
+        <span class="nav-avatar">{{ initial }}</span>
+        <span class="nav-profile-text">
+          <span class="nav-profile-name">{{ session.name }}</span>
+          <span class="nav-profile-role">Siswa</span>
+        </span>
       </a>
       <button v-if="!isSiswa" class="ppdb" type="button" @click="goSPMB">SPMB</button>
     </div>
@@ -153,8 +162,12 @@
         </div>
         <a href="#contact" @click="closeMenu">Kontak</a>
         <div class="mobile-bottom">
-          <a v-if="isSiswa" href="/profil" class="mobile-profile" @click="closeMenu">
-            <i class="fas fa-user-circle"></i> Profil
+          <a v-if="isSiswa" :href="BACKEND + '/profil'" class="mobile-profile" @click="closeMenu">
+            <span class="mobile-avatar">{{ initial }}</span>
+            <span class="mobile-profile-text">
+              <span class="mobile-profile-name">{{ session.name }}</span>
+              <span class="mobile-profile-role">Siswa</span>
+            </span>
           </a>
           <a v-if="!isSiswa" :href="spmbTarget()" class="mobile-ppdb" @click="closeMenu">SPMB</a>
         </div>
@@ -168,7 +181,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 import { useToast } from "@/composable/useToast";
 
-const { session, loaded, spmbTarget, BACKEND } = useAuthSession();
+const { session, spmbTarget, fetchStatus, BACKEND } = useAuthSession();
 const { showToast } = useToast();
 
 const scrolled = ref(false);
@@ -185,9 +198,8 @@ const dropdownRef = ref(null);
 const informasiDropdownRef = ref(null);
 const tentangDropdownRef = ref(null);
 
-const isLoggedIn = computed(() => loaded.value && session.value.logged_in);
 const isSiswa = computed(() => session.value.role === "siswa");
-const isPendaftar = computed(() => session.value.role === "pendaftar");
+const initial = computed(() => (session.value.name || "?").trim().charAt(0).toUpperCase());
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value;
@@ -213,10 +225,13 @@ const goSPMB = () => {
   closeMenu();
 };
 
-const guardSiswa = (event) => {
+const guardSiswa = async (event) => {
   if (session.value.role !== "siswa") {
-    event.preventDefault();
-    showToast("Khusus siswa, silakan login terlebih dahulu");
+    await fetchStatus();
+    if (session.value.role !== "siswa") {
+      event.preventDefault();
+      showToast("Khusus siswa, silakan login terlebih dahulu");
+    }
   }
 };
 
@@ -533,33 +548,62 @@ onUnmounted(() => {
 }
 
 .nav-profile-link {
-  padding: 0 14px;
-  height: 48px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  border-radius: 16px;
+  gap: 10px;
+  padding: 5px 16px 5px 6px;
+  height: 52px;
+  border-radius: 999px;
   background: #f0f4ef;
-  color: #3a6450;
-  font-weight: 700;
-  font-size: 14px;
   text-decoration: none;
-  transition: background 0.2s ease;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .nav-profile-link:hover {
   background: #e2ebe0;
+  box-shadow: 0 8px 18px rgba(58, 100, 80, 0.15);
+  transform: translateY(-1px);
 }
 
-.nav-logout {
-  background: transparent;
-  border: 2px solid #3a6450;
-  color: #3a6450;
-}
-
-.nav-logout:hover {
-  background: #3a6450;
+.nav-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f5b45 0%, #3a6450 100%);
   color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.nav-profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.nav-profile-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1c2a23;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-profile-role {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3a6450;
 }
 
 .mobile-bottom {
@@ -568,22 +612,54 @@ onUnmounted(() => {
 }
 
 .mobile-profile {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 20px;
-  height: 44px;
-  border-radius: 14px;
+  gap: 10px;
+  padding: 6px 16px 6px 6px;
+  height: 52px;
+  border-radius: 999px;
   background: #f0f4ef;
   color: #3a6450;
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
+  flex: 1;
 }
 
-.mobile-logout {
-  background: transparent;
-  border: 2px solid #3a6450;
+.mobile-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2f5b45 0%, #3a6450 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.mobile-profile-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1c2a23;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-profile-role {
+  font-size: 11px;
+  font-weight: 700;
   color: #3a6450;
 }
 
@@ -646,17 +722,6 @@ onUnmounted(() => {
 
   .mobile-nav .mobile-bottom {
     margin-top: 4px;
-  }
-
-  .mobile-nav .mobile-logout {
-    background: transparent;
-    border: 2px solid #3a6450;
-    color: #3a6450;
-  }
-
-  .mobile-nav .mobile-logout:hover {
-    background: #3a6450;
-    color: #fff;
   }
 
   .mobile-dropdown {

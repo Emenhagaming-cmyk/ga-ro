@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Session\TokenMismatchException;
 use Symfony\Component\HttpFoundation\Response;
 
 class HandleTokenMismatch
@@ -20,11 +19,7 @@ class HandleTokenMismatch
      */
     public function handle(Request $request, Closure $next): Response
     {
-        try {
-            $response = $next($request);
-        } catch (TokenMismatchException $e) {
-            $response = $this->handleMismatch($request);
-        }
+        $response = $next($request);
 
         if ($response->getStatusCode() === 419 && $request->getMethod() !== 'GET') {
             return $this->handleMismatch($request);

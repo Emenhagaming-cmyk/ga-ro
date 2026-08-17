@@ -52,14 +52,22 @@
               <span class="badge" v-for="major in spmbMajors" :key="major">{{ major }}</span>
             </div>
           </div>
-          <a
-            v-if="index === 0"
-            :href="spmbTarget()"
-            class="btn-daftar"
-            @click.prevent="handleDaftarClick"
-          >
-            Daftar sekarang <span aria-hidden="true"></span>
-          </a>
+          <div v-if="index === 0" class="spmb-actions">
+            <a
+              :href="spmbTarget()"
+              class="btn-daftar"
+              @click.prevent="handleDaftarClick"
+            >
+              Daftar sekarang <span aria-hidden="true">→</span>
+            </a>
+            <a
+              href="/spmb-info"
+              class="btn-info-spmb"
+              @click.stop="maybeNavigate('/spmb-info')"
+            >
+              Info & Biaya ↗
+            </a>
+          </div>
           <a
             v-else-if="item.href"
             :href="item.href"
@@ -193,6 +201,7 @@ const items = [
     title: "Tentang Sekolah",
     desc: "Kenali lebih dekat profil, visi misi, dan cerita sekolah kami.",
     button: "Kenali kami",
+    href: "#tentang",
     icon: School,
     size: "wide",
     layout: "vertical",
@@ -536,12 +545,21 @@ const items = [
   .badge { font-size: 10px; padding: 3px 8px; }
 }
 
-.featured .btn-daftar {
+.featured .spmb-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   align-self: flex-end;
-  padding: 9px 18px;
   margin: 14px 0 0;
+  position: relative;
+  z-index: 10;
+}
+
+.featured .btn-daftar {
+  padding: 9px 18px;
   border: none;
   border-radius: 10px;
+  background: #3a6450;
   color: #fff;
   font-family: inherit;
   font-size: 14px;
@@ -549,17 +567,42 @@ const items = [
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  z-index: 10;
   pointer-events: auto;
 }
 
 .featured .btn-daftar:hover {
-  transform: translateX(4px);
+  background: #2a5238;
+  transform: translateY(-1px);
 }
 
 .featured .btn-daftar:active {
-  transform: translateX(4px) scale(0.97);
+  transform: translateY(0) scale(0.97);
+}
+
+.featured .btn-info-spmb {
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.featured .btn-info-spmb:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.featured .btn-info-spmb:active {
+  transform: translateY(0) scale(0.97);
 }
 
 .featured .card-link:hover span {

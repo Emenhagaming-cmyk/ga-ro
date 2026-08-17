@@ -104,6 +104,60 @@ public function index(RegistrationInsightService $insightService)
             ->all();
     }
 
+    private function rules(): array
+    {
+        return [
+            'nama_lengkap' => 'required|string|max:255',
+            'nama_panggilan' => 'nullable|string|max:100',
+            'nisn' => 'required|string|max:20',
+            'nik' => 'nullable|string|max:20',
+            'tempat_lahir' => 'required|string|max:100',
+            'tanggal_lahir' => 'required|date',
+            'umur' => 'nullable|integer|min:4|max:25',
+            'agama' => 'nullable|in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu',
+            'kewarnegaraan' => 'nullable|string|max:50',
+            'kategori_pendaftar' => 'nullable|string|max:100',
+            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+            'alamat' => 'required|string',
+            'rt_rw' => 'nullable|string|max:30',
+            'kode_pos' => 'nullable|string|max:10',
+            'asal_sekolah' => 'required|string|max:255',
+            'gelombang' => 'nullable|string|max:50',
+            'tahun_lulus' => 'nullable|integer|min:2015|max:2035',
+            'rata_rata_nilai' => 'nullable|string|max:20',
+            'no_hp' => 'required|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'jurusan_pilihan' => 'required|in:RPL,TKJ,AKL',
+            'jumlah_saudara' => 'nullable|string|max:10',
+            'anak_ke' => 'nullable|string|max:10',
+            'status_keluarga' => 'nullable|string|max:50',
+            'nama_ayah' => 'nullable|string|max:255',
+            'pendidikan_ayah' => 'nullable|string|max:50',
+            'pekerjaan_ayah' => 'nullable|string|max:100',
+            'penghasilan_ayah' => 'nullable|string|max:50',
+            'alamat_ayah' => 'nullable|string',
+            'hp_ayah' => 'nullable|string|max:20',
+            'nama_ibu' => 'nullable|string|max:255',
+            'pendidikan_ibu' => 'nullable|string|max:50',
+            'pekerjaan_ibu' => 'nullable|string|max:100',
+            'penghasilan_ibu' => 'nullable|string|max:50',
+            'alamat_ibu' => 'nullable|string',
+            'hp_ibu' => 'nullable|string|max:20',
+            'nama_wali' => 'nullable|string|max:255',
+            'hubungan_wali' => 'nullable|string|max:100',
+            'email_orang_tua' => 'nullable|email|max:255',
+            'jenis_pembayaran' => 'nullable|in:Transfer,Tunai',
+            'berkas_tambahan' => 'nullable|string',
+            'foto_3x4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'kk_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'ijazah_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'sktm_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'nama_orang_tua' => 'nullable|string|max:255',
+            'no_hp_orang_tua' => 'nullable|string|max:20',
+            'status' => 'sometimes|in:baru,diproses,diterima,ditolak'
+        ];
+    }
+
     public function show(Pendaftaran $pendaftaran)
     {
         return view('pendaftaran.show', compact('pendaftaran'));
@@ -248,57 +302,46 @@ public function index(RegistrationInsightService $insightService)
         return array_filter($data, fn ($value) => $value !== null);
     }
 
-    private function rules(): array
+    /**
+    * Generate participant card PDF for the given registration.
+    */
+    public function generateCard(Pendaftaran $pendaftaran)
     {
-        return [
-            'nama_lengkap' => 'required|string|max:255',
-            'nama_panggilan' => 'nullable|string|max:100',
-            'nisn' => 'required|string|max:20',
-            'nik' => 'nullable|string|max:20',
-            'tempat_lahir' => 'required|string|max:100',
-            'tanggal_lahir' => 'required|date',
-            'umur' => 'nullable|integer|min:4|max:25',
-            'agama' => 'nullable|in:Islam,Kristen,Katolik,Hindu,Buddha,Konghucu',
-            'kewarnegaraan' => 'nullable|string|max:50',
-            'kategori_pendaftar' => 'nullable|string|max:100',
-            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
-            'alamat' => 'required|string',
-            'rt_rw' => 'nullable|string|max:30',
-            'kode_pos' => 'nullable|string|max:10',
-            'asal_sekolah' => 'required|string|max:255',
-            'gelombang' => 'nullable|string|max:50',
-            'tahun_lulus' => 'nullable|integer|min:2015|max:2035',
-            'rata_rata_nilai' => 'nullable|string|max:20',
-            'no_hp' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'jurusan_pilihan' => 'required|in:RPL,TKJ,AKL',
-            'jumlah_saudara' => 'nullable|string|max:10',
-            'anak_ke' => 'nullable|string|max:10',
-            'status_keluarga' => 'nullable|string|max:50',
-            'nama_ayah' => 'nullable|string|max:255',
-            'pendidikan_ayah' => 'nullable|string|max:50',
-            'pekerjaan_ayah' => 'nullable|string|max:100',
-            'penghasilan_ayah' => 'nullable|string|max:50',
-            'alamat_ayah' => 'nullable|string',
-            'hp_ayah' => 'nullable|string|max:20',
-            'nama_ibu' => 'nullable|string|max:255',
-            'pendidikan_ibu' => 'nullable|string|max:50',
-            'pekerjaan_ibu' => 'nullable|string|max:100',
-            'penghasilan_ibu' => 'nullable|string|max:50',
-            'alamat_ibu' => 'nullable|string',
-            'hp_ibu' => 'nullable|string|max:20',
-            'nama_wali' => 'nullable|string|max:255',
-            'hubungan_wali' => 'nullable|string|max:100',
-            'email_orang_tua' => 'nullable|email|max:255',
-            'jenis_pembayaran' => 'nullable|in:Transfer,Tunai',
-            'berkas_tambahan' => 'nullable|string',
-            'foto_3x4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'kk_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'ijazah_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'sktm_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'nama_orang_tua' => 'nullable|string|max:255',
-            'no_hp_orang_tua' => 'nullable|string|max:20',
-            'status' => 'sometimes|in:baru,diproses,diterima,ditolak'
-        ];
+        // Ensure the authenticated user can view this card (owner or admin)
+        $user = request()->user();
+        if ($user->role !== 'admin' && $pendaftaran->user_id !== $user->id) {
+            abort(403);
+        }
+
+        // Load the Blade view with data
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pendaftarans.card', [
+            'pendaftaran' => $pendaftaran,
+        ]);
+
+        // Set paper size for ID card (85mm x 55mm)
+        $pdf->setPaper([0, 0, 226, 157]); // approx 85mm x 55mm in points
+
+        // Return streamed PDF download
+        return $pdf->download('kartu_peserta_' . $pendaftaran->id . '.pdf');
     }
+
+    /**
+     * Download surat keterangan diterima PDF (hanya untuk pendaftaran berstatus diterima).
+     */
+    public function downloadBukti()
+    {
+        $user = request()->user();
+        $pendaftaran = Pendaftaran::where('user_id', $user->id)->first();
+
+        if (!$pendaftaran || $pendaftaran->status !== 'diterima') {
+            abort(403, 'Bukti hanya tersedia setelah pendaftaran diterima.');
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pendaftarans.bukti', [
+            'pendaftaran' => $pendaftaran,
+        ]);
+
+        return $pdf->download('bukti_diterima_' . $pendaftaran->id . '.pdf');
+    }
+
 }

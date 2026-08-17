@@ -27,6 +27,91 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ## 🗂 REKAP PEKERJAAN (dari awal)
 
+### Sesi 12n — Unduh Bukti Diterima (ganti button Dashboard di card Aktivitas)
+- ✅ User minta: card status pendaftaran di bawah navbar (HomeView student-card) saat status `diterima` → button "Buka Dashboard Siswa" diganti "Unduh Bukti Diterima"
+- ✅ Temuan: AI sebelumnya sempat bikin `generateCard` + `pendaftarans/card.blade.php` (Kartu Peserta ID-card) + route `pendaftaran.card` tapi TIDAK ada link ke route itu (berhenti tengah). Itu kartu peserta, bukan bukti diterima
+- ✅ Backend: view baru `pendaftarans/bukti.blade.php` (Surat Keterangan Diterima A4: kop sekolah + logo, nomor surat, tabel data siswa, tanggal dari `confirmed_at`, ttd Kepala Sekolah placeholder), `PendaftaranController::downloadBukti()` (cari by user_id, wajib status `diterima`, else 403), route `GET /pendaftaran/bukti` name `pendaftaran.bukti` (auth)
+- ✅ Frontend: `HomeView.vue` — logika button card: `diterima` → "Unduh Bukti Diterima" + ikon download → `${BACKEND}/pendaftaran/bukti`; lainnya tetap (dashboard-siswa / lengkapi pendaftaran)
+- ✅ Env fix: PHP XAMPP tanpa GD extension (DomPDF butuh GD utk gambar logo) → uncomment `extension=gd` di `C:\xampp\php\php.ini`
+- ✅ Verifikasi: `php -l` ✅, route:list ✅ (bukti & card terdaftar), PDF render ✅ (1.2MB, data "zakky ga suka js"), `vite build` ✅ (6.71s)
+- ⏭ TODO user: ganti placeholder "(Nama Kepala Sekolah)" / NIP di `bukti.blade.php` dengan nama asli
+
+### Sesi 12n.1 — Fix 404 "Unduh Bukti Diterima"
+- ✅ User lapor buka link bukti → 404
+- ✅ Root cause: route `GET /pendaftaran/bukti` terdaftar SETELAH `GET /pendaftaran/{pendaftaran}` (admin group) → "bukti" dianggap ID pendaftaran → route model binding gagal → 404
+- ✅ Fix: pindahkan route `pendaftaran.bukti` + `pendaftaran.card` ke group `auth` (terdaftar lebih awal, sebelum route `{pendaftaran}`)
+- ✅ `php -l` ✅, `route:list` ✅ (urutan: `pendaftaran/bukti` sebelum `pendaftaran/{pendaftaran}`)
+
+### Sesi 12o.1 — Fix Koperasi masih terkunci (bug `.value` di router guard)
+- ✅ User lapor masih tidak bisa akses koperasi walau pakai akun role siswa (aisy)
+- ✅ Root cause SEBENARNYA: `router/index.js` guard pakai `session.role` — `session` adalah Vue `ref`, jadi `session.role` = `undefined` → `undefined !== "siswa"` → SELALU redirect ke `/` untuk semua user (bug ada sejak Sesi 12i, koperasi tak pernah kebuka via URL). Bukan race seperti dugaan 12o
+- ✅ Fix: `session.value.role` + hapus deprecation `next()` → return value langsung
+- ✅ Verifikasi Playwright: login siswa → buka `/koperasi` → url akhir `.../koperasi` ✅; guest → tetap redirect ke `/` ✅
+- ✅ `vite build` ✅ (7.01s)
+
+### Sesi 12o — Fix akses Koperasi (role siswa tidak diakui)
+- ✅ User lapor: setelah daftar & diterima tetap tidak bisa buka Koperasi Online ("khusus siswa")
+- ✅ Root cause 1 (race): link navbar pakai `<a href="/koperasi">` (full page load) → router `beforeEach` jalan saat initial navigation SEBELUM `fetchStatus()` async selesai → session masih dari sessionStorage (stale guest/pendaftar) → di-bounce ke `/`. Fix: guard `requiresSiswa` sekarang `await fetchStatus()` dulu sebelum cek role
+- ✅ Root cause 2: `guardSiswa` di Navbar preventDefault dengan session stale yang sama → sekarang `await fetchStatus()` dulu
+- ✅ Root cause 3: role di DB bisa stale `pendaftar` padahal status `diterima` (updateStatus hanya jalan lewat UI admin) → `authStatus` sekarang derive: `pendaftar` + `diterima` = dilaporkan `siswa`. DB disync (0 row affected, data sudah benar)
+- ✅ Catatan: akun `zax` (id 3) TIDAK punya pendaftaran (role pendaftar wajar) — akun dengan pendaftaran diterima = `aisy` (id 8, role siswa). Koperasi hanya untuk siswa dengan pendaftaran
+- ✅ Verifikasi: `php -l` ✅, `vite build` ✅ (7.30s)
+
+### Sesi 12n.2 — Fix error GD saat download PDF (server belum restart)
+- ✅ User masih dapat "PHP GD extension is required" saat download
+- ✅ Root cause: proses `php artisan serve` (PID lama) masih jalan dengan php.ini LAMA (GD dimuat saat proses start). CLI php baru yang punya GD, server tidak
+- ✅ Fix: restart server (`Stop-Process` PID lama → start `php artisan serve --port=8000` lagi)
+- ✅ Verifikasi: `/auth-status` 200 ✅, `/pendaftaran/bukti` tanpa login → 302 ke `/login` (bukan error GD) ✅
+
+### Sesi 12m — Perbagus Button Profil di Navbar
+- ✅ User minta button profil navbar diperbagus
+- ✅ Redesign jadi pill penuh: avatar inisial gradient hijau (38px) + nama user (dari session, ellipsis) + label "Siswa", hover lift + shadow halus
+- ✅ Versi mobile: avatar + nama + role, `flex:1` mengisi lebar, konsisten pill
+- ✅ `vite build` ✅ (7.07s)
+
+### Sesi 12l — Hapus Tombol Logout dari Navbar Landing
+- ✅ User minta tombol Logout dihapus dari navbar (desktop & mobile) — logout tetap tersedia via halaman backend (form blade `layouts/app.blade.php`)
+- ✅ Hapus button `.nav-logout` / `.mobile-logout`, fungsi `doLogout`, computed `isLoggedIn`/`isPendaftar` (mati), destructure `loaded` dari `useAuthSession`
+- ✅ Hapus CSS mati: `.nav-logout`, `.mobile-logout`, overrides mobile
+- ✅ `vite build` ✅ (36.45s)
+- ⏭ NOTE: e2e `logout.spec.js` test navbar (`.nav-logout`) kini obsolete — hanya test blade yang relevan
+
+### Sesi 12k — Fix Tombol Profil (Halaman Kosong) + Logout Navbar + UI Profil Baru
+- ✅ User lapor: tombol Profil di navbar diklik → halaman kosong; minta UI profil diisi/diperbagus + tombol logout
+- ✅ Root cause: link profil `href="/profil"` relatif → masuk Vue router (route `/profil` tidak ada setelah Sesi 12i) → blank page. Route profil sebenarnya ada di backend (`GET /profil`, role:siswa, blade)
+- ✅ Fix: link Profil (desktop & mobile) → `BACKEND + '/profil'` (backend blade)
+- ✅ Tombol Logout ditambahkan di navbar desktop (`.nav-logout`) & mobile (`.mobile-logout`) untuk user login — pakai pola Sanctum: `fetch POST {BACKEND}/logout` + header `X-XSRF-TOKEN` dari cookie (Laravel decrypt server-side), `credentials: include`, `redirect: manual` → navigasi manual `/?no-intro=1` (menggantikan implementasi lama yang rusak: meta csrf-token di index.html kosong + action `/logout` relatif salah port)
+- ✅ `Cors.php`: tambah `X-XSRF-TOKEN` ke Access-Control-Allow-Headers (2 tempat: OPTIONS & response)
+- ✅ `profile.blade.php` diperbagus: hero avatar gradient (inisial nama), kartu Akun (username/email/badge), kartu Data Pendaftaran + badge warna per status (baru/diproses/diterima/ditolak), CTA "Lihat Dashboard" / "Isi Formulir Pendaftaran" jika belum ada data, responsive mobile
+- ✅ Verifikasi: `vite build` ✅ (8.88s), `php -l` ✅, `view:cache` ✅
+- ⏭ TODO: jalankan e2e `logout.spec.js` (Playwright) untuk konfirmasi alur logout navbar
+
+### Sesi 12j — Verifikasi Checkout Koperasi (sudah dikerjakan AI sebelumnya)
+- ✅ User minta sistem pembayaran koperasi (pilih barang → keranjang → rincian → QRIS/transfer → timer 1 jam → notif penjaga koperasi)
+- ✅ Ternyata AI sebelumnya SUDAH membangun seluruh alur di `KoperasiView.vue` (1.886 baris): shop grid + kategori, cart drawer, rincian pesanan, metode bayar QRIS & transfer bank, countdown 1 jam (3600000ms) dengan auto-batal, sukses view + notif "Penjaga koperasi telah diberitahu", toast, responsive
+- ✅ Celah ditemukan & diperbaiki: em-dash di toast timeout → "Batas waktu habis, pembayaran dibatalkan"
+- ✅ `vite build` pass (6.89s)
+
+### Sesi 12i — Audit & Hapus Kode Mati (ponytail-audit)
+- ✅ Review over-engineering seluruh repo → 3.200+ baris kode mati dihapus
+- ✅ Router: hapus 4 route mati (LoginView, RegisterView, DashboardSiswa, DashboardAdmin) + `useAuth.js` (localStorage auth lama) — guard `requiresSiswa` sekarang pakai `useAuthSession` (sessionStorage backend session)
+- ✅ Hapus file mati: `src/server/` (arsip), About.vue/Services.vue (kosong), Portal.vue (100% comment), FloatingCards.vue, FadeSection.vue, useScroll.js/useTheme.js (kosong), CSS tak terimport (components/global/layout/animations.css), public/knowledge.json (0 byte)
+- ✅ npm: uninstall 4 dep tak terpakai (@upstash/redis, curl, highlight.js, node-fetch) + backend `git` (paket palsu)
+- ✅ Backend: hapus AdminLoginController.php & StudentLoginController.php (stub kosong), routes/api.php + group api Cors di bootstrap (tidak ada route API), try/catch mati di HandleTokenMismatch
+- ✅ Hapus api/knowledge/router.js (import 6 file yang tak ada — dead; diizinkan user)
+- ✅ Verifikasi: `vite build` ✅ (1794 modules), `php -l` ✅, `route:list` ✅ 24 routes
+
+### Sesi 12h — Fix "Call to undefined method PendaftaranController::rules()"
+- ✅ User lapor error saat submit form pendaftaran
+- ✅ Root cause: method `rules()` (validasi lengkap) hilang dari `PendaftaranController.php`, padahal dipanggil di `store()` & `update()`
+- ✅ Restore `rules()` dari git history (1aa519d) — 47 aturan validasi identitas/sekolah/keluarga/file
+- ✅ `php -l` pass
+
+### Sesi 12g — Hapus Link Kosong di Dropdown Layanan
+- ✅ User lapor ada "button tersembunyi" (link kosong) di dropdown Layanan, tepat di bawah SPMB Online
+- ✅ Root cause: sisa anchor `<a href="/spmb-info">` tanpa teks/isi di `Navbar.vue` (dropdown Layanan desktop)
+- ✅ Dihapus seluruh blok anchor kosong — dropdown Layanan sekarang: SPMB Online, Koperasi, Produk Siswa, Career Center
+
 ### Sesi 1 — Setup Database & Auth (backend Laravel)
 - ✅ Buat DB `pendaftaran_db` di MySQL Laragon (C:\Laragon\bin\mysql\mysql-8.4.3-winx64)
 - ✅ Pindah `.env` Laravel dari SQLite → MySQL (`pendaftaran_db`, root tanpa password)

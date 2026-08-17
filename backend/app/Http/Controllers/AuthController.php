@@ -99,9 +99,15 @@ class AuthController extends Controller
 
         $pendaftaran = Pendaftaran::where('user_id', $request->user()->id)->first();
 
+        // Role "pendaftar" dengan pendaftaran diterima dianggap siswa (mis. data lama yang tidak lewat updateStatus)
+        $role = $request->user()->role;
+        if ($role === 'pendaftar' && $pendaftaran?->status === 'diterima') {
+            $role = 'siswa';
+        }
+
         return response()->json([
             'logged_in' => true,
-            'role' => $request->user()->role,
+            'role' => $role,
             'name' => $request->user()->name,
             'has_pendaftaran' => (bool) $pendaftaran,
             'status' => $pendaftaran?->status,

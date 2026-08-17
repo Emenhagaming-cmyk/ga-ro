@@ -24,6 +24,17 @@ const { session, BACKEND } = useAuthSession();
 const showStudentCard = () =>
   session.value.logged_in && session.value.role === "siswa";
 const statusLabel = () => (session.value.status || "").toUpperCase();
+const isAccepted = () => session.value.status === "diterima";
+const scTarget = () => {
+  if (isAccepted()) return BACKEND + "/pendaftaran/bukti";
+  if (session.value.has_pendaftaran) return BACKEND + "/dashboard-siswa";
+  return BACKEND + "/pendaftaran/create";
+};
+const scLabel = () => {
+  if (isAccepted()) return "Unduh Bukti Diterima";
+  if (session.value.has_pendaftaran) return "Buka Dashboard Siswa";
+  return "Lengkapi Pendaftaran";
+};
 </script>
 
 <template>
@@ -69,19 +80,23 @@ const statusLabel = () => (session.value.status || "").toUpperCase();
             Kamu sudah punya akun, tetapi belum mengirim formulir pendaftaran.
           </p>
         </div>
-        <a
-          :href="
-            session.has_pendaftaran
-              ? BACKEND + '/dashboard-siswa'
-              : BACKEND + '/pendaftaran/create'
-          "
-          class="sc-btn"
-        >
-          {{
-            session.has_pendaftaran
-              ? "Buka Dashboard Siswa"
-              : "Lengkapi Pendaftaran"
-          }}
+        <a :href="scTarget()" class="sc-btn">
+          <svg
+            v-if="isAccepted()"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          {{ scLabel() }}
         </a>
       </div>
       <Hero />

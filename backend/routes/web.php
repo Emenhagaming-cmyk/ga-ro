@@ -29,6 +29,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard-siswa', [PendaftaranController::class, 'myDashboard'])->name('dashboard.siswa');
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa');
+
+    // Generate participant card PDF
+    Route::get('/pendaftaran/{pendaftaran}/card', [PendaftaranController::class, 'generateCard'])
+        ->name('pendaftaran.card');
+
+    // Surat keterangan diterima (bukti kelulusan) untuk pemilik pendaftaran
+    Route::get('/pendaftaran/bukti', [PendaftaranController::class, 'downloadBukti'])
+        ->name('pendaftaran.bukti');
 });
 
 // Admin only (akses via URL saja, tanpa button di UI)
