@@ -226,6 +226,16 @@ npx playwright test
 
 ---
 
+## Deployment Production (Vercel) — Sesi 12p
+
+- **Frontend**: project `lomba` → `https://bhapppp.vercel.app` (akun zakkyilhamf-7419, team zakkys-projects-99c4bf23). SPA rewrite di root `vercel.json` (`/((?!api/).*)` → `/index.html`); `.vercelignore` root (backend/vendor dll); `VITE_BACKEND_URL=https://spmb-backend-self.vercel.app` (env project). Button SPMB navbar → `${BACKEND}/login`.
+- **Backend**: project `spmb-backend` → `https://spmb-backend-self.vercel.app` (vercel-php 0.7.4, `backend/api/index.php`). `spmb-backend.vercel.app` dipegang akun lain — jangan dipakai.
+- **Env backend (Vercel project)**: APP_KEY, APP_URL, FRONTEND_URL, DB_* (TiDB gateway ap-southeast-1:4000, DB pendaftaran_db), `MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem`.
+- **Trap vercel-php**: JANGAN upload `vendor` (builder jalankan `composer install` → dev deps dihapus → ENOENT). Path runtime = `/var/task/user/...`. Form action http → butuh `trustProxies(at: '*')` di `bootstrap/app.php`.
+- **Deploy ulang**: di root → `vercel.cmd deploy --prod --yes`; di backend → sama dengan workdir backend (CLI 58.9.0, auth tersimpan di `AppData\Roaming\xdg.data\com.vercel.cli\auth.json`).
+
+---
+
 ## TODO
 
 - [ ] Dynamic School Statistics (admin-managed) — disetujui user

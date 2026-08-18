@@ -27,6 +27,19 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ## 🗂 REKAP PEKERJAAN (dari awal)
 
+### Sesi 12p — Deploy Vercel: fix 404 route SPA + button SPMB + mulai backend
+- ✅ User lapor: setelah deploy Vercel, route SPA 404 (e-learning, e-tracer, dll) & button SPMB navbar tidak bisa; backend "ga bisa deploy di vercel"
+- ✅ Investigasi: project Vercel = `lomba` → `bhapppp.vercel.app` (akun zakkyilhamf-7419, team zakkys-projects-99c4bf23); ROOT `vercel.json` TIDAK ADA → 404 semua route; button SPMB pakai `/login` relatif (frontend) → 404; `spmb-backend.vercel.app` BUKAN milik akun ini (500 dari akun lain); env lomba cuma GROQ_API_KEY + UPSTASH_REDIS_* (sisa dep mati, tanpa VITE_BACKEND_URL → production semua fetch backend → localhost:8000)
+- ✅ Fix frontend: buat root `vercel.json` (SPA rewrite `/((?!api/).*)` → index.html, /api/chat aman); `.vercelignore` root (backend/vendor, node_modules, dist); `goSPMB()` → `${BACKEND}/login`
+- ✅ Akses Vercel: login via `vercel.cmd login` (CLI 58.9.0; auth.json di `AppData\Roaming\xdg.data\com.vercel.cli\`); `.vercel` lama berisi repo.json directory="." yang ditolak CLI 58 → dihapus + re-link (project.json + .env.local VERCEL_OIDC_TOKEN)
+- ✅ Deploy: `vercel.cmd deploy --prod --yes` → Ready in 27s → `bhapppp.vercel.app` aliased
+- ✅ Verifikasi live: `/`, `/e-learning`, `/e-tracer`, `/koperasi`, `/berita`, `/spmb-info` → 200 semua
+- ⚠️ `/api/chat` → 500 (chat function dieksekusi tapi error internal; GROQ_API_KEY ada di env — belum didiagnosa, file chat dilarang disentuh tanpa perintah)
+- ✅ **Bagian A — backend Laravel production dari akun ini**: project Vercel `spmb-backend` dibuat; 10 env vars diset (APP_KEY, APP_URL, FRONTEND_URL, DB_* TiDB dari `.env.deploy`, MYSQL_ATTR_SSL_CA); temuan penting: (1) vendor TIDAK boleh di-upload (builder vercel-php jalankan `composer install` → dev deps dihapus → ENOENT) → `vendor` masuk `.vercelignore`; (2) path cert runtime = `/var/task/user/certs/isrgrootx1.pem` (bukan /var/task); (3) form action http → `trustProxies(at: '*')` di `bootstrap/app.php`
+- ✅ Backend LIVE: `https://spmb-backend-self.vercel.app` (spmb-backend.vercel.app tetap milik akun lain) — login admin/admin123 302→/admin, dashboard 200, form action https, DB TiDB terhubung
+- ✅ Frontend production disetel: `VITE_BACKEND_URL=https://spmb-backend-self.vercel.app` (env project lomba) + redeploy → bundle baru `index-Dm0ThSzN.js` memuat URL backend → alur login/form/SPMB di bhapppp.vercel.app kini terhubung backend nyata
+- 💡 Catatan: env `UPSTASH_REDIS_*` di project lomba = sisa dep yang sudah dihapus (Sesi 12i) — bisa dihapus kapan saja
+
 ### Sesi 12n — Unduh Bukti Diterima (ganti button Dashboard di card Aktivitas)
 - ✅ User minta: card status pendaftaran di bawah navbar (HomeView student-card) saat status `diterima` → button "Buka Dashboard Siswa" diganti "Unduh Bukti Diterima"
 - ✅ Temuan: AI sebelumnya sempat bikin `generateCard` + `pendaftarans/card.blade.php` (Kartu Peserta ID-card) + route `pendaftaran.card` tapi TIDAK ada link ke route itu (berhenti tengah). Itu kartu peserta, bukan bukti diterima

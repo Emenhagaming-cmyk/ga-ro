@@ -221,7 +221,7 @@ const closeTentangDropdown = () => {
 };
 
 const goSPMB = () => {
-  window.location.href = `/login`;
+  window.location.href = `${BACKEND}/login`;
   closeMenu();
 };
 
