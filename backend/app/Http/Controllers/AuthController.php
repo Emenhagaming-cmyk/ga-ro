@@ -38,7 +38,7 @@ class AuthController extends Controller
         Auth::login($user);
         $this->restorePendingDraft($request);
 
-        return redirect()->route('pendaftaran.create')->with('success', 'Register berhasil. Silakan lengkapi data pendaftaran Anda.');
+        return redirect(frontendAuthUrl());
     }
 
     public function showLogin()
@@ -61,18 +61,16 @@ class AuthController extends Controller
             return back()->withErrors(['username' => 'Username atau password salah.'])->withInput();
         }
 
+        if ($user->role === 'admin') {
+            return back()->withErrors([
+                'username' => 'Akun admin dikelola di panel admin terpisah: spmb-admin.vercel.app',
+            ])->withInput();
+        }
+
         Auth::login($user, $request->boolean('remember'));
         $this->restorePendingDraft($request);
 
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($user->role === 'siswa') {
-            return redirect('/');
-        }
-
-        return redirect()->route('pendaftaran.create');
+        return redirect(frontendAuthUrl());
     }
 
     public function logout(Request $request)
@@ -81,8 +79,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $frontend = env('FRONTEND_URL') ?: '/';
-        return redirect($frontend . '/?no-intro=1');
+        return redirect(frontendAuthUrl());
     }
 
     public function authStatus(Request $request)

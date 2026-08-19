@@ -236,6 +236,46 @@ npx playwright test
 
 ---
 
+## Optimasi Performa — Sesi 12r
+
+- **Lazy-load route**: semua view di `src/router/index.js` → `import()` per halaman. Bundle awal 253KB JS + 198KB CSS + 252KB font (4×woff2) = 703KB → **index ±105KB** (103KB JS gzip 41KB + 2.3KB CSS, 0 font).
+- **Font Awesome dihapus total**: `main.js` tidak import `all.min.css`; 4 ikon dipakai (`angle-left`, `envelope`, `instagram`, `tiktok`) diganti SVG inline (path FA6) di `ChatHeader.vue` & `Footer.vue`. CSS `.back-btn svg` tetap `stroke: currentColor`.
+- **Polling singleton**: `useAuthSession.js` guard `intervalBound` → 1 interval `/auth-status` per 30s (dulu 7).
+- **Guard non-blocking**: `router.beforeEach` pakai cache `sessionStorage`; `fetchStatus()` background; `await` hanya saat cache ≠ siswa.
+- **Font**: Google Fonts dari `@import` → `<link>` + preconnect (`index.html`, `create.blade.php`); `%VITE_BACKEND_URL%` di index.html di-substitusi Vite.
+- **Gambar WebP** (GD, q82): `sklh.jpg 146→115KB`, `pmb_smkbu.jpg 100→91KB`; hapus `ber.png` (138KB, unused). Backend logo 720×720/350KB → 240×240/59KB.
+- **Backend deps**: hapus `laravel/pail` (build `--no-dev` → `PailServiceProvider not found` saat packages cache menyebutnya; root cause build 500). `composer.json`/lock valid.
+- **Config-cache build dilewati**: cold-start Laravel di Vercel Hobby tak banyak bisa dihemat (region fixed); `route:cache` tak mungkin (2 route closure di `routes/web.php:10-11`). `vercel.json` backend kembalikan `APP_CONFIG_CACHE=/tmp/config.php`.
+- **Verifikasi**: `npm run build` OK; frontend & backend deployed (Ready); smoke `/login`, `/auth-status`, `/logo.png` 200. Frontend dari IP dev kena WAF 429 (IP-bound, bukan deploy).
+
+---
+
+## Autentikasi Lintas-Domain (mobile) — Sesi 12u
+
+Browser mobile memblokir cookie third-party → fetch `/auth-status` lintas-domain selalu balas guest → navbar landing salah tampil "SPMB" padahal user login. Solusi: **status auth dikirim lewat URL** (`?auth=`), bukan cookie.
+
+- `backend/app/helpers.php` (baru): `frontendAuthUrl()` → `FRONTEND_URL . '/?auth=' . base64_encode(JSON)`; payload `{logged_in, role, name, has_pendaftaran, status}` konsisten dengan `authStatus()`; dipakai oleh semua link ke landing di blade (9 link, 2 file), `AuthController::logout()`, dan branch `logout` di `HandleTokenMismatch` (419/token basi → payload siswa karena belum logout).
+- Autoload composer: `"files": ["app/helpers.php"]`.
+- `useAuthSession.js`: IIFE `applyAuthQuery()` parse `?auth=` (atob → JSON → sessionStorage `spmb_session_status` → `history.replaceState` strip param) + **guard anti-downgrade** `fetchStatus` (update hanya jika `data.logged_in || !session.value.logged_in`; catch juga pertahankan cache login).
+- Verifikasi production (curl UA iPhone): dashboard siswa → 6 link landing payload siswa; logout normal → payload guest; logout token basi (419) → payload siswa.
+
+---
+
+## Panel Admin Terpisah — Sesi 12y/12z
+
+Web admin dipisah ke domain sendiri `https://spmb-admin.vercel.app` (project Vercel `spmb-admin`), kode di `backend-admin\` (salinan backend). DB sama (TiDB). Login admin tidak lagi di form utama.
+
+- **Web utama (backend)**: route admin DIHAPUS (GET /admin → 404); `AuthController::login` menolak role admin + pesan arahkan ke panel; view admin (`pendaftaran/index.blade.php`, `show.blade.php`) pindah ke panel.
+- **Panel (backend-admin)**: `routes/web.php` admin-only (`/`→`/admin`; `/login` guest; `/logout`; forgot/reset-password; group `auth+role:admin`: dashboard, list, export CSV, snapshot, show, PUT status, DELETE). `AuthController::login` hanya role admin ("Hanya akun admin..."), logout → `/login`. View siswa dihapus. UI polish: navbar brand + badge "Panel Admin" + "Buka Web Utama ↗", login page 480px.
+- **Vercel**: project direname `backend-admin` → `spmb-admin`; env production = APP_KEY prod (`base64:gtKJvpBuztMINYQwxnKgMFIHQaYvy3WnzBS0+ItkX5g=`), APP_URL, FRONTEND_URL, DB_* TiDB, `MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem`, `SESSION_SAME_SITE=lax` + `SESSION_SECURE_COOKIE=true` (web utama: `none`). Alias: `vercel alias set <deployment-url> spmb-admin.vercel.app` SETIAP deploy (tidak otomatis).
+- **Trap project Vercel baru**: deployment protection default (`ssoProtection`) → matikan via API `PATCH https://api.vercel.com/v9/projects/spmb-admin?teamId=zakkys-projects-99c4bf23` body `{"ssoProtection":null}`. `vercel link` membuat `.env.local` → hapus (MissingAppKeyException).
+- **Trap env**: env Vercel project + `vercel.json` env masuk PHP runtime; `.env`/`.env.*` exclude via `.vercelignore` (tapi `!.env.example` di-upload). `DB_CONNECTION` WAJIB di vercel.json/env (fallback Laravel 12 = sqlite → `QueryException: Database file at path [pendaftaran_db] does not exist`).
+- **Debug 500 "AuthenticationException Unauthenticated" (guest GET /admin)**: sebenarnya redirect login BEKERJA — debug `withExceptions()->render()` sementara di `bootstrap/app.php` menangkap SEMUA exception termasuk AuthenticationException → selalu render 500. Hapus render debug → redirect `/login` normal. Pelajaran: debug render di `withExceptions` mengalahkan `unauthenticated()` handler.
+- **Verifikasi production**: GET / → 302 /login 200; login admin → dashboard 200 (statTotal + "Pantau Data Pendaftar"); logout → /login; login siswa → ditolak ("Hanya akun admin"); `/pendaftaran` 200, export CSV 200 (text/csv), snapshot 200, show 200, `/up` 200.
+- `.env` lokal panel = sqlite + APP_KEY lokal (`base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=`) — hanya artisan lokal, JANGAN dipakai production.
+
+---
+
 ## TODO
 
 - [ ] Dynamic School Statistics (admin-managed) — disetujui user

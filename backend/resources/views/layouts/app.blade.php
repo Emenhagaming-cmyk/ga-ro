@@ -405,7 +405,7 @@
 <nav class="navbar">
     <div style="display:flex;align-items:center;gap:12px;">
         @auth
-        <a href="http://localhost:5174/?no-intro=1" aria-label="Kembali ke beranda"
+        <a href="{{ frontendAuthUrl() }}" aria-label="Kembali ke beranda"
            style="width:36px;height:36px;border-radius:10px;border:1px solid #dfe4dd;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#3a6450;transition:all 0.25s ease;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 12H5"></path>
@@ -413,7 +413,7 @@
             </svg>
         </a>
         @endauth
-        <a href="http://localhost:5174/?no-intro=1" class="navbar-brand">
+        <a href="{{ frontendAuthUrl() }}" class="navbar-brand">
             <img src="{{ asset('logo.png') }}" alt="Logo SMK Bahrul Ulum" style="height:38px;width:auto;vertical-align:middle;" />
             <span>SMK Bahrul Ulum</span>
         </a>
@@ -422,7 +422,7 @@
         @auth
         {{-- Logged in: no Beranda/Formulir/Dashboard links, ganti tombol back di atas --}}
         @else
-        <a href="http://localhost:5174/" target="_blank" rel="noopener noreferrer">Beranda</a>
+        <a href="{{ frontendAuthUrl() }}" target="_blank" rel="noopener noreferrer">Beranda</a>
         <a href="/pendaftaran/create">Formulir</a>
         @endauth
     </div>

@@ -1,55 +1,57 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthSession } from "../composable/useAuthSession";
-
-import HomeView from "../views/HomeView.vue";
-import ChatView from "../views/ChatView.vue";
-import CareerCenterView from "../views/CareerCenterView.vue";
-import NewsView from "../views/NewsView.vue";
-import KoperasiView from "../views/KoperasiView.vue";
-import ProdukSiswaView from "../views/ProdukSiswaView.vue";
-import ELearningView from "../views/ELearningView.vue";
-import ETracerView from "../views/ETracerView.vue";
-import SpmbInfoView from "../views/SpmbInfoView.vue";
+import { useAuthSession, BACKEND } from "../composable/useAuthSession";
 
 const routes = [
   {
     path: "/",
-    component: HomeView,
+    component: () => import("../views/HomeView.vue"),
+  },
+  {
+    path: "/login",
+    beforeEnter: () => {
+      window.location.href = `${BACKEND}/login`;
+    },
+  },
+  {
+    path: "/register",
+    beforeEnter: () => {
+      window.location.href = `${BACKEND}/register`;
+    },
   },
   {
     path: "/spmb-info",
-    component: SpmbInfoView,
+    component: () => import("../views/SpmbInfoView.vue"),
   },
   {
     path: "/chat",
-    component: ChatView,
+    component: () => import("../views/ChatView.vue"),
   },
   {
     path: "/career-center",
-    component: CareerCenterView,
+    component: () => import("../views/CareerCenterView.vue"),
     meta: { requiresSiswa: true }
   },
   {
     path: "/berita",
-    component: NewsView,
+    component: () => import("../views/NewsView.vue"),
   },
   {
     path: "/koperasi",
-    component: KoperasiView,
+    component: () => import("../views/KoperasiView.vue"),
     meta: { requiresSiswa: true }
   },
   {
     path: "/produk-siswa",
-    component: ProdukSiswaView,
+    component: () => import("../views/ProdukSiswaView.vue"),
     meta: { requiresSiswa: true }
   },
   {
     path: "/e-learning",
-    component: ELearningView,
+    component: () => import("../views/ELearningView.vue"),
   },
   {
     path: "/e-tracer",
-    component: ETracerView,
+    component: () => import("../views/ETracerView.vue"),
   },
 ];
 
@@ -62,9 +64,14 @@ router.beforeEach(async (to) => {
   const { session, fetchStatus } = useAuthSession();
 
   if (to.meta.requiresSiswa) {
-    await fetchStatus();
+    // cache sessionStorage dulu → navigasi instan; refresh hanya jika belum yakin siswa
     if (session.value.role !== "siswa") {
-      return "/";
+      await fetchStatus();
+      if (session.value.role !== "siswa") {
+        return "/";
+      }
+    } else {
+      fetchStatus();
     }
   }
 

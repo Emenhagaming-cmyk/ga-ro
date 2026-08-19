@@ -1,7 +1,5 @@
 <script setup>
-import { ref } from "vue";
 import CursorGlow from "../components/common/CursorGlow.vue";
-import LoadingScreen from "@/components/loading/LoadingScreen.vue";
 import Navbar from "@/components/layout/Navbar.vue";
 import Footer from "@/components/layout/Footer.vue";
 import Hero from "@/components/sections/Hero.vue";
@@ -11,14 +9,6 @@ import News from "@/components/sections/News.vue";
 import BackgroundFX from "@/components/common/BackgroundFX.vue";
 import FloatingAi from "@/components/chatbot/FloatingAi.vue";
 import { useAuthSession } from "@/composable/useAuthSession";
-
-const skipIntro =
-  new URLSearchParams(window.location.search).get("no-intro") === "1";
-const showIntro = ref(!skipIntro && !sessionStorage.getItem("intro"));
-
-if (showIntro.value || skipIntro) {
-  sessionStorage.setItem("intro", "true");
-}
 
 const { session, BACKEND } = useAuthSession();
 const showStudentCard = () =>
@@ -40,8 +30,6 @@ const scLabel = () => {
 <template>
   <div class="page-wrapper">
     <FloatingAi />
-
-    <LoadingScreen v-if="showIntro" @finish="showIntro = false" />
 
     <BackgroundFX />
     <CursorGlow />

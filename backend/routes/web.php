@@ -6,6 +6,10 @@ use App\Http\Controllers\PendaftaranController;
 
 Route::get('/', [PendaftaranController::class, 'create'])->name('home')->middleware(\App\Http\Middleware\Cors::class);
 
+// Static asset via route (vercel-php tidak serve public/ — file dibundel ke lambda)
+Route::get('/logo.png', fn () => response()->file(public_path('logo.png')));
+Route::get('/cs.png', fn () => response()->file(public_path('cs.png')));
+
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
@@ -30,22 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa');
 
-    // Generate participant card PDF
-    Route::get('/pendaftaran/{pendaftaran}/card', [PendaftaranController::class, 'generateCard'])
-        ->name('pendaftaran.card');
-
-    // Surat keterangan diterima (bukti kelulusan) untuk pemilik pendaftaran
+// Surat keterangan diterima (bukti kelulusan) untuk pemilik pendaftaran
     Route::get('/pendaftaran/bukti', [PendaftaranController::class, 'downloadBukti'])
         ->name('pendaftaran.bukti');
-});
-
-// Admin only (akses via URL saja, tanpa button di UI)
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin', [PendaftaranController::class, 'index'])->name('admin.dashboard');
-    Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
-    Route::get('/pendaftaran/export', [PendaftaranController::class, 'exportCsv'])->name('pendaftaran.export');
-    Route::get('/pendaftaran-snapshot', [PendaftaranController::class, 'snapshot'])->name('pendaftaran.snapshot')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-    Route::get('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'show'])->name('pendaftaran.show');
-    Route::put('/pendaftaran/{pendaftaran}/status', [PendaftaranController::class, 'updateStatus'])->name('pendaftaran.status');
-    Route::delete('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
 });

@@ -1,6 +1,6 @@
 <script setup>
 // Foto sekolah dari folder public
-const schoolImage = "/sklh.jpg";
+const schoolImage = "/sklh.webp";
 </script>
 
 <template>

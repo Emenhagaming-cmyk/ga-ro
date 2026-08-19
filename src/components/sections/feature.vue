@@ -174,7 +174,7 @@ const items = [
     title: "SPMB Online",
     desc: "Daftar peserta didik baru secara online dengan proses yang cepat dan mudah.",
     button: "Daftar sekarang",
-    banner: "/pmb_smkbu.jpg",
+    banner: "/pmb_smkbu.webp",
     icon: GraduationCap,
     size: "big",
     layout: "vertical",

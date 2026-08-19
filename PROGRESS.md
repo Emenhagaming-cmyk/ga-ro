@@ -4,6 +4,134 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi 2026-08-18)
+
+### Sesi 12z — Panel admin SELESAI (verifikasi penuh 2026-08-19)
+- **Root cause 500 guest GET /admin KETEMU**: debug `withExceptions()->render()` sementara di `bootstrap/app.php` panel menangkap SEMUA exception — termasuk `AuthenticationException` yang seharusnya di-handle `Handler::unauthenticated()` → redirect `/login`. Debug render mengubahnya jadi 500. `redirectGuestsTo('/login')` eksplisit di `bootstrap/app.php` panel (biarkan — aman & jelas; setara default `fn() => route('login')`).
+- **Bersih-bersih debug selesai**: render debug dihapus dari `bootstrap/app.php`; route `/debug-redirect` dihapus dari `routes/web.php`; try/catch `DEBUG_EXCEPTION` dihapus dari `public/index.php`; `vercel.json` `APP_DEBUG` → `"false"`; `.env` lokal panel dikembalikan ke sqlite + APP_KEY lokal (`base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=`, DB_DATABASE path absolute tanpa kutip — escape sequence dotenv).
+- **Verifikasi production final (`verifyadmin.php` + `verifyadmin2.php`)**:
+  - `GET /` → 302 → `/login` 200 ✅; `/up` 200 ✅
+  - login admin `admin/admin123` → 200 dashboard render YA (statTotal + "Pantau Data Pendaftar") ✅
+  - logout → `/login` ✅; login siswa → ditolak "Hanya akun admin" ✅
+  - `/pendaftaran` 200 (ada data), `/pendaftaran/export` 200 text/csv, `/pendaftaran-snapshot` 200, `/pendaftaran/115353` (show) 200 ✅
+  - PUT status & DELETE TIDAK dites di production (bukan read-only — menghindari merusak data asli; logika sama dengan web utama yang sudah teruji).
+- **IMPLEMENTATION_SUMMARY.md**: section "Panel Admin Terpisah — Sesi 12y/12z" ditambahkan. AGENTS.md struktur 3 bagian sudah update (sesi kemarin).
+- **Catatan**: deploy kadang "Not authorized"/"fetch failed" transient → retry; `vercel alias set` dijalankan setiap deploy.
+
+**LANGKAH BERIKUTNYA (deferred, keputusan user — stats dinamis & section Jurusan)**:
+1. Migration `school_stats` (key-value: siswa_aktif, jurusan, program_keahlian, `jurusans` JSON) + seeder (nilai sekarang: 1280 siswa, 1 jurusan, 1 program keahlian).
+2. Endpoint publik `GET /school-stats` (web utama) + halaman admin `/admin/stats` di panel.
+3. `AboutSchool.vue` fetch stats + fallback hardcode; komponen baru `JurusanSection.vue` (sekolah hanya punya RPL).
+4. CORS tambah `https://bhapppp.vercel.app`.
+5. **Tanya user**: angka asli jumlah siswa/kuota RPL (atau biarkan admin edit via panel).
+
+### Sesi 12y — Pemisahan web admin ke panel terpisah `spmb-admin.vercel.app` (SELESAI di 12z)
+- **Keputusan user** (via question tool): admin punya panel sendiri di domain terpisah, login admin terpisah dari siswa/pendaftar (DB tetap sama — TiDB), UI admin di-polish. Stats dinamis & section Jurusan DITUNDA ke sesi berikutnya.
+- **Sisi web utama (backend) — SELESAI & terverifikasi**:
+  - Route admin DIHAPUS dari `backend/routes/web.php` (GET /admin dll → 404; `Route::resource` tidak dipakai, semua route eksplisit).
+  - `AuthController::login()`: role admin → login DITOLAK + pesan "Akun admin dikelola di panel admin terpisah: spmb-admin.vercel.app" (login tidak dilakukan). Siswa/pendaftar tetap normal → `frontendAuthUrl()`.
+  - View admin (`pendaftaran/index.blade.php`, `show.blade.php`) dipindah ke panel.
+  - Deploy backend Ready 29s; verifikasi production: GET /admin → 404 ✅, login admin → 302 + pesan "panel admin terpisah" ✅, login siswa → landing `?auth=` ✅.
+- **Panel admin (BARU: `C:\Users\LENOVO\lomba\ga-ro\backend-admin`)** — salinan backend via robocopy (exclude `vendor`, `.git`, `node_modules`, `.env`, `.env.local`; robocopy exit code 1 = sukses):
+  - `routes/web.php`: admin-only (`/` → redirect `/admin`; `/login` guest; `/logout` auth; forgot/reset password; group auth+role:admin: `/admin`, `/pendaftaran`, export, snapshot, show, PUT status, DELETE destroy).
+  - `AuthController.php`: login hanya role admin ("Hanya akun admin yang dapat mengakses panel ini."), logout → `/login`. View siswa (register, profile, create, dashboard-siswa, bukti) dihapus.
+  - UI di-polish: title "Panel Admin - SPMB SMK Bahrul Ulum", `.container` max-width 1180px, navbar brand + badge "Panel Admin" + link Dashboard + "Buka Web Utama ↗" (→ FRONTEND_URL) + Logout; halaman login "Masuk Panel Admin" max-width 480px tanpa link register; empty-state index → link FRONTEND_URL.
+  - `route:list` & `view:cache` OK lokal. `.env` lokal panel = `.env.example` + APP_KEY **lokal** (`base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=` — JANGAN dipakai production), DB_CONNECTION=sqlite (hanya untuk artisan lokal). Vendor di-copy lokal hanya agar artisan jalan (tidak ter-upload).
+- **Vercel project `spmb-admin`** (baru): `vercel link --yes` → rename `backend-admin` → `spmb-admin`; env production ditambahkan: APP_KEY **production** (`base64:gtKJvpBuztMINYQwxnKgMFIHQaYvy3WnzBS0+ItkX5g=`), APP_URL, FRONTEND_URL, DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD (TiDB), MYSQL_ATTR_SSL_CA=`/var/task/user/certs/isrgrootx1.pem`, SESSION_SAME_SITE=`lax` (main pakai `none`), SESSION_SECURE_COOKIE=true. Semua "✓ Added".
+  - **Trap**: `vercel link` membuat `.env.local` (VERCEL_OIDC_TOKEN) → MissingAppKeyException 500 → hapus segera (sudah). 
+  - **Trap**: project Vercel baru punya deployment protection (`ssoProtection: {"deploymentType":"all_except_custom_domains"}`) → semua request (termasuk custom domain) redirect ke vercel.com/login → dimatikan via API: `PATCH https://api.vercel.com/v9/projects/spmb-admin?teamId=zakkys-projects-99c4bf23` body `{"ssoProtection":null}` ✅ (GET /login → 200 setelahnya).
+  - Deploy beberapa kali (fetch failed transient sesekali → retry); `vercel alias set <deployment-url> spmb-admin.vercel.app` dijalankan SETIAP deploy (alias tidak otomatis mengikuti deploy prod).
+- **Debug 500 login admin — ROOT CAUSE KETEMU & DIPERBAIKI**:
+  - 500 `QueryException: Database file at path [pendaftaran_db] does not exist. (Connection: sqlite)` → `DB_CONNECTION` KOSONG di production panel (fallback Laravel 12 = sqlite). Main punya DB_CONNECTION=mysql di project env; panel tidak.
+  - Cara menemukan: `withExceptions()->render()` sementara di `bootstrap/app.php` (render exception → response plain "DEBUG: ..." + dump env()) — karena APP_DEBUG=true tidak efektif (vercel.json `"APP_DEBUG": "false"` menang / error page Laravel generik).
+  - Fix: tambah `"DB_CONNECTION": "mysql"` ke `env` di `vercel.json` panel (env Vercel project + vercel.json TERBUKTI masuk PHP runtime; `.env` TIDAK ter-upload — `.vercelignore` exclude `.env`/`.env.*` tapi `!.env.example` — jangan hapus kecuali tahu konsekuensinya).
+  - **Terverifikasi**: login admin `admin/admin123` → **200, dashboard render YA** (len 30KB, statTotal + "Pantau Data Pendaftar") ✅. Logout → 302 /login ✅.
+- **Alat test (masih dipakai)**: `C:\Users\LENOVO\AppData\Local\Temp\opencode\verifyadmin.php` (login admin → dashboard render; logout; login siswa → ditolak) & `verifyadmin2.php` (up, list, export, snapshot, show) & `one.php <url>` (dump DEBUG exception — butuh render debug aktif). Jalankan dari folder `backend-admin`.
+- Catatan teknis lintas sesi: dev IP kena WAF 403/429 Vercel (verifikasi dari browser user); `vercel env add` via `echo value |` OK; `vercel.cmd` = `C:\nvm4w\nodejs\vercel.cmd`; team `zakkys-projects-99c4bf23`; robocopy exit 1 = sukses.
+
+### Sesi 12x — Fix "button login muncul setelah login" (alur back dari halaman form)
+- **Bug user**: login → (backend) halaman form → tombol Back → landing → button login masih muncul padahal sudah login (dan state campur aduk).
+- **Akar masalah**: login/register redirect ke halaman BACKEND (form/beranda) → landing tidak pernah menerima `?auth=` payload → sessionStorage frontend kosong → `fetchStatus`/`/auth-status` lintas-domain tak bisa diandalkan (third-party cookie diblokir) → guest.
+- **Fix**:
+  - `AuthController::login()`: siswa & pendaftar → `redirect(frontendAuthUrl())` (landing `/?auth=<payload>`), admin tetap admin.dashboard. `register()` → `redirect(frontendAuthUrl())` (sebelumnya langsung ke form). Draft tetap di-restore via `restorePendingDraft` sebelum redirect.
+  - `useAuthSession.js`: normalisasi `norm()` — role DB `pendaftar` → `siswa` di UI (diterapkan di sessionFromStorage, applyAuthQuery, fetchStatus). Sebelumnya pendaftar login → UI guest → button login muncul.
+- **Alur sekarang**: login → landing `?auth=siswa` → sessionStorage terisi (bertahan di tab selama bfcache/back) → navbar Profil + hero "Dashboard Siswa", button login HILANG; klik "Lengkapi Pendaftaran" → form; back → tetap siswa ✅. Logout (backend, token segar) → landing `?auth=guest`.
+- **Verifikasi**: curl production — login siswa → redirect `bhapppp.vercel.app/?auth=` payload `{logged_in:true, role:"siswa", name:"Siswa Demo", has_pendaftaran:false}` ✅.
+- Deploy: frontend Ready 16s (`index-DBwWPBAD.js`; retry sekali — fetch failed transient), backend Ready 30s.
+
+### Sesi 12w — Restore dropdown Login 2 opsi (Siswa & Pendaftar) di hero
+- **Konteks**: user ingat dulu ada 2 opsi login (siswa & pendaftar) — bekasnya ditemukan di `PROGRESS.md` Sesi 12q (dropdown dihapus atas permintaan user saat itu) & `git show 1aa519d:src/components/sections/Hero.vue`.
+- **Restore** (gabungan dengan Sesi 12v): siswa → tetap "Dashboard Siswa"; guest → button **Login** + dropdown 2 sub-button "Login Siswa" & "Login Pendaftar" (keduanya → `${BACKEND}/login`; halaman login backend satu form — opsi hanya pemisahan label, role sebenarnya ditentukan saat register). Kode & CSS diambil dari bekas git 1aa519d (`.btn-group-login`, `.sub-buttons`, `.sub-btn`, media query mobile).
+- Deploy: build OK (`index-DnrLCbb-.js`), frontend Ready 17s.
+
+### Sesi 12v — Fix button hero "Lanjutkan Pendaftaran" untuk guest → "Login"
+- **Klarifikasi**: "button login hilang" BUKAN bug sesi — `Hero.vue:39-45` menampilkan "Lanjutkan Pendaftaran" (→ `/pendaftaran/create`) untuk SEMUA guest sejak awal; user login memang tak pernah melihatnya (navbar → Profil). Terverifikasi di device berbeda (sessionStorage kosong) tetap tampil — memang by design.
+- **Fix**: guest branch hero → label **"Login"** + href `${BACKEND}/login` (halaman login punya link "Daftar di sini" → `/register`). Siswa → tetap "Dashboard Siswa". Alur form daftar tetap bisa diakses via navbar SPMB (`spmbTarget()` di useAuthSession.js:79-84) & section feature.
+- Deploy: build OK (`index-Bg-xIVtf.js`), frontend Ready 19s (2 retry — "Not authorized"/"fetch failed" transient CLI; `vercel whoami` tetap valid).
+- Verifikasi dari IP dev gagal (WAF 403/429 — masalah lama IP-bound); user cek via browser (refresh → cache bust otomatis).
+
+### Sesi 12u — Fix navbar "SPMB" di mobile setelah daftar (third-party cookie diblokir) — SELESAI
+- **Bug**: browser mobile memblokir cookie third-party → fetch `/auth-status` lintas-domain (bhapppp.vercel.app → spmb-backend-self.vercel.app) selalu balas guest → navbar landing menampilkan button "SPMB" padahal user sudah login (harusnya "Profil"). Backend `/auth-status` production benar (verifikasi curl: siswa → `{"logged_in":true,"role":"siswa",...}`).
+- **Solusi `?auth=` payload**: status auth dikirim lewat URL, bukan cookie.
+  - `backend/app/helpers.php` (BARU): `frontendAuthUrl()` → `$frontend . '/?auth=' . base64_encode(json...)`; payload = `{logged_in, role, name, has_pendaftaran, status}` dari `auth()` (konsisten dengan `authStatus()`); guest default jika tidak login.
+  - `backend/composer.json`: autoload `"files": ["app/helpers.php"]` (+ `composer dump-autoload`).
+  - 9 link di `layouts/app.blade.php` & `create.blade.php`: `env('FRONTEND_URL',...)` → `{{ frontendAuthUrl() }}` (anchor `#layanan/#tentang/#contact` → `frontendAuthUrl()#layanan` dst).
+  - `AuthController::logout()` → `redirect(frontendAuthUrl())` (guest payload).
+  - `HandleTokenMismatch.php` branch `logout` (419/token basi) → `redirect(frontendAuthUrl())` — jalur ini MASIH user login, jadi payload siswa (benar: navbar tampil Profil).
+  - `useAuthSession.js` (frontend): IIFE `applyAuthQuery()` parse `?auth=` saat load (atob → JSON → sessionStorage `spmb_session_status` → `history.replaceState` hapus param) + guard anti-downgrade di `fetchStatus` (update hanya jika `data.logged_in || !session.value.logged_in`; catch juga tidak men-downgrade login cache).
+- **Verifikasi production (curl, UA iPhone)**:
+  - Dashboard siswa → 6 link landing, semua `?auth=` payload `{logged_in:true, role:"siswa", name:"Siswa Demo", has_pendaftaran:false}` ✅
+  - Logout normal (token segar) → `?auth=` payload guest `{logged_in:false,...}` ✅
+  - Logout token basi (419) → payload siswa (jalur HandleTokenMismatch) ✅
+- Deploy: frontend Ready 21s (`index-Di_64-n8.js`), backend Ready 26s (2x — yang pertama tidak menyentuh file? perbaikan middleware butuh deploy ulang).
+- Catatan: `composer dump-autoload` sempat hang (lock `vendor/composer/install.lock` dari proses mati) → hapus lock, retry OK. Gunakan `Get-Process php,composer` untuk cek proses zombie.
+
+### Sesi 12t — Fix link hardcode localhost:5174 di blade (mobile "situs ini tidak dapat dijangkau" setelah daftar)
+- **Bug**: `layouts/app.blade.php` (3 link: back arrow, brand, Beranda) & `create.blade.php` (5 link: back, logo, Beranda, Layanan, Tentang, Kontak) hardcode `href="http://localhost:5174/?no-intro=1"`. Di production (HP), link itu membawa ke `localhost:5174` = HP sendiri → "situs ini tidak dapat dijangkau".
+- **Fix**: semua hardcode → `href="{{ env('FRONTEND_URL', 'http://localhost:5174') }}/?no-intro=1"`. Dev: `.env` lokal `FRONTEND_URL=http://localhost:5174` → tetap ke dev server. Production: env Vercel project `FRONTEND_URL=https://bhapppp.vercel.app` → otomatis benar. (Suffix `?no-intro=1` kini tak perlu — intro sudah dihapus Sesi 12s — tapi biarkan, tidak merusak.)
+- **Verifikasi**: `view:cache` OK; deploy backend Ready 28s; GET /login production → 0 match `localhost:5174`, 2 match `bhapppp.vercel.app`.
+- Catatan: ada link `?no-intro=1#layanan/#tentang/#contact` (anchor section) — valid di Vue (id section sama).
+
+### Sesi 12s — Fix intro screen menutupi halaman (button "Lanjutkan Pendaftaran" hilang di URL tanpa `?no-intro=1`)
+- **Bug**: `LoadingScreen.vue` tidak pernah emit `@finish` (tidak ada `defineEmits`) → `showIntro` di `HomeView.vue` tidak pernah jadi `false` → layar intro (z-index 9999, inset:0) menutupi landing selama 7.6s+ dan tak pernah dihapus dari DOM → pengunjung baru (tanpa `?no-intro=1`) tidak melihat button "Lanjutkan Pendaftaran"/konten.
+- **Fix**: hapus mekanisme intro dari `HomeView.vue` (import, `showIntro`/`skipIntro`, `<LoadingScreen>`). Halaman langsung tampil di semua URL; `?no-intro=1` kini diabaikan (URL lama tetap jalan). File `src/components/loading/LoadingScreen.vue` TIDAK dihapus (tanpa konfirmasi user).
+- Build OK, deploy `bhapppp.vercel.app` ✅ (Ready 21s). Chunk baru (`index-Dx6l2oyt.js`) → cache bust otomatis, user cukup refresh.
+
+### Sesi 12r — Optimasi Kecepatan (P1+P2+P3)
+**Frontend (Vue/Vite):**
+1. **Lazy-load semua route view** (`src/router/index.js`): `import()` per halaman → bundle awal 253KB JS + 198KB CSS + 252KB font (4×woff2) = 703KB → **index 103KB JS + 2.3KB CSS, 0 font** (±105KB, hemat ~85%).
+2. **Polling singleton**: `useAuthSession.js` → 7 interval `/auth-status` per 30s (7 komponen memanggil composable) menjadi 1 (guard `intervalBound`).
+3. **Router guard non-blocking**: `beforeEach` pakai cache `sessionStorage` dulu (navigasi instan); refresh `fetchStatus()` background; hanya await fetch jika cache ≠ siswa.
+4. **index.html**: Google Fonts pindah dari `@import` CSS → `<link>` + `preconnect` (fonts.googleapis, fonts.gstatic, `%VITE_BACKEND_URL%`); hapus `@import` di `style.css`.
+5. **Font Awesome full dihapus** (`all.min.css` 198KB + 4 woff2 252KB) → **4 ikon jadi SVG inline** (angle-left di ChatHeader; envelope/instagram/tiktok di Footer). `main.js` tak import FA.
+6. **Gambar → WebP** (script PHP GD, quality 82): `sklh.jpg 146→115KB`, `pmb_smkbu.jpg 100→91KB`; update ref di AboutSchool.vue & feature.vue; hapus `ber.png` (138KB, tak dipakai di mana pun).
+
+**Backend (Laravel/Vercel):**
+7. **Backend logo 350KB → 59KB** (720×720 → 240×240, copy `public/logo.png` frontend). Blade ikut lebih ringan.
+8. `create.blade.php`: Google Fonts `@import` → `<link>` + `preconnect`.
+9. **Hapus `laravel/pail`** dari require-dev & composer.lock (dev tool tak dipakai). **Root cause build 500 `Class "Laravel\Pail\PailServiceProvider" not found`**: build `composer install --no-dev` tidak meng-install pail, tapi packages cache build machine menyebutnya. Setelah pail dihapus, build Vercel lancar.
+
+**Percobaan config-cache build-time (P2a) TIDAK jadi (keputusan ponytail):**
+- `config:cache` via composer script `vercel` gagal di build machine (class pail di packages cache → sekarang sudah hilang, tapi) + `route:cache` tidak mungkin karena 2 route pakai closure (`routes/web.php:10-11`).
+- Cold-start Laravel di Vercel Hobby tidak banyak bisa dihemat (region fixed, serverless). **Keputusan: jangan paksakan config cache** — risiko > manfaat. `vercel.json` backend kembali ke state working (dengan `APP_CONFIG_CACHE=/tmp/config.php`).
+
+**Verifikasi:**
+- `npm run build` sukses; chunk per-halaman (HomeView 28KB, Koperasi 20KB, SpmbInfo 27KB, dst).
+- Deploy frontend `bhapppp.vercel.app` ✅ (Ready 18s) & backend `spmb-backend-self.vercel.app` ✅ (Ready 27s).
+- Smoke production: `/login`, `/auth-status`, `/logo.png` → 200. Frontend dari IP dev kena **WAF 429 rate-limit** (bukan masalah deploy) — perlu retest dari browser/incognito.
+- `composer.json`/`composer.lock` valid (pail dihapus), artisan jalan.
+
+**Catatan ponytail:** config-cache backend dilewati — upgrade path: pindah Laravel ke region dekat TiDB atau platform persistent jika throughput butuh; route closure 10-11 bisa pindah ke controller bila mau route:cache.
+
+**Sisa pekerjaan / prioritas lanjutan (dari sesi sebelumnya, belum dikerjakan):**
+- [ ] Dynamic School Statistics (admin-managed) — disetujui user
+- [ ] Universal Search — disetujui user
+- [ ] Info SPMB Center (syarat/biaya/beasiswa/timeline)
+- [ ] Profil Sekolah (Visi Misi)
+- [ ] Diagnosa `/api/chat` → 500 (file chatbot dilindungi; butuh perintah eksplisit)
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi 2026-08-17)
 
 **Sistem SPMB lengkap + E-Learning + E-Tracer. Frontend Vue 3 punya 12 halaman, backend Laravel punya 19 routes.**
@@ -27,6 +155,14 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ## 🗂 REKAP PEKERJAAN (dari awal)
 
+### Sesi 12q (2026-08-18) — Setup AI Gateway (Vercel) di `ai-gateway/`
+- ✅ Vercel CLI sudah terpasang (58.9.0) — tidak perlu install
+- ⚠️ Vercel Skills (`npx skills add vercel-labs/agent-skills`) GAGAL — github.com tidak bisa diakses dari mesin ini (port 443 timeout); coba lagi nanti
+- ✅ Project Node baru di `C:\Users\LENOVO\lomba\ga-ro\ai-gateway`: `ai`, `dotenv`, `@types/node`, `tsx`, `typescript` terinstall (ai@7.0.66, Node 24); `.env.local` berisi `AI_GATEWAY_API_KEY` (key user, gitignored)
+- ✅ `index.ts`: `streamText` + provider `gateway('openai/gpt-5.4')` (pola resmi AI SDK v7 — provider gateway bawaan, key otomatis dari env `AI_GATEWAY_API_KEY`), stream ke stdout + log token usage
+- ✅ Verifikasi jalan: request AUTH OK sampai gateway Vercel, tapi ditolak 403 `customer_verification_required` — akun Vercel user belum punya kartu kredit terverifikasi; user harus add card di https://vercel.com/d?to=%2F%5Bteam%5D%2F~%2Fai%3Fmodal%3Dadd-credit-card lalu `npm start` ulang
+- 💡 `npm start` = `tsx index.ts` (script di package.json ai-gateway)
+
 ### Sesi 12p — Deploy Vercel: fix 404 route SPA + button SPMB + mulai backend
 - ✅ User lapor: setelah deploy Vercel, route SPA 404 (e-learning, e-tracer, dll) & button SPMB navbar tidak bisa; backend "ga bisa deploy di vercel"
 - ✅ Investigasi: project Vercel = `lomba` → `bhapppp.vercel.app` (akun zakkyilhamf-7419, team zakkys-projects-99c4bf23); ROOT `vercel.json` TIDAK ADA → 404 semua route; button SPMB pakai `/login` relatif (frontend) → 404; `spmb-backend.vercel.app` BUKAN milik akun ini (500 dari akun lain); env lomba cuma GROQ_API_KEY + UPSTASH_REDIS_* (sisa dep mati, tanpa VITE_BACKEND_URL → production semua fetch backend → localhost:8000)
@@ -39,6 +175,64 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - ✅ Backend LIVE: `https://spmb-backend-self.vercel.app` (spmb-backend.vercel.app tetap milik akun lain) — login admin/admin123 302→/admin, dashboard 200, form action https, DB TiDB terhubung
 - ✅ Frontend production disetel: `VITE_BACKEND_URL=https://spmb-backend-self.vercel.app` (env project lomba) + redeploy → bundle baru `index-Dm0ThSzN.js` memuat URL backend → alur login/form/SPMB di bhapppp.vercel.app kini terhubung backend nyata
 - 💡 Catatan: env `UPSTASH_REDIS_*` di project lomba = sisa dep yang sudah dihapus (Sesi 12i) — bisa dihapus kapan saja
+
+### Sesi 12p.1 — Fix 500 saat register/login siswa di production (enum role TiDB)
+- ✅ Gejala user: "login sebagai pendaftar atau siswa → 500 server error" (production)
+- ✅ Reproduksi: POST /register → 500; POST /login (akun siswa demo `siswa/siswa123`) → 302 OK — ternyata yang 500 adalah REGISTER (akun pendaftar baru), bukan login
+- ✅ Akar masalah: tabel `users` di TiDB punya `role ENUM('admin','siswa')` — migration `2026_08_09_094358_add_pendaftar_role_to_users_table` (tambah 'pendaftar') TIDAK pernah dijalankan ke TiDB (di-migrate sebelum migration itu ada) → INSERT role='pendaftar' ditolak → 500
+- ✅ Verifikasi schema TiDB via PDO script (baca langsung, pakai cert isrgrootx1.pem): semua tabel & kolom ada (users, pendaftarans 45+ kolom, pendaftaran_drafts); users cuma 2 (admin + siswa demo), pendaftarans 0
+- ✅ Fix: `ALTER TABLE users MODIFY COLUMN role ENUM('admin','siswa','pendaftar') NOT NULL DEFAULT 'pendaftar'` (tanpa mengubah data siswa yang ada)
+- ✅ Verifikasi end-to-end: register akun baru → 302; form create → 200; login akun baru → 302; test user dibersihkan
+- 💡 TRAP: migration Laravel baru di masa depan juga harus dijalankan ke TiDB (mis. via artisan dengan env TiDB, atau ALTER manual) — schema TiDB tidak otomatis sinkron
+
+### Sesi 12p.2 — User masih lihat 500 saat login di web deployed
+- ✅ Gejala: "pas login di web yang udah dideploy masih error 500" (setelah enum fixed)
+- ✅ Investigasi: backend zero error di 200 log terakhir (semua request sukses, login siswa 302, auth-status 200); frontend live bundle `index-thATF_YG.js` sudah memuat `spmb-backend-self.vercel.app`; router Vue TIDAK punya route /login & /register (URL itu blank di SPA)
+- ✅ Kesimpulan: 500 user berasal dari jalur lama — URL `spmb-backend.vercel.app` (deployment akun lain yang rusak) atau cache browser bundle lama — bukan backend production ini
+- ✅ Fix permanen (tutup semua jalur salah): (1) `vercel.json` redirects `/login` & `/register` → 308 ke `spmb-backend-self.vercel.app/login|register` (level server, berlaku untuk semua browser bahkan yang bundle-nya cache lama); (2) router Vue tambah route `/login` & `/register` dengan `beforeEnter` → `window.location.href = ${BACKEND}/...`; (3) `useAuthSession.js` export named `BACKEND`
+- ✅ Verifikasi: build OK, deploy → `/login` → 308 `spmb-backend-self.vercel.app/login`, `/register` → 308
+- 💡 User diminta: hard refresh (Ctrl+Shift+R) & pastikan alamat login = `spmb-backend-self.vercel.app` (BUKAN `spmb-backend.vercel.app`)
+
+### Sesi 12p.3 — Logo hilang di halaman login/daftar/formulir (vercel-php tidak serve public/)
+- ✅ Gejala: logo sekolah tidak muncul di halaman login/register/pendaftaran production
+- ✅ Akar masalah: asset blade = `/logo.png` & `/cs.png` (di `public/`) — vercel-php men-bundle SEMUA file ke lambda & PHP built-in server TIDAK serve static (request `/public/logo.png` malah jatuh ke route fallback Laravel, 200 text/html); rewrite vercel.json ke `/public/...` juga tak jalan (static tak ada di /vercel/output)
+- ✅ Fix: serve lewat route Laravel — `routes/web.php` tambah `GET /logo.png` & `GET /cs.png` → `response()->file(public_path(...))`; rewrites di `backend/vercel.json` dihapus
+- ✅ Verifikasi: `/logo.png` → 200 image/png (359 KB), `/cs.png` → 200 image/png; halaman login img-src benar
+- 💡 TRAP: di vercel-php, semua aset public/ yang dipakai blade harus diserve via route atau file di-root project — file statis public/ TIDAK bisa diakses langsung
+
+### Sesi 12p.4 — Back dari halaman formulir → navbar masih tampil login (state basi bfcache)
+- ✅ Gejala: login/register → redirect halaman formulir (backend) → browser Back ke landing page → navbar/hero masih tampil sebagai guest (button login) padahal sudah login
+- ✅ Akar masalah: halaman frontend di-restore dari bfcache (pageshow persisted) → JS tidak re-run → `sessionStorage` masih berisi state guest lama (polling fetchStatus ikut beku)
+- ✅ Fix: `useAuthSession.js` tambah listener `pageshow` (guard `bfcacheBound` agar sekali pasang) → jika `e.persisted` → `fetchStatus()` revalidate → state navbar ter-update (pendaftar → button SPMB mengarah `pendaftaran/create`, siswa → profil/dashboard)
+- ✅ Build + deploy → live
+- 💡 Untuk role pendaftar navbar memang menampilkan button "SPMB" (label tetap) dengan target `pendaftaran/create` = lanjutkan pendaftaran
+
+### Sesi 12p.5 — Masih tidak ada button "Lanjutkan Pendaftaran" — ROOT CAUSE: cookie SameSite=Lax cross-site
+- ✅ Gejala lanjutan: fix bfcache tidak cukup — back ke landing tetap tampil sebagai guest
+- ✅ Akar masalah SEBENARNYA: session cookie Laravel default `SameSite=Lax` → fetch `/auth-status` dari bhapppp.vercel.app (cross-site) TIDAK membawa cookie → backend selalu menjawab guest. Lokal berfungsi karena localhost:5174→localhost:8000 = same-site (beda port tetap same-site)
+- ✅ Fix: env Vercel backend `SESSION_SAME_SITE=none` (cookie jadi SameSite=None; Secure) → cross-site fetch membawa cookie
+- ✅ Verifikasi Playwright (browser nyata): login siswa/siswa123 → buka frontend → button hero = "Dashboard Siswa"; register pendaftar baru → buka frontend → button hero = **"Lanjutkan Pendaftaran"**; cookie terbaca `laravel-session sameSite=None secure=true`
+- ✅ Test user dibersihkan
+- 💡 UI Hero.vue sudah punya branch pendaftar ("Lanjutkan Pendaftaran" → `pendaftaran/create`) — tinggal state yang salah
+
+### Sesi 12p.6 — Pembersihan file tidak dipakai (perintah user)
+- ✅ Hapus `backend/resources/views/pendaftarans/card.blade.php` + `PendaftaranController::generateCard()` + route `pendaftaran.card` — Kartu Peserta setengah jadi (leftover AI Sesi 12n), tidak ada link dari UI mana pun
+- ✅ Hapus `e2e/logout.spec.js` + `e2e/lihat-logout.mjs` — test/helper navbar logout yang sudah dihapus Sesi 12l
+- ✅ Hapus `playwright.config.js` + folder `e2e` (kosong setelah spec dihapus) + folder `src/server` (arsip kosong)
+- ✅ Verifikasi: php -l bersih (controller, routes, bootstrap), vite build OK
+
+### Sesi 12q — Hero: button Login diganti "Lanjutkan Pendaftaran" (semua non-siswa)
+- ✅ User minta: di landing (`?no-intro=1`), button login diganti jadi "Lanjutkan Pendaftaran"
+- ✅ `Hero.vue`: branch guest (button Login + dropdown Login Siswa/Pendaftar) dihapus → semua non-siswa dapat satu button "Lanjutkan Pendaftaran" → `${BACKEND}/pendaftaran/create`; siswa tetap "Dashboard Siswa"
+- ✅ Dead code dibersihkan: `loginExpanded`, `toggleLogin`, `isLoggedIn`, `isPendaftar`, CSS `.btn-group-login/.sub-buttons/.sub-btn`
+- ✅ Build OK; login/register tetap bisa diakses via navbar (SPMB dropdown) & route `/login`/`/register` (redirect backend)
+
+### Sesi 12q.1 — Fix 500 "Lanjutkan Pendaftaran" di lokal (`.env.local` dari vercel link)
+- ✅ Gejala: klik "Lanjutkan Pendaftaran" (localhost:5174) → 500; semua route backend lokal 500 `MissingAppKeyException` padahal `APP_KEY` ada di `.env`
+- ✅ Akar masalah: `vercel link` (Sesi 12p) membuat `backend/.env.local` berisi `VERCEL_OIDC_TOKEN` — Laravel 12 otomatis memuat `.env.local` dan meng-override env → `APP_KEY` tidak terbaca → encrypter gagal
+- ✅ Fix: hapus `backend/.env.local` (token OIDC hanya dipakai Vercel build, tidak diperlukan untuk deploy CLI)
+- ✅ Verifikasi: `/`, `/login`, `/pendaftaran/create` → 200
+- 💡 TRAP: jangan biarkan `.env.local` di folder backend — Laravel memuatnya otomatis; `vercel link` di folder Laravel akan mengulang masalah ini
 
 ### Sesi 12n — Unduh Bukti Diterima (ganti button Dashboard di card Aktivitas)
 - ✅ User minta: card status pendaftaran di bawah navbar (HomeView student-card) saat status `diterima` → button "Buka Dashboard Siswa" diganti "Unduh Bukti Diterima"

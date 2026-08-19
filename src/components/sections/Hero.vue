@@ -1,14 +1,11 @@
 <script setup>
-import { ref, computed } from "vue";
+import { computed, ref } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
-const { BACKEND, session, loaded } = useAuthSession();
+const { BACKEND, session } = useAuthSession();
+
+const isSiswa = computed(() => session.value.role === "siswa");
 
 const loginExpanded = ref(false);
-
-const isLoggedIn = computed(() => loaded.value && session.value.logged_in);
-const isSiswa = computed(() => session.value.role === "siswa");
-const isPendaftar = computed(() => session.value.role === "pendaftar");
-
 const toggleLogin = () => {
   loginExpanded.value = !loginExpanded.value;
 };
@@ -37,31 +34,22 @@ const toggleLogin = () => {
       <div class="bg-word">SCHOOL</div>
 
       <div class="buttons">
-        <template v-if="!isLoggedIn">
-          <div class="btn-group-login">
-            <button class="primary btn-login" @click="toggleLogin">
-              Login
-            </button>
-            <div class="sub-buttons" :class="{ open: loginExpanded }">
-              <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
-              <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
-            </div>
-          </div>
-        </template>
         <a
-          v-else-if="isSiswa"
+          v-if="isSiswa"
           :href="`${BACKEND}/dashboard-siswa`"
           class="primary btn-login"
         >
           Dashboard Siswa
         </a>
-        <a
-          v-else-if="isPendaftar"
-          :href="`${BACKEND}/pendaftaran/create`"
-          class="primary btn-login"
-        >
-          Lanjutkan Pendaftaran
-        </a>
+        <div class="btn-group-login" v-else>
+          <button class="primary btn-login" @click="toggleLogin">
+            Login
+          </button>
+          <div class="sub-buttons" :class="{ open: loginExpanded }">
+            <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
+            <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -277,8 +265,7 @@ button {
   transform: translateY(-2px);
 }
 
-.primary:active,
-.sub-btn:active {
+.primary:active {
   transform: translateY(1px) scale(0.98);
 }
 

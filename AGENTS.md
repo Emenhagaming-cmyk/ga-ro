@@ -3,7 +3,7 @@
 Konteks permanen proyek. Dibaca otomatis oleh opencode di setiap sesi baru.
 Baca juga `PROGRESS.md` untuk status terakhir & TODO lanjutan.
 
-## Struktur Proyek (2 bagian)
+## Struktur Proyek (3 bagian)
 
 - **Backend Laravel 12** → `C:\Users\LENOVO\lomba\ga-ro\backend`
   - Server: `php artisan serve --port=8000`
@@ -12,6 +12,14 @@ Baca juga `PROGRESS.md` untuk status terakhir & TODO lanjutan.
   - Views: `resources/views/` (auth/, pendaftaran/, layouts/)
   - Form pendaftaran multi-step: `resources/views/pendaftaran/create.blade.php`
   - Routes: `routes/web.php` (web), `routes/api.php` (API Lama — tidak dipakai frontend baru)
+  - **Web utama = SISWA/PENDAFTAR only** — login admin DITOLAK (pesan arahkan ke panel). Route admin dihapus (GET /admin → 404).
+
+- **Panel Admin terpisah** → `C:\Users\LENOVO\lomba\ga-ro\backend-admin` (salinan backend, domain `spmb-admin.vercel.app`, project Vercel `spmb-admin`)
+  - Login hanya role admin ("Hanya akun admin..."); logout → `/login`. Route: `/`, `/login`, `/logout`, forgot/reset-password, group admin (`/admin`, `/pendaftaran`, export, snapshot, show, PUT status, DELETE).
+  - DB SAMA: TiDB production. Env production: DB_CONNECTION=mysql + DB_* + MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem + APP_KEY=`base64:gtKJvpBuztMINYQwxnKgMFIHQaYvy3WnzBS0+ItkX5g=` + SESSION_SAME_SITE=lax + SESSION_SECURE_COOKIE=true (via vercel.json env & project env).
+  - `.env` lokal panel hanya untuk artisan (DB_CONNECTION=sqlite + APP_KEY lokal `base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=` — JANGAN dipakai production). Vendor di-copy lokal (tidak ter-upload).
+  - Deploy: `vercel deploy --prod --yes` lalu `vercel alias set <url> spmb-admin.vercel.app` (alias TIDAK otomatis). CLI: `C:\nvm4w\nodejs\vercel.cmd`, team `zakkys-projects-99c4bf23`.
+  - **Trap**: project Vercel baru punya deployment protection (ssoProtection) → matikan via API PATCH `{"ssoProtection":null}`. `vercel link` bikin `.env.local` → hapus. Deploy kadang `fetch failed` → retry.
 
 - **Landing page Vue 3** → `C:\Users\LENOVO\lomba\ga-ro`
   - Server: `npm run dev` (port 5174)

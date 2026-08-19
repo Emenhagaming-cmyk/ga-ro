@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran - SMK Bahrul Ulum</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap');
 
         * {
             margin: 0;
@@ -776,14 +778,14 @@
     <!-- Header/Navbar -->
     <header class="navbar">
         <div style="display:flex;align-items:center;gap:12px;">
-            <a href="http://localhost:5174/?no-intro=1" aria-label="Kembali ke beranda"
+            <a href="{{ frontendAuthUrl() }}" aria-label="Kembali ke beranda"
                style="width:36px;height:36px;border-radius:10px;border:1px solid #dfe4dd;background:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#3a6450;transition:all 0.25s ease;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 12H5"></path>
                     <path d="M12 19l-7-7 7-7"></path>
                 </svg>
             </a>
-            <a href="http://localhost:5174/?no-intro=1" class="logo">
+            <a href="{{ frontendAuthUrl() }}" class="logo">
                 <img src="{{ asset('logo.png') }}" alt="Logo SMK Bahrul Ulum" class="logo-img" />
                 <div>
                     <h2>SMK Bahrul Ulum</h2>
@@ -793,10 +795,10 @@
         </div>
 
         <nav class="desktop-nav">
-            <a href="http://localhost:5174/?no-intro=1">Beranda</a>
-            <a href="http://localhost:5174/?no-intro=1#layanan">Layanan</a>
-            <a href="http://localhost:5174/?no-intro=1#tentang">Tentang</a>
-            <a href="http://localhost:5174/?no-intro=1#contact">Kontak</a>
+            <a href="{{ frontendAuthUrl() }}">Beranda</a>
+            <a href="{{ frontendAuthUrl() }}#layanan">Layanan</a>
+            <a href="{{ frontendAuthUrl() }}#tentang">Tentang</a>
+            <a href="{{ frontendAuthUrl() }}#contact">Kontak</a>
         </nav>
 
         @auth
