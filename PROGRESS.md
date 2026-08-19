@@ -17,6 +17,7 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
   - PUT status & DELETE TIDAK dites di production (bukan read-only — menghindari merusak data asli; logika sama dengan web utama yang sudah teruji).
 - **IMPLEMENTATION_SUMMARY.md**: section "Panel Admin Terpisah — Sesi 12y/12z" ditambahkan. AGENTS.md struktur 3 bagian sudah update (sesi kemarin).
 - **Catatan**: deploy kadang "Not authorized"/"fetch failed" transient → retry; `vercel alias set` dijalankan setiap deploy.
+- **Tindak lanjut (2026-08-19, atas permintaan user)**: link **"Dashboard" & "Buka Web Utama ↗" dihapus** dari navbar panel (`backend-admin/resources/views/layouts/app.blade.php` — div `nav-links` pertama dihapus; navbar = brand + badge "Panel Admin" + Logout). `view:cache` OK; deploy Ready 27s; verifikasi ulang `verifyadmin.php`: GET / → /login 200, login admin → dashboard 200, logout → /login, login siswa → ditolak "Hanya akun admin" — semua tetap hijau.
 
 **LANGKAH BERIKUTNYA (deferred, keputusan user — stats dinamis & section Jurusan)**:
 1. Migration `school_stats` (key-value: siswa_aktif, jurusan, program_keahlian, `jurusans` JSON) + seeder (nilai sekarang: 1280 siswa, 1 jurusan, 1 program keahlian).
