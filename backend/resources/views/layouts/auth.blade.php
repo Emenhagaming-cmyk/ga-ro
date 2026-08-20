@@ -164,7 +164,7 @@
         }
 
         .form-subtitle {
-            color: #f7f8f7;
+            color: #0a0a0a;
             margin-bottom: 26px;
             font-size: 14px;
             line-height: 1.7;
