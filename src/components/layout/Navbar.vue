@@ -686,7 +686,6 @@ onUnmounted(() => {
     border-radius: 20px;
     background: rgba(251, 252, 250, 0.98);
     box-shadow: 0 18px 38px rgba(35, 55, 42, 0.12);
-    backdrop-filter: blur(18px);
   }
 
   .mobile-nav a {
@@ -786,6 +785,7 @@ onUnmounted(() => {
     height: 66px;
     padding: 0 18px;
     width: 92%;
+    background: rgba(255, 255, 255, 0.97);
   }
 }
 </style>

@@ -6,7 +6,7 @@
     <title>@yield('title', 'SPMB - SMK Bahrul Ulum')</title>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- ponytail: @vite removed — no build dir in production, causes 404 --}}
     <style>
         * {
             font-family: 'Quicksand', sans-serif;
@@ -28,8 +28,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.96);
             padding: 0 7%;
             height: 74px;
             display: flex;
@@ -78,16 +77,16 @@
         }
 
         .container {
-            max-width: 820px;
+            max-width: 400px;
             margin: 0 auto;
-            padding: 40px 24px 60px;
+            padding: 32px 24px 60px;
         }
 
         .form-section {
             background: #fbfcfa;
             border: 1px solid #dfe4dd;
-            padding: 36px 40px;
-            border-radius: 22px;
+            padding: 28px 32px;
+            border-radius: 20px;
             box-shadow: 0 12px 24px rgba(35, 55, 42, 0.06);
             position: relative;
             overflow: hidden;
@@ -368,13 +367,56 @@
             }
 
             .navbar {
-                padding: 0 18px;
-                height: 60px;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px 12px;
+                row-gap: 6px;
+            }
+
+            .navbar > div:first-child {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .navbar-brand {
+                font-size: 15px;
+                gap: 6px;
+                min-width: 0;
+            }
+
+            .navbar-brand img {
+                height: 32px;
+                flex-shrink: 0;
+            }
+
+            .navbar-brand span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 0;
+            }
+
+            .nav-links {
+                flex-shrink: 0;
             }
 
             .nav-links a {
                 font-size: 13px;
                 padding: 6px 10px;
+            }
+
+            .nav-links .btn {
+                padding: 7px 14px;
+                font-size: 13px;
+            }
+
+            .nav-links:first-of-type {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                gap: 6px;
+                border-top: 1px solid #eef1ec;
+                padding-top: 8px;
             }
 
             .container {
@@ -398,6 +440,10 @@
                 width: 100%;
                 text-align: center;
             }
+
+            input, select, textarea {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -418,29 +464,9 @@
             <span>SMK Bahrul Ulum</span>
         </a>
     </div>
-    <div class="nav-links">
-        @auth
-        {{-- Logged in: no Beranda/Formulir/Dashboard links, ganti tombol back di atas --}}
-        @else
-        <a href="{{ frontendAuthUrl() }}" target="_blank" rel="noopener noreferrer">Beranda</a>
-        <a href="/pendaftaran/create">Formulir</a>
-        @endauth
-    </div>
-
-    <div class="nav-links">
-        @auth
-        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-            @csrf
-            <button type="submit" class="action-btn action-btn-edit" style="font-size:13px;">Logout</button>
-        </form>
-        @else
-        <a href="{{ route('login') }}" class="btn btn-secondary" style="padding:8px 18px;">Masuk</a>
-        <a href="{{ route('register') }}" class="btn btn-primary" style="padding:8px 18px;">Daftar</a>
-        @endauth
-    </div>
 </nav>
 
-    <div class="container">
+    {{-- Navbar kini hanya menampilkan brand/logo --}}
         @yield('content')
     </div>
 </body>

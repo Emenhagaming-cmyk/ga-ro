@@ -122,7 +122,7 @@ border-radius:16px;
 
 padding:0 18px;
 
-font-size:15px;
+font-size:16px;
 
 }
 

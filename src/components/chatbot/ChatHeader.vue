@@ -52,8 +52,7 @@ box-shadow:0 0 12px #22c55e;
   height: 72px;
   padding: 0 18px;
   color: black;
-  background: rgba(255,255,255,.85);
-  backdrop-filter: blur(18px);
+  background: rgba(255,255,255,.96);
   border-bottom:1px solid #eee;
   z-index:20;
 }

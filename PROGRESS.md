@@ -18,6 +18,99 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - **IMPLEMENTATION_SUMMARY.md**: section "Panel Admin Terpisah — Sesi 12y/12z" ditambahkan. AGENTS.md struktur 3 bagian sudah update (sesi kemarin).
 - **Catatan**: deploy kadang "Not authorized"/"fetch failed" transient → retry; `vercel alias set` dijalankan setiap deploy.
 - **Tindak lanjut (2026-08-19, atas permintaan user)**: link **"Dashboard" & "Buka Web Utama ↗" dihapus** dari navbar panel (`backend-admin/resources/views/layouts/app.blade.php` — div `nav-links` pertama dihapus; navbar = brand + badge "Panel Admin" + Logout). `view:cache` OK; deploy Ready 27s; verifikasi ulang `verifyadmin.php`: GET / → /login 200, login admin → dashboard 200, logout → /login, login siswa → ditolak "Hanya akun admin" — semua tetap hijau.
+- **Redesign panel jadi sidebar (2026-08-19, atas permintaan user)**:
+  - **Layout baru** `layouts/app.blade.php`: sidebar kiri (gradient hijau tua, brand + badge "Panel Admin", menu Dashboard & Data Pendaftar dengan active state, Logout di bawah; guest → teks "Akses terbatas" + link Masuk Panel) + topbar (hamburger mobile, judul halaman, username) + konten. Mobile (<900px): sidebar slide-in + backdrop + hamburger (JS `toggleSidebar`). CSS form/table/btn/alert dipertahankan.
+  - **Halaman dipisah**: `/admin` → `PendaftaranController@dashboard` (BARU) → view `pendaftaran/dashboard.blade.php` (BARU): 5 kartu status (Total/Baru/Diproses/Diterima/Ditolak — sebelumnya cuma 3), insight AI, tabel "Pendaftar Terbaru" (5 item, link Lihat), auto-refresh 5s + banner data baru via snapshot. `/pendaftaran` → `index()` → tabel lengkap + Export CSV + hapus modal (stat cards & auto-refresh dihapus dari sini).
+  - Verifikasi production (`verifyadmin.php` + script): GET / → /login 200; login admin → dashboard 200 (sidebar=YA, kartu5=YA, terbaru=YA); `/pendaftaran` 200 (Export CSV=YA, statTotal di list=BERSIH); logout → /login; login siswa → ditolak YA. Deploy Ready 27s.
+- **5 Fitur panel (2026-08-19, atas permintaan user) — KODE SELESAI LOKAL, DEPLOY TERTUNDA**:
+  - **Ringkasan AI → Ringkasan Data**: `RegistrationInsightService` disederhanakan — HAPUS semua pemanggilan LLM (Http/Ninerouter/Groq), langsung `buildFallbackSummary()` (template statis). Label view "Ringkasan AI" → "Ringkasan Data". `index()` tidak lagi generate insight.
+  - **A. Analitik Chart.js**: CDN chart.js@4.4.1 di `dashboard.blade.php`; controller `chartData()` (30 hari pendaftar, jurusan, status); 3 canvas: line "Pendaftar per Hari (30 Hari)", doughnut jurusan & status. Grid 1.4fr/1fr/1fr → 1fr di <1024px.
+  - **B. Pencarian + filter**: `index(Request)` — filter `q` (nama/nisn/nik/asal_sekolah/no_hp), `status`, `jurusan`, checkbox `duplikat`, pagination `withQueryString()`. Form `filter-bar` di `index.blade.php` + tombol Reset.
+  - **C. Deteksi duplikat**: `$duplicateNisn`/`$duplicateNik` (groupBy havingRaw count>1) → badge "NISN ganda"/"NIK ganda" di baris list; filter checkbox "Duplikat NISN/NIK".
+  - **D. Laporan mingguan**: route `/laporan` → `laporan()` (stats per status/jurusan + pendaftar minggu ini `startOfWeek`–`endOfWeek`) → view `pendaftaran/laporan.blade.php` (kertas A4, kop sekolah, tabel, kolom TTD Kepala Sekolah & Admin, tombol Cetak/PDF via `window.print()`; CSS `@media print` sembunyikan sidebar/topbar). Menu "Laporan" di sidebar.
+  - **E. Badge live sidebar**: JS poll snapshot 5s di `layouts/app.blade.php` — baseline `latest_id` di sessionStorage; jika ada id baru → badge merah di link "Data Pendaftar" (jumlah baru).
+  - **Error selama develop**: `Cannot redeclare index()` — edit controller menyisakan method `index()` lama (baris ~109) → dihapus. Route:list & view:cache OK.
+  - **DEPLOY GAGAL berulang (fetch failed / 400 missing_files — upload terputus)**: API vercel normal (`/v2/user` 200), whoami OK, `Test-NetConnection api.vercel.com:443` True — masalah jaringan ISP ke endpoint upload. **TODO: retry `vercel deploy --prod --yes` + `vercel alias set <url> spmb-admin.vercel.app` + verifikasi (dashboard chart=YA, filter, laporan 200, badge).**
+  - **Diagnosis lanjut (19/8): POST diblokir ISP total** — GET ke api.vercel.com OK (~8s), tapi POST apa pun (kecil 3B maupun 200KB) → `UND_ERR_CONNECT_TIMEOUT`; httpbin.org juga ETIMEDOUT. Ping 0% loss ke api.vercel.com tapi TCP POST tidak pernah tersambung (upload putus di tengah ~60-75KB). Ini blokir/throttle upload oleh ISP, bukan kode. **Coba: jaringan lain (hotspot HP) → `vercel deploy --prod --yes` dari `backend-admin` + `vercel alias set <url> spmb-admin.vercel.app` + verifikasi.**
+  - **DEPLOY + VERIFIKASI TUNTAS (19/8 malam)**: setelah beberapa jam, `vercel deploy --prod --yes` OK (Ready 29s, `spmb-admin-63x7njdai-zakkys-projects-99c4bf23.vercel.app`) → `vercel alias set` OK → spmb-admin.vercel.app mengarah ke deployment baru. **Verifikasi production 22/22 PASS** (`verifyadmin4.php`): GET / → /login; login admin; /admin 200 dengan Label "Ringkasan Data" + canvas chartDaily/chartJurusan/chartStatus + CDN Chart.js + menu Laporan di sidebar + TIDAK ada "Ringkasan AI"; /pendaftaran 200 + filter q/status/jurusan/duplikat + filter q berfungsi; /laporan 200 + kop "SMK Bahrul Ulum" + tombol Cetak + tabel status (label "Baru/Diproses/Diterima/Ditolak" kapital). Catatan: verifikasi awal false-fail karena (a) GET login tidak menyimpan cookie jar → CSRF 419 → redirect 302 (fix: GET login wajib pakai cookie jar), (b) regex header curl case-sensitive (HTTP/2 header lowercase) — bukan bug aplikasi. Jaringan masih fluktuatif (percobaan 1-2 fail code=0, percobaan 3 bersih).
+- **Optimasi mobile + HP kentang (19/8, atas permintaan user "tampilan mobile masih acak-acakan + minta lancar di HP kentang") — KODE + DEPLOY + VERIFIKASI TUNTAS** (deploy `spmb-admin-a8aldzzwv-zakkys-projects-99c4bf23`, alias OK, verifyadmin5 16/16 PASS):
+  - **Fix "acak-acakan"**: (1) tabel laporan TANPA wrapper overflow → halaman melebar di HP → semua tabel (laporan/dashboard/list) dibungkus `.table-wrap` (overflow-x + -webkit-overflow-scrolling + `min-width` kolom, th/td nowrap); (2) topbar-title `white-space:nowrap + ellipsis + min-width:0` (judul panjang terpotong rapi, tidak mendorong layout); (3) username di topbar `hide-sm` di HP; (4) `.hide-sm` = kolom No HP/Asal Sekolah disembunyikan di <768px (tabel dashboard 5→3 kolom, list 7→5 kolom, tetap muat tanpa geser horizontal); (5) filter-bar di mobile: input+select width 100%; (6) `.report-head` mobile: logo 44px + judul 14px; (7) sidebar-link min-height 46px (touch target); (8) input/select/textarea `font-size:16px` di mobile (anti auto-zoom iOS saat fokus).
+  - **Perf HP kentang**: hapus SEMUA `backdrop-filter` (topbar blur(20px) + sidebar backdrop blur(3px) — paling boros GPU); polling snapshot turun 5s → **20s** (badge sidebar & auto-refresh dashboard — total request 2/menit per halaman, sebelumnya 24/menit); chart init dibungkus `requestAnimationFrame` + guard `typeof Chart === 'undefined'` (tidak blokir paint, aman kalau CDN gagal di jaringan lemot); `preconnect` fonts.googleapis + fonts.gstatic.
+  - Laporan print tetap normal (`@media print`: `.table-wrap` overflow visible + min-width 0 — tabel tidak terpotong saat cetak).
+  - Deployment ke-2 hari ini butuh 9 retry (`fetch failed` ISP blokir POST — pola sama, retry lama akhirnya tembus).
+- **Optimasi mobile + HP kentang WEB UTAMA (frontend Vue, 19/8, atas klarifikasi user "saya minta web utama juga") — KODE + DEPLOY + VERIFIKASI TUNTAS** (deploy `lomba-e05z8wi22-zakkys-projects-99c4bf23`, alias bhapppp.vercel.app OK, build lokal OK, homepage prod 200):
+  - Audit: router sudah lazy-load per route (index gzip 41KB, halaman 1-14KB gzip); semua section/view sudah punya media queries (2-3 per file); CursorGlow sudah desktop-only (>900px); tidak ada import FontAwesome/LoadingScreen yang tidak dipakai; footer responsif penuh.
+  - **Perf fix (boros GPU → hemat)**: (1) `Hero.vue` — 2 blobs `filter: blur(70px)` (240-280px) disembunyikan di ≤900px; (2) `Navbar.vue` — backdrop-filter blur(18px) dihapus dari `.mobile-nav`, navbar jadi `rgba(255,255,255,.97)` solid di mobile (navbar fixed selalu di layar = recompute terus); (3) `FloatingAi.vue` — backdrop-filter blur(16px) dibuang → `rgba(255,255,255,.95)` (tombol fixed selalu tampil); (4) `ChatHeader.vue` — blur(18px) → solid `.96`; (5) `ChatInput.vue` — input `font-size:15px→16px` (anti auto-zoom iOS saat fokus).
+  - TIDAK menyentuh: `api/chat.js`, `api/knowledge/**`, `vite.config.js` bagian chat, `src/server/.env` (aturan AGENTS.md).
+  - Catatan: API Vercel `deployments` endpoint 404 untuk project frontend ini → verifikasi chunk production tidak bisa via API; cukup build lokal + homepage 200 + user cek visual di HP. Deploy butuh 9 retry (ISP blokir POST).
+- **Navbar mobile BACKEND UTAMA diperbaiki (19/8, laporan user: "navbar di halaman login versi mobile acak-acakan") + semua verifikasi TUNTAS**:
+  - Akar masalah: navbar `backend/resources/views/layouts/app.blade.php` TIDAK punya mode mobile — 3 grup (logo+brand, Beranda+Formulir, Masuk+Daftar) tidak bisa wrap di layar 360px → saling tindih.
+  - **Fix CSS-only (tanpa JS)**: di `@media (max-width:768px)` navbar jadi `flex-wrap:wrap; height:auto` (2 baris: atas = logo+brand + Masuk/Daftar, bawah = Beranda+Formulir via `order:3; width:100%` + `.nav-links:first-of-type`); brand 16px + logo 34px; backdrop-filter blur(20px) navbar dibuang (solid .96 — perf); input/select/textarea `font-size:16px` (anti auto-zoom iOS) — konsisten dengan perbaikan panel admin & frontend.
+  - **TRAP TERBARU**: `vercel deploy` dari folder `backend` MENGIRIM ke project `spmb-admin` (bukan `spmb-backend`) → deployment 500 di project panel (alias panel TIDAK terpengaruh). Root cause: `.vercel/project.json` di `backend` berisi projectId yang salah/outdated. **Fix: `vercel link --yes --project spmb-backend` dari folder backend (lalu HAPUS `.env.local` buatan link — trap AGENTS), deploy ulang → `spmb-backend-pfvan880u` (Ready 35s), alias set → spmb-backend-self.vercel.app OK.** Panel lalu di-deploy ulang dari `backend-admin` (`spmb-admin-byvrw5d12`, alias spmb-admin.vercel.app dikoreksi ke deployment baru setelah sempat salah set ke URL lama 63x7njdai).
+  - Verifikasi production (`verifyall.php` 11/11 PASS): backend /login 200 + navbar flex-wrap + order baris kedua + backdrop-filter hilang + input 16px + brand 16px; panel /login 200 + POST login 302 + /admin 200 + chartDaily masih ada.
+  - **Pelajaran: SELALU cek hasil deploy → pastikan prefix URL sesuai project yang dimaksud (`spmb-backend-*`, `spmb-admin-*`, `lomba-*`) sebelum set alias.**
+
+- **Navbar mobile BACKEND UTAMA — perbaikan ke-2 (19/8, laporan user: "navbar halaman login versi mobile acak-acakan" + screenshot)**:
+  - Screenshot 358px menunjukkan: teks "SMK Bahrul Ulum" pecah 3 baris ("SMK" / "Bahrul" / "Ulum"), semua elemen dipaksa 1 baris → tumpang tindih, Vite `@vite` directive memicu404 error di production (no build assets).
+  - **Fix** di `backend/resources/views/layouts/app.blade.php`: (1) `@vite` dihapus (ponytail — no build dir in production, causes404); (2) `.navbar > div:first-child` → `flex:1; min-width:0;` (brand area takes remaining space); (3) `.navbar-brand span` → `white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;` (brand text truncated, tidak pecah); (4) `.navbar-brand` → `min-width:0` (allows truncation); (5) `.nav-links` → `flex-shrink:0` (tombol Masuk/Daftar tidak menyusut); (6) padding navbar diketat `10px 12px`, nav-links font/padding dikurangi.
+  - Deploy `spmb-backend-gtsmyrle4`, alias OK, login page 200, CSS ter-deploy (flex-shrink, text-overflow ada, Vite404 hilang).
+
+- **Navbar BACKEND UTAMA ditingkatkan: hapus nav-links Masuk/Daftar/Beranda/Formulir (2026-08-19, atas permintaan user "button di navbar login sudah ga guna")**:
+  - Kedua div `.nav-links` (Beranda+Formulir + Masuk+Daftar) dihapus dari `app.blade.php` — navbar kini hanya menampilkan brand/logo + back button (untuk auth users).
+  - Link "Lupa kata sandi?" dan "Daftar di sini" tetap ada di dalam form login (konten), bukan navbar.
+  - Deploy `spmb-backend-4jcavmwyk`, alias `pendaftaranspmb.vercel.app`, login page 200, navbar bersih tanpa elemen nav-links.
+
+- **Redesign halaman login/register jadi SPLIT-SCREEN (19/8, atas permintaan user + referensi gambar Shutterstock "Colorful website login ui design vector")**:
+  - Layout baru `backend/resources/views/layouts/auth.blade.php` (BARU): split-screen — kiri `.auth-illustration` (gradient hijau `#214936→#2f5b45→#3a6450`, 3 blob CSS organik semi-transparan, brand logo + "SMK Bahrul Ulum" + headline "Selamat Datang di PPDB Online"), kanan `.auth-form-area` (card putih `.auth-card` 400px, rounded 24px, shadow besar, strip gradient hijau di atas, @yield('content')).
+  - Mobile (<768px): stack vertikal — ilustrasi di atas (min-height 220px, blob dikecilkan), form di bawah; input 16px (anti auto-zoom iOS).
+  - `login.blade.php` & `register.blade.php` → `@extends('layouts.auth')`, field input dibungkus `.input-wrap` dengan **SVG icon inline** (user, lock, email) di kiri input.
+  - Tema TETAP hijau (konsisten web utama) sesuai keputusan user.
+  - `view:cache` OK; deploy `spmb-backend-45lwdx7v3`, alias `pendaftaranspmb.vercel.app`, login 200, semua elemen (auth-wrapper, illustration, blobs, card, input-wrap icons, btn gradient) ter-render.
+  - Catatan: `forgot-password.blade.php` & `reset-password.blade.php` MASIH pakai `layouts.app` (belum diubah — user hanya minta login/register).
+
+- **Domain backend diganti → `pendaftaranspmb.vercel.app` + fix redirect login/register FRONTEND (19/8, laporan user: "url kok ga keganti? pas mau login siswa malah begini")**:
+  - User ganti domain backend di dashboard Vercel: `spmb-backend-self.vercel.app` → **`pendaftaranspmb.vercel.app`** (alias lama dihapus → `DEPLOYMENT_NOT_FOUND`). Set ulang alias ke deployment terbaru.
+  - **Root cause "URL tidak ganti"**: `vercel.json` frontend masih hardcode redirect `/login` & `/register` → `https://spmb-backend-self.vercel.app` (domain mati). Env Vercel `VITE_BACKEND_URL` project `lomba` juga masih domain lama.
+  - **Fix**:
+    1. `vercel.json` (root frontend): redirect `/login` → `pendaftaranspmb.vercel.app/login`, `/register` → `.../register`.
+    2. Env `VITE_BACKEND_URL` project `lomba` (id `g4MEt0b1m2EFHjqe`): DELETE via API (200) → POST ulang nilai `https://pendaftaranspmb.vercel.app` (201, id baru `uR2DKYO9vk0tHZnS`). PUT 404 → pakai DELETE+POST. CLI env add hang (ISP) → pakai `curl.exe` + API langsung + token dari `C:\Users\LENOVO\AppData\Roaming\xdg.data\com.vercel.cli\auth.json` (BUKAN `~/.vercel/auth.json` — path salah).
+    3. Deploy frontend `lomba-rl3zai14q` (Ready 36s, 1 retry fetch failed) — build OK, HomeView 28KB gzip 9.7KB, index 105KB gzip 41KB.
+  - **Penting**: deploy CLI otomatis alias ke **`smkbu-sby.vercel.app`** (domain baru frontend yang di-set user di dashboard; `bhapppp.vercel.app` kini 307 redirect ke smkbu-sby).
+  - **Verifikasi**: `smkbu-sby.vercel.app/login` → 308 → `pendaftaranspmb.vercel.app/login` ✅; `/register` → 308 → `.../register` ✅; homepage 200 ✅; `bhapppp.vercel.app/login` → 307 → smkbu-sby/login ✅.
+  - Catatan: AGENTS.md "Frontend Vue → port 5174 / bhapppp" perlu diupdate ke `smkbu-sby.vercel.app` (deferred).
+
+- **Login/register: background hijau FULL page (19/8, atas permintaan user "coba background hijau full kan, mau lihat bagus ga")**:
+  - Ubah `layouts/auth.blade.php` dari split-screen → **full-page hijau**: `body` gradient `#214936→#2f5b45→#3a6450` + `background-attachment: fixed`; `.auth-illustration` jadi `position:absolute; inset:0` (layer blob dekorasi penuh, tanpa teks); `.auth-form-area` jadi kolom ter-tengah (z-index 2) berisi brand+headline di atas + `.auth-card` putih 400px di bawah.
+  - Blob dekorasi diperbanyak jadi 4 (blob-1..4) tersebar di seluruh halaman (top-left besar, bottom-right, mid-left, top-right).
+  - Mobile (<768px): ukuran blob/headline/brand dikurangi, form-area padding `24px 16px 40px`.
+  - Deploy `spmb-backend-2irt4zvve`, alias `pendaftaranspmb.vercel.app`, login 200, semua CSS + HTML ter-render.
+
+- **Login/register: efek GLASSMORPHISM pada card (19/8, atas permintaan user "coba kasih efek glass pada card login")**:
+  - `.auth-card`: `background: rgba(255,255,255,0.16)` + `backdrop-filter: blur(18px)` + `-webkit-` prefix + border `rgba(255,255,255,0.28)` (glass effect).
+  - Strip gradient di atas card pindah dari `::before` → `::after` (arah `#7db88d→#3a6450→#2a5238`); `::before` lama dihapus (tidak ada duplikat strip).
+  - Input tetap solid putih (`#ffffff`) supaya readability terjaga di atas glass.
+  - Deploy `spmb-backend-ljn2x2z9e`, alias `pendaftaranspmb.vercel.app`, CSS ter-deploy (backdrop-filter, rgba glass, ::after).
+
+- **Card login: glass lebih tebal + kontras (19/8, user lihat screenshot & pilih "Glass lebih tebal")**:
+  - Keluhan user: card "kalah" sama background hijau — teks & card tenggelam.
+  - `.auth-card`: opacity `0.16`→`0.28`, blur `18px`→`20px`, shadow `0 24px 60px rgba(28,42,35,0.14)`→`0 30px 70px rgba(13,26,20,0.45)`, border `rgba(255,255,255,0.28)`→`0.42`.
+  - Kontras teks dinaikkan: `.form-title` `#1c2a23`→`#12241b` (lebih pekat), `.form-subtitle` `#647067`→`#55635a`, `.auth-links` `#647067`→`#4a5a50`, `.auth-links a` `#3a6450`→`#245236` (hijau lebih pekat).
+  - Deploy `spmb-backend-eoj6j2isd` (2× fetch failed → attempt 3 sukses), alias `pendaftaranspmb.vercel.app`, CSS ter-deploy.
+
+- **Card login: font di-cerahkan (19/8, user: "font nya sekarang gelap, kalah sama background, tolong cerahkan dikit")**:
+  - `.form-title` `#12241b`→`#1e3d2e`, `.form-subtitle` `#55635a`→`#71817a`, `.auth-links` `#4a5a50`→`#6b7a71`, `.auth-links a` `#245236`→`#2f5b45`.
+  - Deploy `spmb-backend-omyuua6bl`, alias `pendaftaranspmb.vercel.app`.
+
+- **Halaman Profil (`auth/profile.blade.php`): hapus "Kembali ke Beranda" + tambah tombol Logout (19/8, user: "karna udah ada tombol back di sebelah logo, tambahkan logout")**:
+  - Link `&larr; Kembali ke Beranda` (bagian bawah halaman) DIHAPUS — navbar sudah punya tombol back (SVG arrow) di sebelah logo.
+  - Tambah tombol **Logout** di bawah tombol "Lihat Dashboard"/"Isi Formulir Pendaftaran": form POST `route('logout')` + `@csrf`, class baru `.profile-btn-logout` (putih, border merah `#e2b6b2`, teks `#b3362c`, hover bg `#fdf1f0`).
+  - Route profil: `GET /profil` (name `profil`, middleware `role:siswa`) — 302 ke `/login` bila belum login.
+  - Deploy `spmb-backend-fd6y538hw` (6× fetch failed + 1 retry → attempt 7 sukses), alias `pendaftaranspmb.vercel.app`.
+
+- **Forgot & Reset Password disamakan dengan UI login/register (19/8, user: "sekarang ui forgot passwordnya sama kan dengan ui login siswa/pendaftar")**:
+  - `forgot-password.blade.php` & `reset-password.blade.php`: `@extends('layouts.app')` → `@extends('layouts.auth')` — kini full-page hijau + glass card + blob + SVG icon di `.input-wrap` + `.auth-links` (sama persis login/register).
+  - Struktur disesuaikan: `.form-section` dibuang (auth layout sudah punya card), `.btn-group` dihapus (btn-primary sudah full width), inline style link diganti `.auth-links`.
+  - Deploy `spmb-backend-cmqspdoks` (8× fetch failed → attempt 9 sukses), alias `pendaftaranspmb.vercel.app`, `/forgot-password` render auth layout (auth-wrapper, blobs, input-wrap terverifikasi).
 
 **LANGKAH BERIKUTNYA (deferred, keputusan user — stats dinamis & section Jurusan)**:
 1. Migration `school_stats` (key-value: siswa_aktif, jurusan, program_keahlian, `jurusans` JSON) + seeder (nilai sekarang: 1280 siswa, 1 jurusan, 1 program keahlian).
@@ -755,6 +848,14 @@ npx playwright test
 ### Verifikasi
 - `npx vite build` ✅ sukses (1800 modules, 25.39s)
 - Semua halaman baru bisa diakses: `/e-learning`, `/e-tracer`
+
+### Navbar BACKEND UTAMA — perbaikan kesalahan `</nav>` hilang (19/8, laporan user: "form login terpotong + button navbar hilang"):
+- **Root cause**: saat aku menghapus nav-links (Masuk/Daftar/Beranda/Formulir) dari `app.blade.php`, closing tag `</nav>` ikut terhapus secara accidental
+- **Struktur jadi**: `<nav>...@yield('content')...</body>` — semua konten (form login, judul halaman) berada di dalam `<nav>` yang punya `display: flex; justify-content: space-between`
+- **Akibat**: form login di-push ke kanan halaman, title "Masuk" + field Username terpotong di atas, form bergeser ke right, hanya PASSWORD yang terlihat
+- **Fix**: tambahkan `</nav>` setelah `</div>` penutup brand div di `backend/resources/views/layouts/app.blade.php` (line 467)
+- **Hasil**: `<nav>` tertutup dengan benar; form berada LUAR `<nav>` → alir normal, ter-centang di halaman; username, password, title, subtitle semua visible
+- **Deploy**: `spmb-backend-f5ryvsf1i`, alias `pendaftaranspmb.vercel.app`, login page 200, form lengkap terlihat
 
 ### Fitur yang BELUM ada di web baru (dibanding web lama)
 | Fitur | Prioritas |

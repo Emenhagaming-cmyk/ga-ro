@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('title', 'Lupa Kata Sandi - SPMB SMK Bahrul Ulum')
 
 @section('content')
-<div class="form-section">
     <h1 class="form-title">Lupa Kata Sandi</h1>
     <p class="form-subtitle">Masukkan username atau email untuk mendapat link reset kata sandi.</p>
 
@@ -25,16 +24,16 @@
         @csrf
         <div class="form-group">
             <label>Username atau Email</label>
-            <input type="text" name="username" value="{{ old('username') }}" placeholder="Masukkan username atau email" required autofocus>
+            <div class="input-wrap">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <input type="text" name="username" value="{{ old('username') }}" placeholder="Masukkan username atau email" required autofocus>
+            </div>
         </div>
 
-        <div class="btn-group">
-            <button type="submit" class="btn btn-primary" style="width:100%;">Kirim Link Reset</button>
-        </div>
+        <button type="submit" class="btn btn-primary">Kirim Link Reset</button>
     </form>
 
-    <p style="margin-top:18px;text-align:center;font-size:13px;color:#647067;">
-        <a href="{{ route('login') }}" style="color:#3a6450;font-weight:700;text-decoration:none;">Kembali ke Masuk</a>
+    <p class="auth-links">
+        <a href="{{ route('login') }}">Kembali ke Masuk</a>
     </p>
-</div>
 @endsection

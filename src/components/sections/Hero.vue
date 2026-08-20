@@ -320,6 +320,10 @@ p {
     padding: 160px 24px 72px;
   }
 
+  .ambient {
+    display: none;
+  }
+
   h1 {
     font-size: clamp(42px, 10vw, 54px);
   }

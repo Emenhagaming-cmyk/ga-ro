@@ -1,7 +1,7 @@
 {
   "redirects": [
-    { "source": "/login", "destination": "https://spmb-backend-self.vercel.app/login" },
-    { "source": "/register", "destination": "https://spmb-backend-self.vercel.app/register" }
+    { "source": "/login", "destination": "https://pendaftaranspmb.vercel.app/login" },
+    { "source": "/register", "destination": "https://pendaftaranspmb.vercel.app/register" }
   ],
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }

@@ -61,9 +61,12 @@
     </div>
     @endif
 
-    <p style="margin-top:20px;text-align:center;">
-        <a href="/" style="color:#3a6450;font-weight:700;text-decoration:none;">&larr; Kembali ke Beranda</a>
-    </p>
+    <div style="margin-top:20px;text-align:center;">
+        <form action="{{ route('logout') }}" method="POST" style="margin:0;">
+            @csrf
+            <button type="submit" class="profile-btn profile-btn-logout">Logout</button>
+        </form>
+    </div>
 </div>
 
 <style>
@@ -180,6 +183,20 @@
         transform: translateY(-2px);
         box-shadow: 0 14px 30px rgba(58, 100, 80, 0.28);
         color: #fff;
+    }
+
+    .profile-btn-logout {
+        background: #fff;
+        color: #b3362c;
+        border: 1.5px solid #e2b6b2;
+        box-shadow: none;
+        margin-top: 0;
+    }
+
+    .profile-btn-logout:hover {
+        background: #fdf1f0;
+        color: #b3362c;
+        box-shadow: 0 10px 24px rgba(179, 54, 44, 0.12);
     }
 
     .profile-card-empty {

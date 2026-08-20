@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class PendaftaranController extends Controller
 {
-public function index(RegistrationInsightService $insightService)
+public function dashboard(RegistrationInsightService $insightService)
     {
         $stats = [
             'total' => Pendaftaran::count(),
@@ -23,10 +23,87 @@ public function index(RegistrationInsightService $insightService)
             ],
         ];
 
-        $pendaftarans = Pendaftaran::latest()->paginate(15);
+        $terbaru = Pendaftaran::latest()->take(5)->get();
         $insight = $insightService->generateSummary($stats);
+        $chart = $this->chartData();
 
-        return view('pendaftaran.index', compact('pendaftarans', 'stats', 'insight'));
+        return view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'chart'));
+    }
+
+    public function index(Request $request)
+    {
+        $duplicateNisn = Pendaftaran::whereNotNull('nisn')->where('nisn', '!=', '')
+            ->selectRaw('nisn')->groupBy('nisn')->havingRaw('count(*) > 1')->pluck('nisn');
+        $duplicateNik = Pendaftaran::whereNotNull('nik')->where('nik', '!=', '')
+            ->selectRaw('nik')->groupBy('nik')->havingRaw('count(*) > 1')->pluck('nik');
+
+        $pendaftarans = Pendaftaran::query()
+            ->when($request->filled('q'), fn ($q) => $q->where(function ($w) use ($request) {
+                $w->where('nama_lengkap', 'like', '%' . $request->q . '%')
+                    ->orWhere('nisn', 'like', '%' . $request->q . '%')
+                    ->orWhere('nik', 'like', '%' . $request->q . '%')
+                    ->orWhere('asal_sekolah', 'like', '%' . $request->q . '%')
+                    ->orWhere('no_hp', 'like', '%' . $request->q . '%');
+            }))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->when($request->filled('jurusan'), fn ($q) => $q->where('jurusan_pilihan', $request->jurusan))
+            ->when($request->boolean('duplikat'), fn ($q) => $q->where(function ($w) use ($duplicateNisn, $duplicateNik) {
+                $w->whereIn('nisn', $duplicateNisn)->orWhereIn('nik', $duplicateNik);
+            }))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('pendaftaran.index', compact('pendaftarans', 'duplicateNisn', 'duplicateNik'));
+    }
+
+    public function laporan()
+    {
+        $start = now()->startOfWeek();
+        $end = now()->endOfWeek();
+
+        $stats = [
+            'baru' => Pendaftaran::where('status', 'baru')->count(),
+            'diproses' => Pendaftaran::where('status', 'diproses')->count(),
+            'diterima' => Pendaftaran::where('status', 'diterima')->count(),
+            'ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
+            'jurusan' => [
+                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
+                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
+                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
+            ],
+        ];
+
+        $mingguIni = Pendaftaran::whereBetween('created_at', [$start, $end])->latest()->get();
+
+        return view('pendaftaran.laporan', compact('stats', 'mingguIni', 'start', 'end'));
+    }
+
+    private function chartData(): array
+    {
+        $daily = collect(range(29, 0))->map(function ($i) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            return [
+                'label' => now()->subDays($i)->format('d/m'),
+                'count' => Pendaftaran::whereDate('created_at', $date)->count(),
+            ];
+        });
+
+        return [
+            'daily' => $daily->pluck('count')->values(),
+            'daily_labels' => $daily->pluck('label')->values(),
+            'jurusan' => [
+                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
+                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
+                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
+            ],
+            'status' => [
+                'Baru' => Pendaftaran::where('status', 'baru')->count(),
+                'Diproses' => Pendaftaran::where('status', 'diproses')->count(),
+                'Diterima' => Pendaftaran::where('status', 'diterima')->count(),
+                'Ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
+            ],
+        ];
     }
 
     public function myDashboard(Request $request)

@@ -25,7 +25,8 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 
 // Admin only
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin', [PendaftaranController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin', [PendaftaranController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/laporan', [PendaftaranController::class, 'laporan'])->name('pendaftaran.laporan');
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
     Route::get('/pendaftaran/export', [PendaftaranController::class, 'exportCsv'])->name('pendaftaran.export');
     Route::get('/pendaftaran-snapshot', [PendaftaranController::class, 'snapshot'])->name('pendaftaran.snapshot')->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);

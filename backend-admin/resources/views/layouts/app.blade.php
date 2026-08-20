@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Panel Admin - SPMB SMK Bahrul Ulum')</title>
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -24,65 +26,206 @@
             min-height: 100vh;
         }
 
-        .navbar {
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 248px;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #1f3d2e 0%, #2a5238 100%);
+            color: #e8f0e6;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 200;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            text-decoration: none;
+        }
+
+        .sidebar-brand img {
+            height: 40px;
+            width: auto;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 3px;
+        }
+
+        .sidebar-brand-text {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+        }
+
+        .sidebar-brand-text small {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #9fd0b1;
+            margin-top: 2px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-label {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgba(232, 240, 230, 0.55);
+            padding: 0 10px;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 12px;
+            color: rgba(232, 240, 230, 0.85);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link svg {
+            flex-shrink: 0;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .sidebar-link.active {
+            background: #ffffff;
+            color: #2a5238;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .sidebar-link .sidebar-new-badge {
+            margin-left: auto;
+            background: #e2564d;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 999px;
+            padding: 1px 8px;
+            line-height: 1.6;
+        }
+
+        .sidebar-footer {
+            padding: 16px 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .sidebar-footer .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ===== Main ===== */
+        .main {
+            flex: 1;
+            margin-left: 248px;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            padding: 0 7%;
-            height: 74px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: rgba(255, 255, 255, 0.96);
             border-bottom: 1px solid rgba(223, 228, 221, 0.95);
-            box-shadow: 0 8px 30px rgba(28, 42, 35, 0.08);
+            box-shadow: 0 8px 30px rgba(28, 42, 35, 0.06);
+            padding: 0 32px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
         }
 
-        .navbar-brand {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 20px;
+        .topbar-title {
+            font-size: 18px;
             font-weight: 800;
             color: #1c2a23;
-            text-decoration: none;
             letter-spacing: -0.02em;
-        }
-
-        .navbar-brand span {
-            color: #3a6450;
-        }
-
-        .nav-links {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
         }
 
-        .nav-links a {
-            text-decoration: none;
-            color: #5b6475;
-            font-weight: 700;
-            font-size: 14px;
-            padding: 9px 14px;
-            border-radius: 999px;
-            transition: all 0.25s ease;
+        .hamburger {
+            display: none;
+            background: #3a6450;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
         }
 
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: #ffffff;
-            background: linear-gradient(90deg, #2f5b45 0%, #3a6450 100%);
-            box-shadow: 0 8px 18px rgba(58, 100, 80, 0.18);
-        }
-
-        .container {
+        .main-content {
             max-width: 1180px;
+            width: 100%;
             margin: 0 auto;
-            padding: 40px 24px 60px;
+            padding: 36px 32px 60px;
         }
 
+        .sidebar-backdrop {
+            display: none;
+        }
+
+        /* ===== Tabel responsif ===== */
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+        }
+
+        .table-wrap table {
+            min-width: 560px;
+        }
+
+        .table-wrap th,
+        .table-wrap td {
+            white-space: nowrap;
+        }
+
+        /* ===== Komponen umum (tetap) ===== */
         .form-section {
             background: #fbfcfa;
             border: 1px solid #dfe4dd;
@@ -191,6 +334,9 @@
             font-size: 14px;
             font-family: inherit;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             transition: all 0.25s ease;
         }
 
@@ -214,6 +360,16 @@
         .btn-secondary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 18px rgba(28, 42, 35, 0.06);
+        }
+
+        .btn-outline-light {
+            background: transparent;
+            color: #e8f0e6;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .btn-group {
@@ -362,22 +518,45 @@
             margin-bottom: 16px;
         }
 
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
             }
 
-            .navbar {
-                padding: 0 18px;
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(28, 42, 35, 0.5);
+                z-index: 150;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+
+            .sidebar-backdrop.open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .hamburger {
+                display: inline-flex;
+            }
+
+            .topbar {
+                padding: 0 16px;
                 height: 60px;
             }
 
-            .nav-links a {
-                font-size: 13px;
-                padding: 6px 10px;
-            }
-
-            .container {
+            .main-content {
                 padding: 24px 16px 40px;
             }
 
@@ -390,6 +569,10 @@
                 font-size: 20px;
             }
 
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
             .btn-group {
                 flex-direction: column;
             }
@@ -398,33 +581,121 @@
                 width: 100%;
                 text-align: center;
             }
+
+            .sidebar-link {
+                min-height: 46px;
+            }
+
+            input, select, textarea {
+                font-size: 16px;
+            }
+
+            .hide-sm {
+                display: none !important;
+            }
+
+            .table-wrap table {
+                min-width: 480px;
+            }
         }
     </style>
 </head>
 <body>
-<nav class="navbar">
-    <div style="display:flex;align-items:center;gap:12px;">
-        <a href="{{ route('admin.dashboard') }}" class="navbar-brand">
-            <img src="{{ asset('logo.png') }}" alt="Logo SMK Bahrul Ulum" style="height:38px;width:auto;vertical-align:middle;" />
-            <span>SMK Bahrul Ulum</span>
+<div class="layout">
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
+            <img src="{{ asset('logo.png') }}" alt="Logo SMK Bahrul Ulum" />
+            <span class="sidebar-brand-text">SMK Bahrul Ulum<small>Panel Admin</small></span>
         </a>
-        <span style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#fff;background:#3a6450;padding:4px 12px;border-radius:999px;">Panel Admin</span>
-    </div>
 
-    <div class="nav-links">
-        @auth
-        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-            @csrf
-            <button type="submit" class="btn btn-secondary" style="padding:8px 18px;">Logout</button>
-        </form>
-        @else
-        <span style="font-size:12px;font-weight:700;color:#647067;">Akses terbatas untuk admin sekolah</span>
-        @endauth
-    </div>
-</nav>
+        <nav class="sidebar-nav">
+            @auth
+            <span class="sidebar-label">Menu</span>
+            <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->is('admin') ? 'active' : '' }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                Dashboard
+            </a>
+            <a href="{{ route('pendaftaran.index') }}" class="sidebar-link {{ request()->is('pendaftaran*') ? 'active' : '' }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="15" y2="17"></line></svg>
+                Data Pendaftar
+                <span class="sidebar-new-badge" id="newBadge" style="display:none;">0</span>
+            </a>
+            <a href="{{ route('pendaftaran.laporan') }}" class="sidebar-link {{ request()->is('laporan') ? 'active' : '' }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="8" y1="9" x2="10" y2="9"></line></svg>
+                Laporan
+            </a>
+            @else
+            <span style="font-size:13px;font-weight:700;color:rgba(232,240,230,0.7);padding:0 10px;line-height:1.7;">Akses terbatas untuk admin sekolah.</span>
+            @endauth
+        </nav>
 
-    <div class="container">
-        @yield('content')
+        <div class="sidebar-footer">
+            @auth
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-outline-light">Logout</button>
+            </form>
+            @else
+            <a href="{{ route('login') }}" class="btn btn-outline-light" style="text-decoration:none;">Masuk Panel</a>
+            @endauth
+        </div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <button class="hamburger" onclick="toggleSidebar(true)" aria-label="Buka menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <span class="topbar-title">@yield('page-title', 'Panel Admin SPMB')</span>
+            </div>
+            @auth
+            <span class="hide-sm" style="font-size:12px;font-weight:700;color:#647067;flex-shrink:0;">{{ auth()->user()->username }}</span>
+            @endauth
+        </header>
+
+        <div class="main-content">
+            @yield('content')
+        </div>
     </div>
+</div>
+
+<script>
+    function toggleSidebar(open) {
+        document.getElementById('sidebar').classList.toggle('open', open);
+        document.getElementById('sidebarBackdrop').classList.toggle('open', open);
+    }
+
+    @auth
+    (function newBadgePoll() {
+        const badge = document.getElementById('newBadge');
+        if (!badge) return;
+        const key = 'spmb_admin_latest_id';
+        let baseline = parseInt(sessionStorage.getItem(key) || '0', 10);
+
+        async function poll() {
+            try {
+                const res = await fetch('{{ route("pendaftaran.snapshot") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data.latest_id) return;
+                if (!baseline) {
+                    baseline = data.latest_id;
+                    sessionStorage.setItem(key, String(baseline));
+                    return;
+                }
+                if (data.latest_id > baseline) {
+                    badge.textContent = data.latest_id - baseline;
+                    badge.style.display = 'inline-block';
+                }
+            } catch (e) {}
+        }
+        setInterval(poll, 20000);
+        poll();
+    })();
+    @endauth
+</script>
 </body>
 </html>

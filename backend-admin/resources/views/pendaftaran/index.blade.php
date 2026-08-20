@@ -1,50 +1,42 @@
 @extends('layouts.app')
 
 @section('title', 'Data Pendaftar SPMB')
+@section('page-title', 'Data Pendaftar')
 
 @section('content')
-@php
-    $totalPendaftar = $stats['total'];
-    $baruCount = $stats['baru'];
-    $diterimaCount = $stats['diterima'];
-@endphp
-
 <div class="dashboard-shell">
     <div class="dashboard-header">
         <div>
-            <p class="dashboard-kicker">Admin Dashboard</p>
-            <h1 class="form-title">Pantau Data Pendaftar SPMB</h1>
-            <p class="form-subtitle">Ringkasan cepat status pendaftaran dan informasi siswa yang masuk.</p>
+            <p class="dashboard-kicker">Data Pendaftar</p>
+            <h1 class="form-title">Semua Data Pendaftar</h1>
+            <p class="form-subtitle">Kelola status dan hapus data pendaftaran yang masuk.</p>
         </div>
         <a href="{{ route('pendaftaran.export') }}" class="btn btn-primary" style="text-decoration:none;">⬇ Export CSV</a>
     </div>
 
-    <div class="stats-grid" id="statsGrid">
-        <div class="stat-card stat-card-green">
-            <div class="stat-label">Total Pendaftar</div>
-            <div class="stat-value" id="statTotal">{{ $totalPendaftar }}</div>
-            <div class="stat-foot">Data terbaru terkelola</div>
-        </div>
-        <div class="stat-card stat-card-blue">
-            <div class="stat-label">Baru</div>
-            <div class="stat-value" id="statBaru">{{ $baruCount }}</div>
-            <div class="stat-foot">Menunggu diproses</div>
-        </div>
-        <div class="stat-card stat-card-gold">
-            <div class="stat-label">Diterima</div>
-            <div class="stat-value" id="statDiterima">{{ $diterimaCount }}</div>
-            <div class="stat-foot">Sudah disetujui</div>
-        </div>
-    </div>
-
-    <div id="newDataBanner" style="display:none;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:14px;padding:14px 18px;font-weight:700;">
-        🔔 Data pendaftaran baru masuk — <button id="reloadNow" class="btn btn-primary" style="margin-left:8px;font-size:12px;padding:6px 14px;">Muat Ulang</button>
-    </div>
-
-    <div class="insight-card">
-        <div class="insight-title">Ringkasan AI</div>
-        <p>{{ $insight }}</p>
-    </div>
+    <form method="GET" action="{{ route('pendaftaran.index') }}" class="filter-bar">
+        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari nama, NISN, NIK, sekolah, no. HP..." style="max-width:320px;">
+        <select name="status" style="max-width:160px;">
+            <option value="">Semua Status</option>
+            @foreach (['baru', 'diproses', 'diterima', 'ditolak'] as $s)
+            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+            @endforeach
+        </select>
+        <select name="jurusan" style="max-width:160px;">
+            <option value="">Semua Jurusan</option>
+            @foreach (['RPL', 'TKJ', 'AKL'] as $j)
+            <option value="{{ $j }}" {{ request('jurusan') === $j ? 'selected' : '' }}>{{ $j }}</option>
+            @endforeach
+        </select>
+        <label class="filter-duplicate">
+            <input type="checkbox" name="duplikat" value="1" {{ request('duplikat') ? 'checked' : '' }}>
+            Duplikat NISN/NIK
+        </label>
+        <button type="submit" class="btn btn-primary" style="padding:10px 20px;">Filter</button>
+        @if (request()->anyFilled(['q', 'status', 'jurusan']) || request('duplikat'))
+        <a href="{{ route('pendaftaran.index') }}" class="btn btn-secondary" style="padding:10px 20px;text-decoration:none;">Reset</a>
+        @endif
+    </form>
 
     <div class="form-section">
         @if (session('success'))
@@ -65,14 +57,14 @@
             <a href="{{ env('FRONTEND_URL', 'https://bhapppp.vercel.app') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration:none;">Buka Web Utama</a>
         </div>
     @else
-        <div style="overflow-x: auto;">
+        <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
                         <th>No</th>
                         <th>Nama</th>
-                        <th>No. HP</th>
-                        <th>Asal Sekolah</th>
+                        <th class="hide-sm">No. HP</th>
+                        <th class="hide-sm">Asal Sekolah</th>
                         <th>Jurusan</th>
                         <th>Status</th>
                         <th>Aksi</th>
@@ -82,9 +74,16 @@
                     @foreach ($pendaftarans as $item)
                         <tr data-id="{{ $item->id }}">
                             <td>{{ $loop->iteration + ($pendaftarans->currentPage() - 1) * $pendaftarans->perPage() }}</td>
-                            <td><strong>{{ $item->nama_lengkap }}</strong></td>
-                            <td>{{ $item->no_hp }}</td>
-                            <td>{{ $item->asal_sekolah }}</td>
+                            <td><strong>{{ $item->nama_lengkap }}</strong>
+                                @if ($duplicateNisn->contains($item->nisn))
+                                <span class="badge badge-danger" title="NISN terdaftar lebih dari satu kali">NISN ganda</span>
+                                @endif
+                                @if ($duplicateNik->contains($item->nik))
+                                <span class="badge badge-danger" title="NIK terdaftar lebih dari satu kali">NIK ganda</span>
+                                @endif
+                            </td>
+                            <td class="hide-sm">{{ $item->no_hp }}</td>
+                            <td class="hide-sm">{{ $item->asal_sekolah }}</td>
                             <td><span style="font-weight: 600; color: #3a6450;">{{ $item->jurusan_pilihan }}</span></td>
                             <td>
                                 @php
@@ -172,75 +171,50 @@
         margin-bottom: 6px;
     }
 
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
+    .filter-bar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        background: #fbfcfa;
+        border: 1px solid #dfe4dd;
+        border-radius: 16px;
+        padding: 14px 16px;
     }
 
-    .stat-card {
-        padding: 20px 22px;
-        border-radius: 20px;
-        color: #1c2a23;
-        box-shadow: 0 12px 28px rgba(28, 42, 35, 0.06);
-        border: 1px solid rgba(223, 228, 221, 0.9);
-    }
-
-    .stat-card-green {
-        background: linear-gradient(135deg, #edf7eb 0%, #f8fcf7 100%);
-    }
-
-    .stat-card-blue {
-        background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 100%);
-    }
-
-    .stat-card-gold {
-        background: linear-gradient(135deg, #fff7e8 0%, #fffcf5 100%);
-    }
-
-    .stat-label {
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: #647067;
-        margin-bottom: 8px;
-    }
-
-    .stat-value {
-        font-size: 30px;
-        font-weight: 800;
-        color: #1c2a23;
-        margin-bottom: 6px;
-    }
-
-    .stat-foot {
-        font-size: 13px;
-        color: #647067;
-    }
-
-    .insight-card {
-        padding: 18px 20px;
-        border-radius: 18px;
-        background: linear-gradient(135deg, #f7f3ff 0%, #ffffff 100%);
-        border: 1px solid rgba(125, 184, 141, 0.18);
-        box-shadow: 0 10px 24px rgba(28, 42, 35, 0.05);
-    }
-
-    .insight-title {
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: #5b4b8a;
-        margin-bottom: 8px;
-    }
-
-    .insight-card p {
+    .filter-bar input[type="text"], .filter-bar select {
+        width: auto;
         margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .filter-bar input[type="text"],
+        .filter-bar select {
+            width: 100%;
+            max-width: none !important;
+        }
+
+        .filter-duplicate {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+
+    .filter-duplicate {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
         color: #475449;
-        line-height: 1.7;
-        font-size: 14px;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .filter-duplicate input[type="checkbox"] {
+        width: auto;
+        margin: 0;
     }
 
     .badge {
@@ -360,12 +334,6 @@
     }
 
     @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 480px) {
         .modal-actions { flex-direction: column-reverse; }
         .modal-actions .btn { width: 100%; }
     }
@@ -404,33 +372,5 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeDeleteModal();
     });
-
-    (function autoRefresh() {
-        let latestKnownId = parseInt(document.querySelector('table tbody tr')?.dataset.id || '0', 10);
-        const banner = document.getElementById('newDataBanner');
-        const reloadBtn = document.getElementById('reloadNow');
-        if (reloadBtn) reloadBtn.addEventListener('click', () => location.reload());
-
-        async function poll() {
-            try {
-                const res = await fetch('{{ route("pendaftaran.snapshot") }}', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
-                if (!res.ok) return;
-                const data = await res.json();
-                if (data.stats) {
-                    const t = document.getElementById('statTotal'); if (t) t.textContent = data.stats.total;
-                    const b = document.getElementById('statBaru'); if (b) b.textContent = data.stats.baru;
-                    const d = document.getElementById('statDiterima'); if (d) d.textContent = data.stats.diterima;
-                }
-                if (data.latest_id && latestKnownId && data.latest_id > latestKnownId) {
-                    banner.style.display = 'block';
-                }
-                if (data.latest_id && !latestKnownId) {
-                    latestKnownId = data.latest_id;
-                }
-            } catch (e) {}
-        }
-        setInterval(poll, 5000);
-        poll();
-    })();
 </script>
 @endsection

@@ -51,11 +51,7 @@ border:none;
 
 border-radius:22px;
 
-background:rgba(255,255,255,.85);
-
-backdrop-filter:blur(16px);
-
--webkit-backdrop-filter:blur(16px);
+background:rgba(255,255,255,.95);
 
 display:flex;
 
