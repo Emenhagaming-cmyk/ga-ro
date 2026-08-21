@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pendaftaran;
+use App\Models\User;
 use App\Services\RegistrationInsightService;
 use Illuminate\Http\Request;
 
@@ -24,10 +25,11 @@ public function dashboard(RegistrationInsightService $insightService)
         ];
 
         $terbaru = Pendaftaran::latest()->take(5)->get();
+        $akunSiswa = User::where('role', '!=', 'admin')->latest()->take(5)->get();
         $insight = $insightService->generateSummary($stats);
         $chart = $this->chartData();
 
-        return view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'chart'));
+        return view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa', 'chart'));
     }
 
     public function index(Request $request)

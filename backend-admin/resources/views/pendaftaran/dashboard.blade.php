@@ -73,6 +73,48 @@
         @endif
 
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+            <h2 style="font-size:17px;font-weight:800;color:#1c2a23;">Akun Siswa Terdaftar</h2>
+        </div>
+
+        @if ($akunSiswa->isEmpty())
+            <div class="empty-state">
+                <p>Belum ada akun siswa terdaftar</p>
+                <p style="font-size:13px;color:#9ba8a0;">Akun muncul otomatis saat siswa mendaftar di web utama.</p>
+            </div>
+        @else
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th class="hide-sm">Username</th>
+                            <th>Email</th>
+                            <th>Terdaftar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($akunSiswa as $akun)
+                            <tr>
+                                <td><strong>{{ $akun->name }}</strong></td>
+                                <td class="hide-sm">{{ $akun->username }}</td>
+                                <td>{{ $akun->email }}</td>
+                                <td class="hide-sm">{{ optional($akun->created_at)->format('d/m/Y H:i') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+    <div class="form-section">
+        @if (session('success'))
+        <div class="alert alert-success">
+            ✓ {{ session('success') }}
+        </div>
+        @endif
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
             <h2 style="font-size:17px;font-weight:800;color:#1c2a23;">Pendaftar Terbaru</h2>
             <a href="{{ route('pendaftaran.index') }}" class="btn btn-secondary" style="text-decoration:none;padding:8px 18px;font-size:13px;">Lihat Semua</a>
         </div>
