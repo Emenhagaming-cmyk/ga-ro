@@ -31,6 +31,7 @@ Route::post('/pendaftaran', [PendaftaranController::class, 'store'])->name('pend
 // Login siswa & admin: dashboard siswa + update form sendiri
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard-siswa', [PendaftaranController::class, 'myDashboard'])->name('dashboard.siswa');
+    Route::get('/dashboard-siswa/snapshot', [PendaftaranController::class, 'myDashboardSnapshot'])->name('dashboard.siswa.snapshot');
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa');
 

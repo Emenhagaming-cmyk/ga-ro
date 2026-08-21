@@ -1,10 +1,10 @@
 @extends('layouts.auth')
 
-@section('title', 'Daftar - SPMB SMK Bahrul Ulum')
+@section('title', 'Daftar - AKUN SMK Bahrul Ulum')
 
 @section('content')
-<h1 class="form-title">Buat Akun Siswa</h1>
-<p class="form-subtitle">Daftar akun terlebih dahulu untuk mengisi formulir pendaftaran SPMB.</p>
+<h1 class="form-title" align="center">Buat Akun Siswa</h1>
+<p class="form-subtitle" align="center">Bikin akun dulu ya ~</p>
 
 @if ($errors->any())
 <div class="alert alert-error">
@@ -75,7 +75,7 @@
 </form>
 
 <p class="auth-links">
-    Sudah punya akun?
-    <a href="{{ route('login') }}">Masuk di sini</a>
+    Udah punya akun?
+    <a href="{{ route('login') }}">Login di sini</a>
 </p>
 @endsection

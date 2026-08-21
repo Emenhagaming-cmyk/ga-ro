@@ -4,7 +4,7 @@
 
 @section('content')
 <h1 class="form-title" align="center">Masuk</h1>
-<p class="form-subtitle">Login Untuk Melakukan Pendaftaran dan membuka fitur yang tersedia</p>
+<p class="form-subtitle" align="center">Hai Siswa! Login Terlebih dahulu ya</p>
 
 @if (session('success'))
 <div class="alert alert-success">{{ session('success') }}</div>
@@ -51,6 +51,6 @@
 
 <p class="auth-links">
     Belum punya akun?
-    <a href="{{ route('register') }}">Daftar di sini</a>
+    <a href="{{ route('register') }}">Daftar dulu ya!</a>
 </p>
 @endsection

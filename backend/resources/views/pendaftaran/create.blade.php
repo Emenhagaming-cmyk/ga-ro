@@ -822,10 +822,10 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </div>
-            <h3 id="confirmTitle">Periksa Kembali Data Anda</h3>
-            <p>Apakah data yang Anda isi sudah benar? Mohon periksa kembali sebelum mengirim.</p>
+            <h3 id="confirmTitle">Periksa Kembali Data Kamu Ya Sob</h3>
+            <p>Apakah data yang Kamu isi sudah benar? Mohon periksa kembali sebelum mengirim ya :D.</p>
             <div class="confirm-actions">
-                <button type="button" class="btn btn-prev confirm-cancel" id="confirmCancel">Cek Lagi</button>
+                <button type="button" class="btn btn-prev confirm-cancel" id="confirmCancel">Cek Lagi :/</button>
                 <button type="button" class="btn btn-next confirm-ok" id="confirmOk">Ya, Kirim</button>
             </div>
         </div>
@@ -838,7 +838,7 @@
             <div class="sidebar-header">
                 <small>SPMB 2025/2026</small>
                 <h3>Pendaftaran</h3>
-                <p>Lengkapi data diri Anda dengan benar untuk memulai proses pendaftaran SPMB SMK Bahrul Ulum.</p>
+                <p>Lengkapi data diri kamu dengan benar ya sob untuk memulai proses pendaftaran SPMB SMK Bahrul Ulum.</p>
             </div>
 
             <div class="steps-list">
@@ -966,19 +966,12 @@
                         <div class="form-group">
                             <label>Agama</label>
                             <select name="agama" required>
-                                <option value="">Pilih agama</option>
                                 <option value="Islam">Islam</option>
-                                <option value="Kristen">Kristen</option>
-                                <option value="Katolik">Katolik</option>
-                                <option value="Hindu">Hindu</option>
-                                <option value="Buddha">Buddha</option>
-                                <option value="Konghucu">Konghucu</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Jenis Kelamin</label>
                             <select name="jenis_kelamin" required>
-                                <option value="">Pilih jenis kelamin</option>
                                 <option value="Laki-laki">Laki-laki</option>
                                 <option value="Perempuan">Perempuan</option>
                             </select>
@@ -989,17 +982,15 @@
                         <div class="form-group">
                             <label>Kewarnegaraan</label>
                             <select name="kewarnegaraan" required>
-                                <option value="">Pilih kewarganegaraan</option>
                                 <option value="Indonesia">Indonesia</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Kategori Pendaftar</label>
                             <select name="kategori_pendaftar" required>
-                                <option value="">Pilih kategori pendaftar</option>
                                 <option value="SMP Bahrul Ulum">SMP Bahrul Ulum</option>
-                                <option value="SMP Umum">SMP Umum</option>
-                                <option value="SMP Yatim">SMP Yatim</option>
+                                <option value="SMP Umum">Yatim Piatu</option>
+                                <option value="SMP Yatim">Yatim</option>
                             </select>
                         </div>
                     </div>
@@ -1045,7 +1036,6 @@
                         <div class="form-group">
                             <label>Gelombang</label>
                             <select name="gelombang" required>
-                                <option value="">Pilih gelombang</option>
                                 <option value="Grand Opening">Grand Opening</option>
                                 <option value="Gelombang 1">Gelombang 1</option>
                                 <option value="Gelombang 2">Gelombang 2</option>
@@ -1068,14 +1058,12 @@
                         <div class="form-group">
                             <label>Jurusan Pilihan</label>
                             <select name="jurusan_pilihan" required>
-                                <option value="">Pilih jurusan</option>
                                 <option value="RPL">Rekayasa Perangkat Lunak (RPL)</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Jumlah Saudara Kandung</label>
                             <select name="jumlah_saudara" required>
-                                <option value="">Pilih jumlah saudara</option>
                                 <option value="1">1</option>
                                 <option value="2">2</option>
                                 <option value="3">3</option>
@@ -1089,7 +1077,6 @@
                         <div class="form-group">
                             <label>Anak Ke-</label>
                             <select name="anak_ke" required>
-                                <option value="">Pilih urutan anak</option>
                                 <option value="1">1</option>
                                 <option value="2">2</option>
                                 <option value="3">3</option>
@@ -1100,11 +1087,9 @@
                         <div class="form-group">
                             <label>Status Keluarga</label>
                             <select name="status_keluarga" required>
-                                <option value="">Pilih status keluarga</option>
                                 <option value="Anak Kandung">Anak Kandung</option>
                                 <option value="Anak Angkat">Anak Angkat</option>
                                 <option value="Yatim">Yatim</option>
-                                <option value="Piatu">Piatu</option>
                                 <option value="Yatim Piatu">Yatim Piatu</option>
                             </select>
                         </div>
@@ -1121,7 +1106,6 @@
                         <div class="form-group">
                             <label>Pendidikan Ayah</label>
                             <select name="pendidikan_ayah" required>
-                                <option value="">Pilih pendidikan</option>
                                 <option value="SD">SD</option>
                                 <option value="SMP">SMP</option>
                                 <option value="SMA">SMA</option>
@@ -1136,7 +1120,6 @@
                         <div class="form-group">
                             <label>Pekerjaan Ayah</label>
                             <select name="pekerjaan_ayah" required>
-                                <option value="">Pilih pekerjaan</option>
                                 <option value="PNS">PNS</option>
                                 <option value="ABRI">ABRI</option>
                                 <option value="PKL">PKL</option>
@@ -1148,7 +1131,6 @@
                         <div class="form-group">
                             <label>Penghasilan Ayah</label>
                             <select name="penghasilan_ayah" required>
-                                <option value="">Pilih penghasilan</option>
                                 <option value="< Rp. 1.000.000">&lt; Rp. 1.000.000</option>
                                 <option value="1.000.000 - 2.000.000">Rp. 1.000.000 - 2.000.000</option>
                                 <option value="> Rp. 2.000.000">&gt; Rp. 2.000.000</option>
@@ -1175,7 +1157,6 @@
                         <div class="form-group">
                             <label>Pendidikan Ibu</label>
                             <select name="pendidikan_ibu" required>
-                                <option value="">Pilih pendidikan</option>
                                 <option value="SD">SD</option>
                                 <option value="SMP">SMP</option>
                                 <option value="SMA">SMA</option>
@@ -1190,7 +1171,6 @@
                         <div class="form-group">
                             <label>Pekerjaan Ibu</label>
                             <select name="pekerjaan_ibu" required>
-                                <option value="">Pilih pekerjaan</option>
                                 <option value="PNS">PNS</option>
                                 <option value="ABRI">ABRI</option>
                                 <option value="PKL">PKL</option>
@@ -1202,7 +1182,7 @@
                         <div class="form-group">
                             <label>Penghasilan Ibu</label>
                             <select name="penghasilan_ibu" required>
-                                <option value="">Pilih penghasilan</option>
+                                <option value="< Rp. 1.000.000">&lt; kurang dari Rp. 1.000.000</option>
                                 <option value="< Rp. 1.000.000">&lt; Rp. 1.000.000</option>
                                 <option value="1.000.000 - 2.000.000">Rp. 1.000.000 - 2.000.000</option>
                                 <option value="> Rp. 2.000.000">&gt; Rp. 2.000.000</option>
@@ -1243,7 +1223,6 @@
                         <div class="form-group">
                             <label>Jenis Pembayaran</label>
                             <select name="jenis_pembayaran" required>
-                                <option value="">Pilih jenis pembayaran</option>
                                 <option value="Transfer">Transfer</option>
                                 <option value="Tunai">Tunai</option>
                             </select>
@@ -1330,7 +1309,7 @@
             if (direction > 0) {
                 const r = validateStep(currentStep);
                 if (!r.valid) {
-                    showNotif(`Harap lengkapi ${r.count} kolom wajib yang ditandai merah sebelum lanjut.`, 'error');
+                    showNotif(`Harap lengkapi ${r.count} kolom wajib yang ditandai merah sebelum lanjut ya.`, 'error');
                     r.firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 }
@@ -1367,7 +1346,7 @@
                 e.preventDefault();
                 currentStep = invalidStep;
                 updateUI();
-                showNotif('Ada kolom wajib yang belum diisi. Lengkapi data yang ditandai merah.', 'error');
+                showNotif('Ada kolom wajib yang belum diisi nih. Lengkapi data yang ditandai merah itu ya.', 'error');
                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
@@ -1383,7 +1362,7 @@
                 const btn = document.getElementById('submitBtn');
                 btn.disabled = true;
                 btn.textContent = 'Mengirim...';
-                showNotif('Pendaftaran berhasil dikirim!', 'success');
+                showNotif('Yey Pendaftaran berhasil dikirim!', 'success');
                 setTimeout(() => form.submit(), 1200);
             };
             document.getElementById('confirmCancel').onclick = closeConfirm;

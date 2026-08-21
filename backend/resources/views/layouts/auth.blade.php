@@ -145,7 +145,7 @@
             overflow: hidden;
         }
 
-        .auth-card::after {
+        /* .auth-card::after {
             content: '';
             position: absolute;
             top: 0;
@@ -153,7 +153,7 @@
             right: 0;
             height: 4px;
             background: linear-gradient(90deg, #7db88d 0%, #3a6450 58%, #2a5238 100%);
-        }
+        } */
 
         .form-title {
             font-size: 26px;
@@ -164,7 +164,7 @@
         }
 
         .form-subtitle {
-            color: #0a0a0a;
+            color: #f5f2f2;
             margin-bottom: 26px;
             font-size: 14px;
             line-height: 1.7;
@@ -209,7 +209,7 @@
         }
 
         .input-wrap input::placeholder {
-            color: #000000;
+            color: #313131;
         }
 
         .input-wrap input:focus {

@@ -43,6 +43,22 @@ public function index(RegistrationInsightService $insightService)
         return view('pendaftaran.dashboard-siswa', compact('pendaftaran'));
     }
 
+    public function myDashboardSnapshot(Request $request)
+    {
+        if ($request->user()->role === 'admin') {
+            abort(403);
+        }
+
+        $pendaftaran = Pendaftaran::where('user_id', $request->user()->id)->first();
+
+        return response()->json([
+            'status' => $pendaftaran?->status ?? null,
+            'status_updated_at' => $pendaftaran?->status_updated_at?->toIso8601String(),
+            'nama_lengkap' => $pendaftaran?->nama_lengkap ?? null,
+            'jurusan_pilihan' => $pendaftaran?->jurusan_pilihan ?? null,
+        ]);
+    }
+
     public function create()
     {
         $draft = session('pending_pendaftaran', []);
@@ -69,11 +85,11 @@ public function index(RegistrationInsightService $insightService)
 
                 return redirect()->route('login')
                     ->withCookie(cookie('pending_draft', $key, 10080))
-                    ->withErrors(['email' => 'Silakan masuk/daftar terlebih dahulu untuk mengirim pendaftaran. Data Anda sudah disimpan sementara dan akan terisi kembali setelah login.']);
+                    ->withErrors(['email' => 'Silakan masuk/daftar terlebih dahulu ya sob untuk mengirim pendaftaran. Tenang Data kamu sudah disimpan sementara dan akan terisi kembali setelah login.']);
             }
 
             return redirect()->route('login')
-                ->withErrors(['email' => 'Silakan masuk/daftar terlebih dahulu untuk mengirim pendaftaran.']);
+                ->withErrors(['email' => 'Silakan masuk/daftar ya terlebih dahulu ya sob untuk mengirim pendaftaran :D.']);
         }
 
         $request->session()->put('pending_pendaftaran', $this->sanitizeDraft($request));
@@ -82,7 +98,7 @@ public function index(RegistrationInsightService $insightService)
             $request->session()->forget('pending_pendaftaran');
 
             return redirect()->route('dashboard.siswa')
-                ->with('error', 'Anda sudah mengirim pendaftaran. Pantau status Anda di dashboard.');
+                ->with('error', 'Kamu udah mengirim pendaftaran. Pantau status kamu di dashboard ya.');
         }
 
         $data = $request->validate($this->rules());
@@ -94,7 +110,7 @@ public function index(RegistrationInsightService $insightService)
 
         Pendaftaran::create($data);
 
-        return redirect()->route('dashboard.siswa')->with('success', 'Pendaftaran berhasil dikirim. Pantau status Anda di dashboard.');
+        return redirect()->route('dashboard.siswa')->with('success', 'Yey! Pendaftaran berhasil dikirim. Pantau status kamu di dashboard ya.');
     }
 
     private function sanitizeDraft(Request $request): array
@@ -172,7 +188,7 @@ public function index(RegistrationInsightService $insightService)
         $deadline = $pendaftaran->created_at->copy()->addDays(3);
 
         if ($pendaftaran->status !== 'baru' || !now()->lt($deadline)) {
-            return back()->with('error', 'Batas waktu edit formulir telah berakhir. Hubungi admin jika ingin mengubah data.');
+            return back()->with('error', 'Batas waktu edit formulir kamu udah abis nih. Hubungi admin jika ingin mengubah data ya.');
         }
 
         $data = $request->validate($this->rules());
@@ -226,9 +242,7 @@ public function index(RegistrationInsightService $insightService)
             'diterima' => Pendaftaran::where('status', 'diterima')->count(),
             'ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
             'jurusan' => [
-                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
-                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
-                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
+                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count()
             ],
         ];
 

@@ -16,8 +16,8 @@
     <div class="dashboard-header">
         <div>
             <p class="dashboard-kicker">Dashboard Siswa</p>
-            <h1 class="form-title">HALO {{ $hasData ? $pendaftaran->nama_lengkap : Auth::user()->name }}</h1>
-            <p class="form-subtitle">Pantau status pendaftaran Anda.</p>
+            <h1 class="form-title">HALO {{ $hasData ? $pendaftaran->nama_lengkap : Auth::user()->name }}!</h1>
+            <p class="form-subtitle">Pantau status pendaftaran kamu di sini ya.</p>
         </div>
         <!-- <a href="{{ route('logout') }}" class="btn btn-secondary"
            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"> -->
@@ -45,9 +45,9 @@
     @endif
 
     @if (!$hasData)
-    {{-- Empty state: siswa belum mengisi form --}}
+    {{-- Empty state: kamu belum mengisi form --}}
     <div class="alert alert-success" style="margin-top:24px;">
-        Anda belum mengisi formulir pendaftaran.
+        kamu belum mengisi formulir pendaftaran nih :|.
         <a href="{{ route('pendaftaran.create') }}" class="btn btn-primary" style="margin-left:12px;">Daftar</a>
     </div>
     @else
@@ -179,11 +179,11 @@
             @if ($pendaftaran->status === 'baru')
                  Batas waktu edit telah berakhir. Hubungi admin bila ingin mengubah data.
             @elseif ($pendaftaran->status === 'diterima')
-                 Selamat! Anda diterima di jurusan {{ $pendaftaran->jurusan_pilihan }}.
+                 Selamat! Kamu diterima di jurusan {{ $pendaftaran->jurusan_pilihan }}.
             @elseif ($pendaftaran->status === 'ditolak')
                  Maaf, pendaftaran Anda tidak diterima. Hubungi admin untuk info lebih lanjut.
             @else
-                 Formulir Anda sedang diproses admin. Pantau status secara berkala.
+                 Formulir kamu sedang diproses admin. Pantau status secara berkala.
             @endif
         </div>
         @endif
@@ -198,4 +198,25 @@
     .status-label { font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#647067;margin-bottom:6px; }
     .status-value { font-size:15px;font-weight:700;color:#1c2a23; }
 </style>
+
+@if ($hasData)
+<script>
+    (function () {
+        var initialStatus = {{ Js::from($pendaftaran->status) }};
+        var url = {{ Js::from(route('dashboard.siswa.snapshot')) }};
+        async function poll() {
+            try {
+                var res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                if (!res.ok) return;
+                var data = await res.json();
+                if (data.status && data.status !== initialStatus) {
+                    location.reload();
+                }
+            } catch (e) {}
+        }
+        setInterval(poll, 15000);
+        poll();
+    })();
+</script>
+@endif
 @endsection

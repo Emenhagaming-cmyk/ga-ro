@@ -4,7 +4,7 @@
 
 @section('content')
     <h1 class="form-title">Reset Kata Sandi</h1>
-    <p class="form-subtitle">Masukkan email terdaftar dan kata sandi baru Anda.</p>
+    <p class="form-subtitle">Masukkan email terdaftar dan kata sandi baru kamu ya.</p>
 
     @if ($errors->any())
     <div class="alert alert-error">
@@ -46,6 +46,6 @@
     </form>
 
     <p class="auth-links">
-        <a href="{{ route('login') }}">Kembali ke Masuk</a>
+        <a href="{{ route('login') }}">Kembali</a>
     </p>
 @endsection

@@ -60,8 +60,8 @@
     <div class="ttd">
         <p>Surabaya, {{ $tanggalSurat }}</p>
         <p>Kepala Sekolah,</p>
-        <p class="nama">(Nama Kepala Sekolah)</p>
-        <p>NIP. (NIP Kepala Sekolah)</p>
+        <p class="nama">Pak Rojib</p>
+        <p>NIP. 200928</p>
     </div>
 </body>
 </html>

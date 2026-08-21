@@ -112,6 +112,12 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
   - Struktur disesuaikan: `.form-section` dibuang (auth layout sudah punya card), `.btn-group` dihapus (btn-primary sudah full width), inline style link diganti `.auth-links`.
   - Deploy `spmb-backend-cmqspdoks` (8× fetch failed → attempt 9 sukses), alias `pendaftaranspmb.vercel.app`, `/forgot-password` render auth layout (auth-wrapper, blobs, input-wrap terverifikasi).
 
+- **Dashboard Siswa: auto-refresh status pendaftaran (20/8, user: "saat admin ubah status diterima/tolak, web utama auto refresh")**:
+  - Backend: method baru `myDashboardSnapshot()` di `PendaftaranController` → JSON `{status, status_updated_at, nama_lengkap, jurusan_pilihan}` untuk pendaftaran user login (admin → 403). Route baru `GET /dashboard-siswa/snapshot` (name `dashboard.siswa.snapshot`, middleware auth).
+  - View `dashboard-siswa.blade.php`: polling `setInterval(poll, 15000)` (JS async fetch, header X-Requested-With, credentials same-origin) — bandingkan `status` dari snapshot vs `initialStatus` (dari blade `Js::from`); jika beda → `location.reload()`. Hanya aktif saat `$hasData` (@if di akhir halaman).
+  - Dashboard admin TIDAK diubah — polling `pendaftaran.snapshot` tiap 20 detik sudah ada (update stats + banner "data baru masuk").
+  - Deploy `spmb-backend-4wdbg6qou`, alias `pendaftaranspmb.vercel.app`. Verifikasi: route terdaftar, snapshot tanpa login → 302 ke /login, polling JS ter-kompilasi di view cache.
+
 **LANGKAH BERIKUTNYA (deferred, keputusan user — stats dinamis & section Jurusan)**:
 1. Migration `school_stats` (key-value: siswa_aktif, jurusan, program_keahlian, `jurusans` JSON) + seeder (nilai sekarang: 1280 siswa, 1 jurusan, 1 program keahlian).
 2. Endpoint publik `GET /school-stats` (web utama) + halaman admin `/admin/stats` di panel.
