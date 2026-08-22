@@ -1,5 +1,6 @@
 <template>
   <RouterView />
+  <Analytics />
   <Teleport to="body">
     <Transition name="toast">
       <div v-if="visible" class="toast">{{ message }}</div>
@@ -8,6 +9,7 @@
 </template>
 
 <script setup>
+import { Analytics } from "@vercel/analytics/vue";
 import { useToast } from "@/composable/useToast";
 const { message, visible } = useToast();
 </script>
