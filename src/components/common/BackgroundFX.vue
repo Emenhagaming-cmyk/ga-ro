@@ -192,4 +192,8 @@ background-size:45px 45px;
 
 }
 
+@media (max-width: 768px) {
+.bg { display: none; }
+}
+
 </style>

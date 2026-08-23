@@ -32,6 +32,7 @@ class AuthController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'plain_password' => $validated['password'],
             'role' => 'pendaftar',
         ]);
 
@@ -106,6 +107,9 @@ class AuthController extends Controller
             'logged_in' => true,
             'role' => $role,
             'name' => $request->user()->name,
+            'email' => $request->user()->email,
+            'nisn' => $pendaftaran?->nisn,
+            'jurusan' => $pendaftaran?->jurusan_pilihan,
             'has_pendaftaran' => (bool) $pendaftaran,
             'status' => $pendaftaran?->status,
         ]);
@@ -184,6 +188,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->password = Hash::make($password);
+                $user->plain_password = $password;
                 $user->save();
             }
         );

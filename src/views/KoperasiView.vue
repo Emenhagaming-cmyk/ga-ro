@@ -14,17 +14,19 @@
         <button class="kop-back" @click="goBack" aria-label="Kembali">
           <ChevronLeft :size="20" :stroke-width="2" />
         </button>
-        <button class="kop-cart-topbar" @click="drawerOpen = true" aria-label="Keranjang">
+        <h1 class="topbar-title">Koperasi Sekolah</h1>
+        <button class="kop-cart-topbar" @click="openCart" aria-label="Keranjang">
           <ShoppingBag :size="20" :stroke-width="2" />
           <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
         </button>
       </div>
 
-      <header class="kop-header">
-        <span class="kop-eyebrow">Koperasi Sekolah</span>
-        <h1>Belanja di Koperasi</h1>
-        <p>Kebutuhan siswa tersedia praktis. Pesan, bayar, ambil.</p>
-      </header>
+      <div class="kop-stats">
+        <span class="stat-count">{{ filtered.length }} item</span>
+        <button class="stat-filter" @click="showFilter = !showFilter">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
 
       <div class="kop-tabs">
         <button
@@ -36,28 +38,23 @@
       </div>
 
       <div class="kop-grid">
-        <div v-for="p in filtered" :key="p.id" class="kop-card">
+        <div v-for="p in filtered" :key="p.id" class="kop-card" @click="addToCart(p)">
           <div class="card-visual" :style="{ background: p.bgColor }">
             <span class="card-emoji" role="img" :aria-label="p.name">{{ p.emoji }}</span>
             <span v-if="p.isNew" class="card-new">Baru</span>
-            <button
-              class="card-add"
-              :disabled="p.stock === 0"
-              @click="addToCart(p)"
-              :aria-label="'Tambah ' + p.name"
-            >
-              <Plus :size="18" :stroke-width="2.5" />
-            </button>
           </div>
           <div class="card-body">
-            <span class="card-cat">{{ p.category }}</span>
             <h3 class="card-name">{{ p.name }}</h3>
-            <p class="card-desc">{{ p.desc }}</p>
             <div class="card-foot">
               <span class="card-price">{{ fmt(p.numPrice) }}</span>
-              <span :class="['card-stock', { low: p.stock < 10 && p.stock > 0, out: p.stock === 0 }]">
-                {{ p.stock > 0 ? `Stok ${p.stock}` : 'Habis' }}
-              </span>
+              <button
+                class="card-add-inline"
+                :disabled="p.stock === 0"
+                @click.stop="addToCart(p)"
+                :aria-label="'Tambah ' + p.name"
+              >
+                <Plus :size="16" :stroke-width="2.5" />
+              </button>
             </div>
           </div>
         </div>
@@ -68,218 +65,212 @@
         <p>Belum ada produk di kategori ini.</p>
       </div>
 
-      <div class="kop-info">
-        <Info :size="18" :stroke-width="2" class="info-icon" />
-        <p><strong>Cara Pesan:</strong> Pilih produk, checkout, bayar via QRIS atau transfer. Pesanan akan disiapkan oleh penjaga koperasi.</p>
-      </div>
+      <!-- ═══ FLOATING CART ═══ -->
+      <Transition name="float-up">
+        <button
+          v-if="cartCount > 0 && !cartOpen"
+          class="kop-float"
+          @click="openCart"
+        >
+          <ShoppingBag :size="18" :stroke-width="2" />
+          <span class="float-count">{{ cartCount }} item</span>
+          <span class="float-sep"></span>
+          <span class="float-total">{{ fmt(cartTotal) }}</span>
+        </button>
+      </Transition>
     </div>
 
-    <!-- ═══ CART DRAWER ═══ -->
+    <!-- ═══ CART SHEET (slide-up) ═══ -->
     <Transition name="overlay-fade">
-      <div v-if="drawerOpen" class="kop-overlay" @click="drawerOpen = false"></div>
+      <div v-if="cartOpen" class="kop-overlay" @click="cartOpen = false"></div>
     </Transition>
-    <Transition name="slide-right">
-      <aside v-if="drawerOpen" class="kop-drawer" role="dialog" aria-label="Keranjang belanja">
-        <div class="drawer-head">
+    <Transition name="slide-up">
+      <div v-if="cartOpen" class="kop-sheet" role="dialog" aria-label="Keranjang belanja">
+        <div class="sheet-handle" @click="cartOpen = false">
+          <span class="handle-bar"></span>
+        </div>
+
+        <div class="sheet-head">
           <h2>Keranjang <span v-if="cartCount > 0">({{ cartCount }})</span></h2>
-          <button class="drawer-close" @click="drawerOpen = false" aria-label="Tutup">
+          <button class="sheet-close" @click="cartOpen = false" aria-label="Tutup">
             <X :size="20" :stroke-width="2" />
           </button>
         </div>
 
-        <div v-if="cart.length === 0" class="drawer-empty">
+        <div v-if="cart.length === 0" class="sheet-empty">
           <ShoppingBag :size="36" :stroke-width="1.5" />
           <p>Keranjang masih kosong</p>
           <span>Tambahkan produk untuk mulai belanja</span>
         </div>
 
-        <div v-else class="drawer-body">
-          <div class="drawer-items">
-            <div v-for="item in cart" :key="item.product.id" class="di">
-              <div class="di-visual" :style="{ background: item.product.bgColor }">
-                <span>{{ item.product.emoji }}</span>
-              </div>
-              <div class="di-content">
-                <h4>{{ item.product.name }}</h4>
-                <span class="di-price">{{ fmt(item.product.numPrice) }}</span>
-              </div>
-              <div class="di-actions">
-                <div class="qty-control">
-                  <button class="qty-btn" @click="updateQty(item.product.id, -1)" aria-label="Kurangi">
-                    <Minus :size="14" :stroke-width="2.5" />
-                  </button>
-                  <span class="qty-num">{{ item.quantity }}</span>
-                  <button
-                    class="qty-btn"
-                    @click="updateQty(item.product.id, 1)"
-                    :disabled="item.quantity >= item.product.stock"
-                    aria-label="Tambah"
-                  >
-                    <Plus :size="14" :stroke-width="2.5" />
-                  </button>
-                </div>
-                <button class="di-del" @click="removeFromCart(item.product.id)" aria-label="Hapus">
-                  <Trash2 :size="15" :stroke-width="2" />
+        <div v-else class="sheet-body">
+          <div v-for="item in cart" :key="item.product.id" class="si">
+            <div class="si-visual" :style="{ background: item.product.bgColor }">
+              <span>{{ item.product.emoji }}</span>
+            </div>
+            <div class="si-content">
+              <h4>{{ item.product.name }}</h4>
+              <span class="si-price">{{ fmt(item.product.numPrice) }}</span>
+            </div>
+            <div class="si-actions">
+              <div class="qty-control">
+                <button class="qty-btn" @click="updateQty(item.product.id, -1)" aria-label="Kurangi">
+                  <Minus :size="14" :stroke-width="2.5" />
+                </button>
+                <span class="qty-num">{{ item.quantity }}</span>
+                <button
+                  class="qty-btn"
+                  @click="updateQty(item.product.id, 1)"
+                  :disabled="item.quantity >= item.product.stock"
+                  aria-label="Tambah"
+                >
+                  <Plus :size="14" :stroke-width="2.5" />
                 </button>
               </div>
+              <button class="si-del" @click="removeFromCart(item.product.id)" aria-label="Hapus">
+                <Trash2 :size="15" :stroke-width="2" />
+              </button>
             </div>
           </div>
         </div>
 
-        <div v-if="cart.length > 0" class="drawer-foot">
-          <div class="drawer-total-row">
+        <div v-if="cart.length > 0" class="sheet-foot">
+          <div class="promo-row">
+            <input class="promo-input" type="text" placeholder="Punya kode promo?" v-model="promoCode" />
+            <button class="promo-btn" @click="applyPromo">Pakai</button>
+          </div>
+          <div class="delivery-row">
+            <Info :size="14" :stroke-width="2" />
+            <span>Pengambilan di koperasi sekolah</span>
+            <strong class="delivery-free">Gratis</strong>
+          </div>
+          <div class="sheet-total-row">
             <span>Total</span>
             <strong>{{ fmt(cartTotal) }}</strong>
           </div>
           <button class="kop-btn primary full" @click="goCheckout">
-            Checkout
-            <ArrowRight :size="18" :stroke-width="2" />
+            Beli Sekarang
           </button>
         </div>
-      </aside>
+      </div>
     </Transition>
 
     <!-- ═══ CHECKOUT VIEW ═══ -->
     <div v-if="view === 'checkout'" class="kop-flow">
       <div class="flow-box">
-        <button class="flow-back" @click="view = 'shop'">
-          <ChevronLeft :size="18" :stroke-width="2" />
-          Kembali
-        </button>
-
-        <div class="flow-steps">
-          <span class="step active">Rincian</span>
-          <span class="step-line"></span>
-          <span class="step">Bayar</span>
-          <span class="step-line"></span>
-          <span class="step">Selesai</span>
+        <div class="flow-topbar">
+          <button class="flow-back" @click="view = 'shop'">
+            <ChevronLeft :size="18" :stroke-width="2" />
+          </button>
+          <h2 class="flow-topbar-title">Checkout</h2>
+          <div style="width:36px"></div>
         </div>
 
-        <h2 class="flow-title">Rincian Pesanan</h2>
-        <p class="flow-sub">Periksa pesanan Anda sebelum melanjutkan</p>
-
-        <div class="order-card">
-          <div class="oc-id">
-            <span>No. Pesanan</span>
-            <strong>{{ orderId }}</strong>
-          </div>
-
-          <div class="oc-items">
-            <div v-for="item in cart" :key="item.product.id" class="oc-item">
-              <div class="oc-item-left">
-                <div class="oc-thumb" :style="{ background: item.product.bgColor }">
-                  <span>{{ item.product.emoji }}</span>
-                </div>
-                <div class="oc-item-info">
-                  <h4>{{ item.product.name }}</h4>
-                  <span>{{ item.quantity }} &times; {{ fmt(item.product.numPrice) }}</span>
-                </div>
+        <!-- Customer Info -->
+        <div class="checkout-section">
+          <div class="section-label">Informasi Pengambil</div>
+          <div class="info-card">
+            <div class="info-card-left">
+              <div class="info-avatar">{{ user?.name?.charAt(0) || '?' }}</div>
+              <div>
+                <strong>{{ user?.name || 'Guest' }}</strong>
+                <span>{{ user?.email || '-' }}</span>
               </div>
-              <strong class="oc-item-total">{{ fmt(item.product.numPrice * item.quantity) }}</strong>
             </div>
-          </div>
-
-          <div class="oc-summary">
-            <div class="oc-row">
-              <span>Subtotal ({{ cartCount }} item)</span>
-              <span>{{ fmt(cartTotal) }}</span>
-            </div>
-            <div class="oc-row">
-              <span>Biaya layanan</span>
-              <span class="oc-free">Gratis</span>
-            </div>
-            <div class="oc-row oc-total">
-              <span>Total Pembayaran</span>
-              <strong>{{ fmt(cartTotal) }}</strong>
-            </div>
+            <ChevronLeft :size="16" :stroke-width="2" class="info-arrow" />
           </div>
         </div>
 
-        <button class="kop-btn primary full" @click="view = 'payment'">
-          Pilih Pembayaran
-          <ArrowRight :size="18" :stroke-width="2" />
-        </button>
-      </div>
-    </div>
-
-    <!-- ═══ PAYMENT METHOD ═══ -->
-    <div v-if="view === 'payment'" class="kop-flow">
-      <div class="flow-box">
-        <button class="flow-back" @click="view = 'checkout'">
-          <ChevronLeft :size="18" :stroke-width="2" />
-          Kembali
-        </button>
-
-        <div class="flow-steps">
-          <span class="step done">Rincian</span>
-          <span class="step-line done"></span>
-          <span class="step active">Bayar</span>
-          <span class="step-line"></span>
-          <span class="step">Selesai</span>
+        <!-- Order Items -->
+        <div class="checkout-section">
+          <div class="section-label">Pesanan Anda</div>
+          <div class="order-items">
+            <div v-for="item in cart" :key="item.product.id" class="oi">
+              <div class="oi-visual" :style="{ background: item.product.bgColor }">
+                <span>{{ item.product.emoji }}</span>
+              </div>
+              <div class="oi-info">
+                <h4>{{ item.product.name }}</h4>
+                <span class="oi-meta">{{ item.quantity }} &times; {{ fmt(item.product.numPrice) }}</span>
+              </div>
+              <strong class="oi-total">{{ fmt(item.product.numPrice * item.quantity) }}</strong>
+            </div>
+          </div>
         </div>
 
-        <h2 class="flow-title">Metode Pembayaran</h2>
-        <p class="flow-sub">Pilih metode pembayaran yang tersedia</p>
+        <!-- Payment Method -->
+        <div class="checkout-section">
+          <div class="section-label">Metode Pembayaran</div>
+          <div class="pay-options">
+            <button
+              :class="['pay-opt', { selected: payMethod === 'qris' }]"
+              @click="payMethod = 'qris'"
+            >
+              <div class="po-icon qris-icon">
+                <QrCode :size="22" :stroke-width="1.5" />
+              </div>
+              <div class="po-text">
+                <h4>QRIS</h4>
+                <span>Scan QR untuk bayar instan</span>
+              </div>
+              <div v-if="payMethod === 'qris'" class="po-check">
+                <Check :size="16" :stroke-width="3" />
+              </div>
+            </button>
+            <button
+              :class="['pay-opt', { selected: payMethod === 'transfer' }]"
+              @click="payMethod = 'transfer'"
+            >
+              <div class="po-icon transfer-icon">
+                <CreditCard :size="22" :stroke-width="1.5" />
+              </div>
+              <div class="po-text">
+                <h4>Transfer Bank</h4>
+                <span>Transfer ke rekening koperasi</span>
+              </div>
+              <div v-if="payMethod === 'transfer'" class="po-check">
+                <Check :size="16" :stroke-width="3" />
+              </div>
+            </button>
+          </div>
+        </div>
 
-        <div class="pay-grid">
+        <!-- Summary -->
+        <div class="checkout-section">
+          <div class="summary-row">
+            <span>Subtotal ({{ cartCount }} item)</span>
+            <span>{{ fmt(cartTotal) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Biaya layanan</span>
+            <span class="summary-free">Gratis</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span>
+            <strong>{{ fmt(cartTotal) }}</strong>
+          </div>
+        </div>
+
+        <div class="checkout-footer">
+          <span class="checkout-total-label">Total {{ fmt(cartTotal) }}</span>
           <button
-            :class="['pay-opt', { selected: payMethod === 'qris' }]"
-            @click="payMethod = 'qris'"
+            class="kop-btn primary checkout-btn"
+            :disabled="!payMethod"
+            @click="processPayment"
           >
-            <div class="po-icon">
-              <QrCode :size="28" :stroke-width="1.5" />
-            </div>
-            <div class="po-text">
-              <h4>QRIS</h4>
-              <span>Scan QR untuk bayar instan</span>
-            </div>
-            <div v-if="payMethod === 'qris'" class="po-check">
-              <Check :size="16" :stroke-width="3" />
-            </div>
-          </button>
-
-          <button
-            :class="['pay-opt', { selected: payMethod === 'transfer' }]"
-            @click="payMethod = 'transfer'"
-          >
-            <div class="po-icon">
-              <CreditCard :size="28" :stroke-width="1.5" />
-            </div>
-            <div class="po-text">
-              <h4>Transfer Bank</h4>
-              <span>Transfer ke rekening koperasi</span>
-            </div>
-            <div v-if="payMethod === 'transfer'" class="po-check">
-              <Check :size="16" :stroke-width="3" />
-            </div>
+            Place Order
           </button>
         </div>
-
-        <div class="pay-amount">
-          <span>Total Pembayaran</span>
-          <strong>{{ fmt(cartTotal) }}</strong>
-        </div>
-
-        <button
-          class="kop-btn primary full"
-          :disabled="!payMethod"
-          @click="processPayment"
-        >
-          Bayar Sekarang
-          <ArrowRight :size="18" :stroke-width="2" />
-        </button>
       </div>
     </div>
 
     <!-- ═══ PENDING PAYMENT ═══ -->
     <div v-if="view === 'pending'" class="kop-flow">
       <div class="flow-box flow-center">
-        <div class="flow-steps">
-          <span class="step done">Rincian</span>
-          <span class="step-line done"></span>
-          <span class="step active">Bayar</span>
-          <span class="step-line"></span>
-          <span class="step">Selesai</span>
+        <div class="flow-topbar">
+          <div style="width:36px"></div>
+          <h2 class="flow-topbar-title">Pembayaran</h2>
+          <div style="width:36px"></div>
         </div>
 
         <div class="pend-card">
@@ -378,14 +369,6 @@
     <!-- ═══ SUCCESS VIEW ═══ -->
     <div v-if="view === 'success'" class="kop-flow">
       <div class="flow-box flow-center">
-        <div class="flow-steps">
-          <span class="step done">Rincian</span>
-          <span class="step-line done"></span>
-          <span class="step done">Bayar</span>
-          <span class="step-line done"></span>
-          <span class="step active">Selesai</span>
-        </div>
-
         <div class="suc-circle">
           <Check :size="44" :stroke-width="2.5" />
         </div>
@@ -427,20 +410,6 @@
         </button>
       </div>
     </div>
-
-    <!-- ═══ FLOATING CART ═══ -->
-    <Transition name="float-up">
-      <button
-        v-if="view === 'shop' && cartCount > 0 && !drawerOpen"
-        class="kop-float"
-        @click="drawerOpen = true"
-      >
-        <ShoppingBag :size="18" :stroke-width="2" />
-        <span class="float-count">{{ cartCount }} item</span>
-        <span class="float-sep"></span>
-        <span class="float-total">{{ fmt(cartTotal) }}</span>
-      </button>
-    </Transition>
   </section>
 </template>
 
@@ -451,16 +420,22 @@ import {
   ArrowRight, QrCode, CreditCard, Check, Copy,
   Info, Package, Bell
 } from 'lucide-vue-next'
+import { useAuthSession } from '@/composable/useAuthSession'
+
+const { session } = useAuthSession()
+const user = computed(() => session.value)
 
 /* ─── State ─── */
 const view = ref('shop')
 const activeCat = ref('Semua')
-const drawerOpen = ref(false)
+const cartOpen = ref(false)
+const showFilter = ref(false)
 const payMethod = ref(null)
 const isProcessing = ref(false)
 const orderId = ref('')
 const deadline = ref(null)
 const timeLeft = ref({ hours: 0, minutes: 59, seconds: 59 })
+const promoCode = ref('')
 let timerInterval = null
 
 const toast = ref({ show: false, message: '', type: 'success' })
@@ -505,19 +480,17 @@ function addToCart(product) {
   if (existing) {
     if (existing.quantity < product.stock) {
       existing.quantity++
-      showToast(`${product.name} ditambahkan`)
     } else {
       showToast('Stok tidak mencukupi', 'error')
     }
   } else {
     cart.value.push({ product, quantity: 1 })
-    showToast(`${product.name} ditambahkan`)
   }
 }
 
 function removeFromCart(id) {
   cart.value = cart.value.filter(i => i.product.id !== id)
-  if (cart.value.length === 0) drawerOpen.value = false
+  if (cart.value.length === 0) cartOpen.value = false
 }
 
 function updateQty(id, delta) {
@@ -527,6 +500,12 @@ function updateQty(id, delta) {
   if (next <= 0) { removeFromCart(id); return }
   if (next > item.product.stock) { showToast('Stok tidak mencukupi', 'error'); return }
   item.quantity = next
+}
+
+function applyPromo() {
+  if (promoCode.value.trim()) {
+    showToast('Kode promo tidak valid', 'error')
+  }
 }
 
 /* ─── Helpers ─── */
@@ -554,9 +533,14 @@ async function copyText(text) {
 /* ─── Navigation ─── */
 function goBack() { window.history.back() }
 
+function openCart() {
+  cartOpen.value = true
+}
+
 function goCheckout() {
-  drawerOpen.value = false
+  cartOpen.value = false
   orderId.value = genOrderId()
+  payMethod.value = null
   setTimeout(() => { view.value = 'checkout' }, 200)
 }
 
@@ -603,6 +587,7 @@ function resetOrder() {
   payMethod.value = null
   orderId.value = ''
   isProcessing.value = false
+  promoCode.value = ''
   view.value = 'shop'
 }
 
@@ -618,11 +603,7 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
-/* ═══════════════════════════════════════
-   DESIGN TOKENS
-   Forest green palette. One accent (amber).
-   Shape: 12px containers, 8px inputs, pill CTAs.
-   ═══════════════════════════════════════ */
+/* ═══ DESIGN TOKENS ═══ */
 .kop {
   --green-900: #0f3d22;
   --green-700: #1a6b3c;
@@ -631,21 +612,20 @@ onUnmounted(() => {
   --green-200: #b8dbc6;
   --green-100: #dceee2;
   --green-50:  #f0f7f2;
-  --surface:   #f4f6f3;
+  --surface:   #f8f9f7;
   --white:     #ffffff;
   --text-1:    #1a2420;
   --text-2:    #4d5f53;
   --text-3:    #7d8f84;
   --amber:     #c77d0a;
-  --amber-dk:  #a86808;
   --red:       #c53030;
-  --border:    rgba(26, 107, 60, 0.1);
-  --shadow-sm: 0 2px 8px rgba(20, 50, 30, 0.05);
-  --shadow-md: 0 8px 24px rgba(20, 50, 30, 0.07);
+  --border:    rgba(26, 107, 60, 0.08);
+  --shadow-sm: 0 2px 8px rgba(20, 50, 30, 0.04);
+  --shadow-md: 0 8px 24px rgba(20, 50, 30, 0.06);
   --shadow-lg: 0 16px 40px rgba(20, 50, 30, 0.1);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
 
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
@@ -675,20 +655,12 @@ onUnmounted(() => {
   box-shadow: var(--shadow-lg);
   pointer-events: none;
 }
-.kop-toast.error {
-  background: var(--red);
-}
+.kop-toast.error { background: var(--red); }
 .toast-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #4ade80;
-  flex-shrink: 0;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #4ade80; flex-shrink: 0;
 }
-.kop-toast.error .toast-dot {
-  background: #fca5a5;
-}
-
+.kop-toast.error .toast-dot { background: #fca5a5; }
 .toast-enter-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .toast-leave-active { transition: all 0.25s ease; }
 .toast-enter-from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
@@ -696,7 +668,7 @@ onUnmounted(() => {
 
 /* ═══ SHOP VIEW ═══ */
 .kop-shop {
-  padding: 24px 7% 120px;
+  padding: 0 7% 120px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -705,36 +677,25 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
-  padding-top: 16px;
+  padding: 20px 0 16px;
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 10;
+}
+.topbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-1);
+  margin: 0;
 }
 
-.kop-back {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--border);
-  background: var(--white);
-  border-radius: var(--radius-md);
-  color: var(--green-700);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.kop-back:hover {
-  background: var(--green-50);
-  border-color: var(--green-200);
-}
-.kop-back:active { transform: scale(0.96); }
-
-.kop-cart-topbar {
+.kop-back, .kop-cart-topbar {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border: 1px solid var(--border);
   background: var(--white);
   border-radius: var(--radius-md);
@@ -742,57 +703,41 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.kop-cart-topbar:hover {
+.kop-back:hover, .kop-cart-topbar:hover {
   background: var(--green-50);
   border-color: var(--green-200);
 }
+.kop-back:active, .kop-cart-topbar:active { transform: scale(0.96); }
 .cart-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  position: absolute; top: -6px; right: -6px;
+  min-width: 20px; height: 20px; padding: 0 6px;
   border-radius: var(--radius-pill);
   background: var(--green-700);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+  color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
 }
 
-.kop-header {
-  margin-bottom: 32px;
+.kop-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
-.kop-eyebrow {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--green-100);
-  color: var(--green-700);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 14px;
-}
-.kop-header h1 {
-  font-size: clamp(28px, 4vw, 44px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--green-900);
-  margin: 0 0 10px;
-}
-.kop-header p {
+.stat-count {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text-2);
-  font-size: 16px;
-  line-height: 1.6;
-  max-width: 480px;
-  margin: 0;
+}
+.stat-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  cursor: pointer;
 }
 
 /* ═══ CATEGORY TABS ═══ */
@@ -800,11 +745,11 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 .kop-tab {
-  padding: 9px 18px;
-  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--white);
   color: var(--text-2);
@@ -814,10 +759,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.kop-tab:hover {
-  border-color: var(--green-200);
-  color: var(--green-700);
-}
+.kop-tab:hover { border-color: var(--green-200); color: var(--green-700); }
 .kop-tab.active {
   background: var(--green-700);
   border-color: var(--green-700);
@@ -829,24 +771,20 @@ onUnmounted(() => {
 .kop-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  gap: 16px;
 }
 
 .kop-card {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--white);
-  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+  cursor: pointer;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 .kop-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-}
-.kop-card:hover .card-add {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .card-visual {
@@ -858,15 +796,14 @@ onUnmounted(() => {
   overflow: hidden;
 }
 .card-emoji {
-  font-size: 48px;
+  font-size: 52px;
   line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
 }
 .card-new {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 3px 10px;
+  top: 10px; left: 10px;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
   background: var(--amber);
   color: #fff;
@@ -875,76 +812,47 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.card-add {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
+
+.card-body {
+  padding: 14px 16px 16px;
+}
+.card-name {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.3;
+}
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-price {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--green-700);
+}
+.card-add-inline {
+  width: 32px; height: 32px;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   background: var(--green-700);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0;
-  transform: translateY(6px);
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(26, 107, 60, 0.3);
+  box-shadow: 0 2px 8px rgba(26, 107, 60, 0.25);
 }
-.card-add:hover { background: var(--green-600); }
-.card-add:active { transform: translateY(0) scale(0.92); }
-.card-add:disabled {
+.card-add-inline:hover { background: var(--green-600); transform: scale(1.05); }
+.card-add-inline:active { transform: scale(0.92); }
+.card-add-inline:disabled {
   background: var(--text-3);
   cursor: not-allowed;
   box-shadow: none;
 }
-
-.card-body {
-  padding: 14px 16px 16px;
-}
-.card-cat {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--green-700);
-}
-.card-name {
-  margin: 5px 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-1);
-  line-height: 1.3;
-}
-.card-desc {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-3);
-  line-height: 1.4;
-}
-.card-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-.card-price {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--green-700);
-}
-.card-stock {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-3);
-}
-.card-stock.low { color: var(--amber); font-weight: 600; }
-.card-stock.out { color: var(--red); font-weight: 600; }
 
 /* ═══ EMPTY STATE ═══ */
 .kop-empty {
@@ -958,36 +866,44 @@ onUnmounted(() => {
 }
 .kop-empty p { margin: 0; font-size: 15px; }
 
-/* ═══ INFO BANNER ═══ */
-.kop-info {
+/* ═══ FLOATING CART ═══ */
+.kop-float {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  margin-top: 32px;
-  padding: 16px 20px;
-  border-radius: var(--radius-md);
-  background: var(--green-50);
-  border: 1px solid var(--border);
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--green-900);
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(15, 61, 34, 0.35);
+  transition: all 0.2s ease;
 }
-.info-icon {
-  color: var(--green-700);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.kop-info p {
-  font-size: 13.5px;
-  color: var(--text-2);
-  line-height: 1.6;
-  margin: 0;
-}
-.kop-info strong { color: var(--text-1); }
+.kop-float:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 12px 40px rgba(15, 61, 34, 0.4); }
+.kop-float:active { transform: translateX(-50%) scale(0.97); }
+.float-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.25); }
+.float-count { opacity: 0.8; font-weight: 500; }
+.float-total { color: #4ade80; }
+.float-up-enter-active { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+.float-up-leave-active { transition: all 0.25s ease; }
+.float-up-enter-from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+.float-up-leave-to   { opacity: 0; transform: translateX(-50%) translateY(12px); }
 
-/* ═══ CART DRAWER ═══ */
+/* ═══ CART SHEET (slide-up) ═══ */
 .kop-overlay {
   position: fixed;
   inset: 0;
   z-index: 900;
-  background: rgba(15, 30, 20, 0.4);
+  background: rgba(15, 30, 20, 0.45);
   backdrop-filter: blur(4px);
 }
 .overlay-fade-enter-active,
@@ -995,202 +911,220 @@ onUnmounted(() => {
 .overlay-fade-enter-from,
 .overlay-fade-leave-to { opacity: 0; }
 
-.kop-drawer {
+.kop-sheet {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  bottom: 0; left: 0; right: 0;
   z-index: 950;
-  width: 400px;
-  max-width: 92vw;
+  max-height: 85vh;
   background: var(--white);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   display: flex;
   flex-direction: column;
-  box-shadow: -8px 0 40px rgba(15, 30, 20, 0.12);
+  box-shadow: 0 -8px 40px rgba(15, 30, 20, 0.12);
 }
-.slide-right-enter-active { transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-.slide-right-leave-active { transition: transform 0.25s ease; }
-.slide-right-enter-from,
-.slide-right-leave-to { transform: translateX(100%); }
+.slide-up-enter-active { transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-up-leave-active { transition: transform 0.25s ease; }
+.slide-up-enter-from,
+.slide-up-leave-to { transform: translateY(100%); }
 
-.drawer-head {
+.sheet-handle {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+  cursor: pointer;
+}
+.handle-bar {
+  width: 40px; height: 4px;
+  border-radius: 2px;
+  background: #d1d5db;
+}
+
+.sheet-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+  padding: 8px 24px 16px;
 }
-.drawer-head h2 {
-  font-size: 18px;
-  font-weight: 700;
+.sheet-head h2 {
   margin: 0;
+  font-size: 20px;
+  font-weight: 700;
 }
-.drawer-head h2 span {
-  color: var(--text-3);
-  font-weight: 500;
-}
-.drawer-close {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-2);
-  display: flex;
+.sheet-close {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 36px; height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--green-50);
+  color: var(--text-2);
   cursor: pointer;
-  transition: all 0.15s ease;
 }
-.drawer-close:hover { background: var(--green-50); color: var(--text-1); }
 
-.drawer-empty {
-  flex: 1;
+.sheet-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-3);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  color: var(--text-3);
-  padding: 40px;
 }
-.drawer-empty p {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-2);
-  margin: 8px 0 0;
-}
-.drawer-empty span { font-size: 13px; }
+.sheet-empty p { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-2); }
+.sheet-empty span { font-size: 13px; }
 
-.drawer-body {
+.sheet-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 24px;
-}
-.drawer-items {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 0 24px;
 }
 
-.di {
+.si {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  border: 1px solid transparent;
-  transition: border-color 0.15s ease;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
 }
-.di:hover { border-color: var(--border); }
-
-.di-visual {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm);
+.si:last-child { border-bottom: none; }
+.si-visual {
+  width: 60px; height: 60px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 28px;
   flex-shrink: 0;
-  font-size: 24px;
 }
-.di-content {
+.si-content {
   flex: 1;
   min-width: 0;
 }
-.di-content h4 {
-  margin: 0;
+.si-content h4 {
+  margin: 0 0 4px;
   font-size: 14px;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-1);
 }
-.di-price {
-  font-size: 12px;
-  color: var(--text-3);
-  font-weight: 500;
+.si-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-700);
 }
-
-.di-actions {
+.si-actions {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
 }
+
 .qty-control {
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--white);
 }
 .qty-btn {
-  width: 30px;
-  height: 30px;
+  width: 32px; height: 32px;
   border: none;
-  background: transparent;
-  color: var(--text-2);
+  background: var(--green-50);
+  color: var(--green-700);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s;
 }
-.qty-btn:hover { background: var(--green-50); color: var(--green-700); }
+.qty-btn:hover { background: var(--green-100); }
 .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.qty-btn:active { transform: scale(0.9); }
 .qty-num {
-  width: 28px;
+  min-width: 32px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  line-height: 30px;
 }
 
-.di-del {
-  width: 30px;
-  height: 30px;
+.si-del {
+  width: 32px; height: 32px;
   border: none;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-3);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: all 0.15s ease;
+  transition: all 0.15s;
 }
-.di-del:hover { background: #fef2f2; color: var(--red); }
+.si-del:hover { background: #fef2f2; color: var(--red); }
 
-.drawer-foot {
-  padding: 16px 24px 24px;
+.sheet-foot {
+  padding: 16px 24px 28px;
   border-top: 1px solid var(--border);
-  flex-shrink: 0;
 }
-.drawer-total-row {
+
+.promo-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.promo-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  background: var(--green-50);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.promo-input:focus { border-color: var(--green-500); }
+.promo-input::placeholder { color: var(--text-3); }
+.promo-btn {
+  padding: 10px 18px;
+  border: 1.5px solid var(--green-700);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--green-700);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.promo-btn:hover { background: var(--green-50); }
+
+.delivery-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--green-50);
+  font-size: 13px;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+.delivery-free {
+  margin-left: auto;
+  color: var(--green-700);
+  font-size: 13px;
+}
+
+.sheet-total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  font-size: 16px;
 }
-.drawer-total-row span {
-  font-size: 14px;
-  color: var(--text-2);
-}
-.drawer-total-row strong {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--green-900);
-}
+.sheet-total-row span { color: var(--text-2); }
+.sheet-total-row strong { font-size: 18px; color: var(--text-1); }
 
-/* ═══ GLOBAL BUTTON ═══ */
+/* ═══ BUTTONS ═══ */
 .kop-btn {
   display: inline-flex;
   align-items: center;
@@ -1204,253 +1138,204 @@ onUnmounted(() => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  letter-spacing: 0.01em;
 }
-.kop-btn:active { transform: scale(0.97); }
 .kop-btn.primary {
   background: var(--green-700);
   color: #fff;
   box-shadow: 0 4px 16px rgba(26, 107, 60, 0.25);
 }
-.kop-btn.primary:hover {
-  background: var(--green-600);
-  box-shadow: 0 6px 20px rgba(26, 107, 60, 0.3);
-}
-.kop-btn.primary:disabled {
-  background: var(--text-3);
-  box-shadow: none;
-  cursor: not-allowed;
-}
+.kop-btn.primary:hover { background: var(--green-600); transform: translateY(-1px); }
+.kop-btn.primary:active { transform: translateY(0) scale(0.98); }
+.kop-btn.primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 .kop-btn.full { width: 100%; }
 
-/* ═══ FLOW VIEWS (Checkout, Payment, Pending, Success) ═══ */
+.btn-spin {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ FLOW VIEWS ═══ */
 .kop-flow {
-  padding: 24px 7%;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  align-items: flex-start;
   justify-content: center;
+  padding: 0 7%;
 }
 .flow-box {
   width: 100%;
-  max-width: 560px;
-  padding-top: 24px;
+  max-width: 520px;
+  padding: 20px 0 40px;
 }
-.flow-box.flow-center {
+.flow-center {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+.flow-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.flow-topbar-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
 .flow-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 0;
-  border: none;
-  background: transparent;
-  color: var(--text-2);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  color: var(--green-700);
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: all 0.2s ease;
+}
+.flow-back:hover { background: var(--green-50); }
+
+/* ═══ CHECKOUT ═══ */
+.checkout-section {
   margin-bottom: 24px;
 }
-.flow-back:hover { color: var(--green-700); }
-
-/* ─── Step indicator ─── */
-.flow-steps {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 32px;
-  width: 100%;
-  max-width: 360px;
-}
-.flow-center .flow-steps { align-self: center; }
-
-.step {
-  font-size: 12px;
+.section-label {
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-3);
-  white-space: nowrap;
-  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
 }
-.step.active { color: var(--green-700); }
-.step.done { color: var(--green-500); }
-.step-line {
-  flex: 1;
-  height: 2px;
-  background: var(--green-100);
-  margin: 0 12px;
-  border-radius: 1px;
-}
-.step-line.done { background: var(--green-500); }
 
-.flow-title {
-  font-size: clamp(22px, 3vw, 28px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px;
-  color: var(--green-900);
-}
-.flow-sub {
-  font-size: 14px;
-  color: var(--text-2);
-  margin: 0 0 28px;
-}
-.flow-center .flow-title,
-.flow-center .flow-sub { text-align: center; }
-
-/* ═══ ORDER CARD (Checkout) ═══ */
-.order-card {
+.info-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
   background: var(--white);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
 }
-.oc-id {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: var(--green-50);
-  border-bottom: 1px solid var(--border);
-}
-.oc-id span { font-size: 13px; color: var(--text-3); }
-.oc-id strong { font-size: 13px; color: var(--green-700); font-weight: 700; }
-
-.oc-items { padding: 8px 20px; }
-.oc-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-.oc-item:last-child { border-bottom: none; }
-.oc-item-left {
+.info-card-left {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 0;
 }
-.oc-thumb {
-  width: 42px;
-  height: 42px;
+.info-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--green-100);
+  color: var(--green-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+.info-card-left strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-1);
+}
+.info-card-left span {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.info-arrow { color: var(--text-3); transform: rotate(180deg); }
+
+.order-items {
+  background: var(--white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.oi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.oi + .oi { border-top: 1px solid var(--border); }
+.oi-visual {
+  width: 52px; height: 52px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 24px;
   flex-shrink: 0;
 }
-.oc-item-info h4 {
-  margin: 0;
+.oi-info { flex: 1; min-width: 0; }
+.oi-info h4 {
+  margin: 0 0 2px;
   font-size: 14px;
   font-weight: 600;
+  color: var(--text-1);
 }
-.oc-item-info span {
+.oi-meta {
   font-size: 12px;
   color: var(--text-3);
 }
-.oc-item-total {
+.oi-total {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-1);
-  flex-shrink: 0;
-  margin-left: 12px;
 }
 
-.oc-summary {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
+.pay-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.oc-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--text-2);
-}
-.oc-free {
-  color: var(--green-500);
-  font-weight: 600;
-}
-.oc-total {
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
-  font-size: 15px;
-}
-.oc-total span { font-weight: 600; color: var(--text-1); }
-.oc-total strong {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--green-700);
-}
-
-/* ═══ PAYMENT OPTIONS ═══ */
-.pay-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
 .pay-opt {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 20px;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--white);
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--white);
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
-  font-family: inherit;
 }
 .pay-opt:hover { border-color: var(--green-200); }
-.pay-opt.selected {
-  border-color: var(--green-700);
-  background: var(--green-50);
-}
-.pay-opt:active { transform: scale(0.99); }
+.pay-opt.selected { border-color: var(--green-700); background: var(--green-50); }
 
 .po-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-md);
-  background: var(--green-50);
+  width: 44px; height: 44px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--green-700);
   flex-shrink: 0;
 }
-.pay-opt.selected .po-icon { background: var(--green-100); }
+.qris-icon { background: #eef2ff; color: #4f46e5; }
+.transfer-icon { background: #fef3c7; color: #d97706; }
 
-.po-text {
-  flex: 1;
-}
+.po-text { flex: 1; }
 .po-text h4 {
-  margin: 0;
-  font-size: 15px;
+  margin: 0 0 2px;
+  font-size: 14px;
   font-weight: 700;
+  color: var(--text-1);
 }
 .po-text span {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-3);
 }
+
 .po-check {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-pill);
+  width: 28px; height: 28px;
+  border-radius: 50%;
   background: var(--green-700);
   color: #fff;
   display: flex;
@@ -1459,64 +1344,90 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.pay-amount {
+.summary-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-radius: var(--radius-md);
-  background: var(--green-50);
-  margin-bottom: 16px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--text-2);
 }
-.pay-amount span { font-size: 14px; color: var(--text-2); }
-.pay-amount strong { font-size: 18px; font-weight: 800; color: var(--green-900); }
+.summary-row + .summary-row { border-top: 1px solid var(--border); }
+.summary-free { color: var(--green-700); font-weight: 600; }
+.summary-row.total {
+  border-top: 2px solid var(--text-1);
+  margin-top: 4px;
+  padding-top: 14px;
+  font-size: 16px;
+  color: var(--text-1);
+}
+.summary-row.total strong { font-size: 18px; }
+
+.checkout-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+}
+.checkout-total-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+.checkout-btn {
+  flex: 1;
+  max-width: 240px;
+  padding: 14px 32px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--green-900);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.checkout-btn:hover { background: var(--green-700); }
+.checkout-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ═══ PENDING PAYMENT ═══ */
 .pend-card {
   width: 100%;
-  max-width: 560px;
   background: var(--white);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
 }
 .pend-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 24px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border);
 }
-.pend-head h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-}
+.pend-head h3 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
 .pend-badge {
+  display: inline-block;
   padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: #fef3c7;
   color: #92400e;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
+.pend-body { padding: 24px; }
 
-.pend-body { padding: 28px 24px; }
-
-/* QR code visual */
-.qr-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
+.qr-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
 .qr-code {
-  width: 180px;
-  height: 180px;
-  border: 2px solid var(--text-1);
-  border-radius: var(--radius-sm);
-  padding: 12px;
+  width: 180px; height: 180px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1524,57 +1435,45 @@ onUnmounted(() => {
   position: relative;
 }
 .qr-inner {
-  width: 100%;
-  height: 100%;
+  width: 120px; height: 120px;
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 8px;
 }
 .qr-block {
-  border: 3px solid var(--text-1);
-  border-radius: 3px;
-  position: relative;
-}
-.qr-block::after {
-  content: '';
   position: absolute;
-  inset: 4px;
-  background: var(--text-1);
-  border-radius: 1px;
+  width: 28px; height: 28px;
+  border: 4px solid #1a2420;
+  border-radius: 4px;
 }
-.qr-block.tl { grid-area: 1 / 1; }
-.qr-block.tr { grid-area: 1 / 2; }
-.qr-block.bl { grid-area: 2 / 1; }
+.qr-block.tl { top: 0; left: 0; }
+.qr-block.tr { top: 0; right: 0; }
+.qr-block.bl { bottom: 0; left: 0; }
 .qr-dots {
-  grid-area: 2 / 2;
+  position: absolute;
+  inset: 0;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 2px;
-  padding: 2px;
+  grid-template-rows: repeat(5, 1fr);
+  gap: 4px;
+  padding: 32px;
 }
 .qr-dot {
-  aspect-ratio: 1;
-  background: var(--text-1);
-  border-radius: 1px;
+  width: 100%; height: 100%;
+  background: #1a2420;
+  border-radius: 2px;
 }
 .qr-brand {
-  position: absolute;
-  bottom: -10px;
-  background: var(--white);
-  padding: 0 8px;
+  margin-top: 8px;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--text-1);
+  color: var(--text-3);
+  letter-spacing: 0.1em;
 }
 
 .pend-amount {
   text-align: center;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
-  color: var(--green-900);
+  color: var(--text-1);
   margin: 0 0 8px;
 }
 .pend-hint {
@@ -1582,175 +1481,148 @@ onUnmounted(() => {
   font-size: 13px;
   color: var(--text-3);
   margin: 0;
-  line-height: 1.5;
 }
 
-/* Bank transfer details */
 .bank-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  background: var(--green-50);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 .bank-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
 }
-.bank-row:last-child { border-bottom: none; }
+.bank-row + .bank-row { border-top: 1px solid var(--border); }
 .bank-label {
   font-size: 13px;
   color: var(--text-3);
 }
-.bank-row strong {
-  font-size: 14px;
-  font-weight: 700;
-  text-align: right;
-}
-.bank-amount {
-  color: var(--green-700);
-  font-size: 16px;
-}
-.bank-copy {
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  padding: 14px 8px;
-  margin: 0 -8px;
-  transition: background 0.15s ease;
-}
-.bank-copy:hover { background: var(--green-50); }
 .bank-val {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+.bank-val strong { font-size: 14px; }
+.bank-amount { color: var(--green-700); }
+.bank-copy { cursor: pointer; }
+.bank-copy:hover { background: rgba(0,0,0,0.02); }
 .copy-tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
-  background: var(--green-50);
+  background: var(--green-100);
   color: var(--green-700);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
 }
 
-/* Timer */
 .pend-timer {
-  padding: 24px;
+  padding: 20px 24px;
   border-top: 1px solid var(--border);
   text-align: center;
 }
 .timer-label {
   font-size: 13px;
   color: var(--text-3);
-  margin-bottom: 14px;
   display: block;
+  margin-bottom: 12px;
 }
 .timer-row {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .timer-cell {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
 }
 .timer-num {
-  width: 56px;
-  height: 56px;
+  width: 52px; height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--green-50);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--green-900);
-  font-variant-numeric: tabular-nums;
-}
-.timer-colon {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text-3);
-  margin-bottom: 20px;
 }
 .timer-unit {
   font-size: 11px;
   color: var(--text-3);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+.timer-colon {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-3);
+  padding-bottom: 18px;
 }
 .timer-warn {
   font-size: 12px;
   color: var(--amber);
   margin: 0;
-  font-weight: 500;
 }
 
 /* ═══ SUCCESS VIEW ═══ */
 .suc-circle {
-  width: 80px;
-  height: 80px;
+  width: 88px; height: 88px;
   border-radius: 50%;
   background: var(--green-100);
   color: var(--green-700);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-  animation: suc-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  margin-bottom: 24px;
+  animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-@keyframes suc-pop {
-  0%   { transform: scale(0); opacity: 0; }
-  60%  { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes pop-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 .suc-title {
-  font-size: clamp(22px, 3vw, 28px);
+  font-size: 24px;
   font-weight: 800;
-  color: var(--green-900);
-  margin: 0 0 6px;
-  letter-spacing: -0.02em;
+  color: var(--text-1);
+  margin: 0 0 8px;
+  text-align: center;
 }
 .suc-sub {
   font-size: 14px;
-  color: var(--text-2);
+  color: var(--text-3);
   margin: 0 0 28px;
+  text-align: center;
 }
 
 .suc-card {
   width: 100%;
-  max-width: 560px;
   background: var(--white);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 4px 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
   margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
 }
 .suc-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
 }
-.suc-row:last-child { border-bottom: none; }
+.suc-row + .suc-row { border-top: 1px solid var(--border); }
 .suc-row span { font-size: 13px; color: var(--text-3); }
-.suc-row strong { font-size: 14px; }
-.suc-amount { color: var(--green-700); }
+.suc-row strong { font-size: 14px; color: var(--text-1); }
+.suc-amount { color: var(--green-700) !important; font-size: 16px !important; }
 .suc-status {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: var(--green-100);
   color: var(--green-700);
@@ -1759,21 +1631,18 @@ onUnmounted(() => {
 }
 
 .suc-notif {
-  width: 100%;
-  max-width: 560px;
   display: flex;
-  align-items: flex-start;
   gap: 14px;
-  padding: 18px 20px;
-  border-radius: var(--radius-md);
+  padding: 16px;
   background: var(--green-50);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  width: 100%;
 }
 .sn-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-pill);
+  width: 40px; height: 40px;
+  border-radius: 50%;
   background: var(--green-100);
   color: var(--green-700);
   display: flex;
@@ -1783,104 +1652,35 @@ onUnmounted(() => {
 }
 .sn-text strong {
   display: block;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-1);
   margin-bottom: 4px;
 }
 .sn-text p {
   margin: 0;
-  font-size: 13px;
-  color: var(--text-2);
+  font-size: 12px;
+  color: var(--text-3);
   line-height: 1.5;
 }
-
-/* ═══ FLOATING CART ═══ */
-.kop-float {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 800;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 24px;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--green-700);
-  color: #fff;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 32px rgba(26, 107, 60, 0.35);
-  transition: all 0.2s ease;
-}
-.kop-float:hover {
-  background: var(--green-600);
-  box-shadow: 0 12px 40px rgba(26, 107, 60, 0.4);
-  transform: translateX(-50%) translateY(-2px);
-}
-.kop-float:active { transform: translateX(-50%) scale(0.97); }
-.float-count { font-weight: 600; }
-.float-sep {
-  width: 1px;
-  height: 16px;
-  background: rgba(255,255,255,0.3);
-}
-.float-total { font-weight: 800; }
-
-.float-up-enter-active { transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-.float-up-leave-active { transition: all 0.2s ease; }
-.float-up-enter-from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-.float-up-leave-to   { opacity: 0; transform: translateX(-50%) translateY(10px); }
-
-/* ═══ BUTTON LOADER ═══ */
-.btn-spin {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 1024px) {
   .kop-grid { grid-template-columns: repeat(3, 1fr); }
 }
-
 @media (max-width: 768px) {
-  .kop-shop { padding: 16px 5% 130px; }
   .kop-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .kop-header h1 { font-size: 28px; }
-
-  .card-add { opacity: 1; transform: translateY(0); }
-  .card-emoji { font-size: 36px; }
-
-  .kop-flow { padding: 16px 5%; }
-  .flow-box { padding-top: 16px; }
-
-  .timer-num { width: 48px; height: 48px; font-size: 20px; }
+  .kop-shop { padding: 0 5% 120px; }
+  .kop-float { bottom: 20px; padding: 12px 20px; font-size: 13px; }
 }
-
 @media (max-width: 520px) {
-  .kop-grid { grid-template-columns: 1fr; gap: 12px; }
-  .card-visual { aspect-ratio: 16/10; }
+  .kop-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .card-emoji { font-size: 40px; }
-
-  .oc-item { flex-direction: column; align-items: flex-start; gap: 8px; }
-  .oc-item-total { margin-left: 0; align-self: flex-end; }
-
-  .pay-amount { flex-direction: column; gap: 4px; text-align: center; }
-
-  .bank-row { flex-direction: column; align-items: flex-start; gap: 4px; }
-
-  .kop-float { left: 16px; right: 16px; transform: none; justify-content: center; }
-  .kop-float:hover { transform: translateY(-2px); }
-  .kop-float:active { transform: scale(0.98); }
-  .float-up-enter-from { transform: translateY(20px); }
-  .float-up-leave-to   { transform: translateY(10px); }
+  .card-body { padding: 10px 12px 12px; }
+  .card-name { font-size: 13px; }
+  .card-price { font-size: 13px; }
+  .sheet-foot { padding: 14px 20px 24px; }
+  .flow-box { padding: 16px 0 32px; }
+  .checkout-footer { flex-direction: column; gap: 12px; }
+  .checkout-btn { max-width: 100%; }
 }
 </style>

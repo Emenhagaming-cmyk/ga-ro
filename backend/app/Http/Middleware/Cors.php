@@ -15,7 +15,8 @@ class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $allowedOrigins = [
+$allowedOrigins = [
+            'https://smkbu-sby.vercel.app',
             env('FRONTEND_URL', 'http://localhost:5174'),
             'http://localhost:5174',
         ];

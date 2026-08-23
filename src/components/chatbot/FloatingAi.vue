@@ -11,6 +11,8 @@ class="floating-ai"
 src="/ch.png"
 alt="BU AI"
 class="chat-logo"
+width="48"
+height="48"
 />
 
 <span class="online"></span>

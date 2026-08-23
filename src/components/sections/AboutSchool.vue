@@ -31,6 +31,9 @@ const schoolImage = "/sklh.webp";
                 :src="schoolImage"
                 alt="SMK Bahrul Ulum"
                 class="school-image"
+                width="480"
+                height="320"
+                loading="lazy"
               />
               <div class="image-overlay"></div>
             </div>

@@ -6,30 +6,58 @@ use App\Models\Pendaftaran;
 use App\Models\User;
 use App\Services\RegistrationInsightService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PendaftaranController extends Controller
 {
-public function dashboard(RegistrationInsightService $insightService)
+    // ponytail: in-memory cache — hit TiDB 1x per 10 detik, bukan 1x per polling browser
+    private static ?array $statsCache = null;
+    private static int $statsCacheTs = 0;
+
+    private static function freshStats(): array
     {
-        $stats = [
-            'total' => Pendaftaran::count(),
-            'baru' => Pendaftaran::where('status', 'baru')->count(),
-            'diproses' => Pendaftaran::where('status', 'diproses')->count(),
-            'diterima' => Pendaftaran::where('status', 'diterima')->count(),
-            'ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
+        $now = time();
+        if (self::$statsCache && $now - self::$statsCacheTs < 10) {
+            return self::$statsCache;
+        }
+
+        // ponytail: 1 query GROUP BY, bukan 8 COUNT terpisah
+        $rows = Pendaftaran::selectRaw('status, jurusan_pilihan, COUNT(*) as cnt')
+            ->groupBy('status', 'jurusan_pilihan')
+            ->get()
+            ->pluck('cnt', 'status');
+
+        $jRows = Pendaftaran::selectRaw('jurusan_pilihan, COUNT(*) as cnt')
+            ->groupBy('jurusan_pilihan')
+            ->get()
+            ->pluck('cnt', 'jurusan_pilihan');
+
+        self::$statsCache = [
+            'total' => $rows->sum(),
+            'baru' => $rows->get('baru', 0),
+            'diproses' => $rows->get('diproses', 0),
+            'diterima' => $rows->get('diterima', 0),
+            'ditolak' => $rows->get('ditolak', 0),
             'jurusan' => [
-                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
-                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
-                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
+                'RPL' => $jRows->get('RPL', 0),
+                'TKJ' => $jRows->get('TKJ', 0),
+                'AKL' => $jRows->get('AKL', 0),
             ],
         ];
+        self::$statsCacheTs = $now;
+        return self::$statsCache;
+    }
+
+public function dashboard(RegistrationInsightService $insightService)
+    {
+        $stats = self::freshStats();
 
         $terbaru = Pendaftaran::latest()->take(5)->get();
         $akunSiswa = User::where('role', '!=', 'admin')->latest()->take(5)->get();
         $insight = $insightService->generateSummary($stats);
-        $chart = $this->chartData();
 
-        return view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa', 'chart'));
+        return response()->view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa'))
+            ->header('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
     }
 
     public function index(Request $request)
@@ -298,18 +326,7 @@ public function dashboard(RegistrationInsightService $insightService)
 
         $latest = Pendaftaran::orderByDesc('id')->first();
 
-        $stats = [
-            'total' => Pendaftaran::count(),
-            'baru' => Pendaftaran::where('status', 'baru')->count(),
-            'diproses' => Pendaftaran::where('status', 'diproses')->count(),
-            'diterima' => Pendaftaran::where('status', 'diterima')->count(),
-            'ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
-            'jurusan' => [
-                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
-                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
-                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
-            ],
-        ];
+        $stats = self::freshStats();
 
         $rows = Pendaftaran::latest()->limit(15)->get(['id', 'nama_lengkap', 'no_hp', 'asal_sekolah', 'jurusan_pilihan', 'status', 'created_at']);
 
@@ -398,6 +415,19 @@ public function dashboard(RegistrationInsightService $insightService)
         ]);
 
         return $pdf->download('bukti_diterima_' . $pendaftaran->id . '.pdf');
+    }
+
+    public function resetUserPassword(User $user)
+    {
+        abort_if($user->role === 'admin', 403);
+
+        $plain = strtoupper(substr(uniqid(), -8));
+        $user->update(['password' => bcrypt($plain), 'plain_password' => $plain]);
+
+        return back()->with('reset_password', [
+            'name' => $user->name,
+            'password' => $plain,
+        ]);
     }
 
 }

@@ -8,7 +8,7 @@
     <div class="dashboard-header">
         <div>
             <p class="dashboard-kicker">Admin Dashboard</p>
-            <h1 class="form-title">Pantau Data Pendaftar SPMB</h1>
+            <h1 class="form-title" fetchpriority="high">Pantau Data Pendaftar SPMB</h1>
             <p class="form-subtitle">Ringkasan cepat status pendaftaran dan informasi siswa yang masuk.</p>
         </div>
     </div>
@@ -50,25 +50,19 @@
         <p>{{ $insight }}</p>
     </div>
 
-    <div class="charts-grid">
-        <div class="chart-card">
-            <h3 class="chart-title">Pendaftar per Hari (30 Hari)</h3>
-            <canvas id="chartDaily" height="110"></canvas>
-        </div>
-        <div class="chart-card">
-            <h3 class="chart-title">Distribusi Jurusan</h3>
-            <canvas id="chartJurusan" height="110"></canvas>
-        </div>
-        <div class="chart-card">
-            <h3 class="chart-title">Status Pendaftaran</h3>
-            <canvas id="chartStatus" height="110"></canvas>
-        </div>
-    </div>
-
     <div class="form-section">
         @if (session('success'))
         <div class="alert alert-success">
             ✓ {{ session('success') }}
+        </div>
+        @endif
+
+        @if (session('reset_password'))
+        @php $rp = session('reset_password'); @endphp
+        <div class="alert alert-success" style="margin-bottom:12px;">
+            Password untuk <strong>{{ $rp['name'] }}</strong> berhasil direset.
+            Password baru: <code style="background:#fff;padding:3px 8px;border-radius:6px;font-weight:800;letter-spacing:0.08em;color:#1c2a23;">{{ $rp['password'] }}</code>
+            <span style="font-weight:400;color:#647067;font-size:12px;"> — kasih ke siswa, lalu login ulang.</span>
         </div>
         @endif
 
@@ -89,7 +83,9 @@
                             <th>Nama</th>
                             <th class="hide-sm">Username</th>
                             <th>Email</th>
+                            <th>Password</th>
                             <th>Terdaftar</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,7 +94,23 @@
                                 <td><strong>{{ $akun->name }}</strong></td>
                                 <td class="hide-sm">{{ $akun->username }}</td>
                                 <td>{{ $akun->email }}</td>
+                                <td>
+                                    <span style="display:inline-flex;align-items:center;gap:4px;">
+                                        <code id="pw-{{ $akun->id }}" data-pw="{{ $akun->plain_password ?? '(tidak ada)' }}" style="background:#f0f4ee;padding:2px 8px;border-radius:6px;font-size:12px;color:#647067;">••••••••</code>
+                                        <button type="button" onclick="togglePw({{ $akun->id }})" style="background:none;border:none;cursor:pointer;padding:2px;color:#647067;" title="Tampilkan hash">
+                                            <svg id="eye-open-{{ $akun->id }}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            <svg id="eye-closed-{{ $akun->id }}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                        </button>
+                                    </span>
+                                </td>
                                 <td class="hide-sm">{{ optional($akun->created_at)->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    <form action="{{ route('admin.resetPassword', $akun) }}" method="POST" style="margin:0;"
+                                          onsubmit="return confirm('Reset password {{ $akun->name }}? Password baru akan ditampilkan di halaman ini.');">
+                                        @csrf
+                                        <button type="submit" style="background:none;border:1px solid #e2b6b2;color:#b3362c;font-weight:700;font-size:11px;padding:4px 10px;border-radius:8px;cursor:pointer;transition:all 0.2s;">Reset</button>
+                                    </form>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -269,28 +281,6 @@
         font-size: 14px;
     }
 
-    .charts-grid {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr 1fr;
-        gap: 16px;
-    }
-
-    .chart-card {
-        background: #fbfcfa;
-        border: 1px solid #dfe4dd;
-        border-radius: 20px;
-        padding: 18px 20px;
-        box-shadow: 0 10px 24px rgba(28, 42, 35, 0.05);
-    }
-
-    .chart-title {
-        font-size: 13px;
-        font-weight: 800;
-        color: #3a6450;
-        letter-spacing: 0.04em;
-        margin-bottom: 14px;
-    }
-
     .badge {
         padding: 4px 10px;
         border-radius: 999px;
@@ -309,10 +299,6 @@
         .stats-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-
-        .charts-grid {
-            grid-template-columns: 1fr;
-        }
     }
 
     @media (max-width: 480px) {
@@ -321,71 +307,6 @@
         }
     }
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-    requestAnimationFrame(function () {
-        if (typeof Chart === 'undefined') return;
-        const dailyLabels = @json($chart['daily_labels']);
-    const dailyCounts = @json($chart['daily']);
-    const jurusanLabels = Object.keys(@json($chart['jurusan']));
-    const jurusanCounts = Object.values(@json($chart['jurusan']));
-    const statusLabels = Object.keys(@json($chart['status']));
-    const statusCounts = Object.values(@json($chart['status']));
-
-    Chart.defaults.font.family = 'Quicksand, sans-serif';
-    Chart.defaults.color = '#647067';
-
-    new Chart(document.getElementById('chartDaily'), {
-        type: 'line',
-        data: {
-            labels: dailyLabels,
-            datasets: [{
-                label: 'Pendaftar',
-                data: dailyCounts,
-                borderColor: '#3a6450',
-                backgroundColor: 'rgba(58, 100, 80, 0.12)',
-                fill: true,
-                tension: 0.35,
-                pointRadius: 2,
-            }]
-        },
-        options: {
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
-                y: { beginAtZero: true, ticks: { precision: 0 } }
-            }
-        }
-    });
-
-    new Chart(document.getElementById('chartJurusan'), {
-        type: 'doughnut',
-        data: {
-            labels: jurusanLabels,
-            datasets: [{
-                data: jurusanCounts,
-                backgroundColor: ['#3a6450', '#4f8cc9', '#d9a441'],
-                borderWidth: 0,
-            }]
-        },
-        options: { plugins: { legend: { position: 'bottom' } } }
-    });
-
-    new Chart(document.getElementById('chartStatus'), {
-            type: 'doughnut',
-            data: {
-                labels: statusLabels,
-                datasets: [{
-                    data: statusCounts,
-                    backgroundColor: ['#7db88d', '#a78bfa', '#4f8cc9', '#e2564d'],
-                    borderWidth: 0,
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-    });
-</script>
 
 <script>
     (function autoRefresh() {
@@ -417,5 +338,28 @@
         setInterval(poll, 20000);
         poll();
     })();
+</script>
+
+<script>
+    function togglePw(id) {
+        var el = document.getElementById('pw-' + id);
+        var open = document.getElementById('eye-open-' + id);
+        var closed = document.getElementById('eye-closed-' + id);
+        if (el.textContent.trim() === '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') {
+            el.textContent = el.getAttribute('data-pw') || '(tidak ada)';
+            el.style.color = '#1c2a23';
+            el.style.fontSize = '12px';
+            el.style.fontWeight = '700';
+            open.style.display = 'none';
+            closed.style.display = 'block';
+        } else {
+            el.textContent = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
+            el.style.color = '#647067';
+            el.style.fontSize = '12px';
+            el.style.fontWeight = 'normal';
+            open.style.display = 'block';
+            closed.style.display = 'none';
+        }
+    }
 </script>
 @endsection

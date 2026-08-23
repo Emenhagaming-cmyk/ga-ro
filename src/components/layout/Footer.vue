@@ -4,7 +4,7 @@
       <div class="footer-content">
         <div class="footer-col col-brand">
           <div class="brand-section">
-            <img src="/logo.png" alt="Logo SMK Bahrul Ulum" class="logo" />
+            <img src="/logo.png" alt="Logo SMK Bahrul Ulum" class="logo" width="32" height="32" />
             <div class="brand-info">
               <h3 class="footer-brand">SMK Bahrul Ulum</h3>
               <p class="tagline">Sekolah Expert IT</p>

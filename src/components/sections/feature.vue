@@ -24,7 +24,7 @@
           @click="index === 0 ? undefined : handleCardClick(item)"
         >
           <div v-if="index === 0" class="spmb-banner" aria-hidden="true">
-            <img :src="item.banner || '/bu.jpg'" alt="SPMB Banner" />
+            <img :src="item.banner || '/bu.jpg'" alt="SPMB Banner" width="400" height="225" loading="lazy" />
           </div>
           <div class="card-top">
             <span class="card-number">0{{ index + 1 }}</span>

@@ -1,7 +1,7 @@
 <template>
   <header class="navbar" :class="{ shrink: scrolled }">
     <a href="#top" class="logo">
-      <img src="/logo.png" alt="Logo Sekolah" class="logo-img" />
+      <img src="/logo.png" alt="Logo Sekolah" class="logo-img" width="40" height="40" />
 
       <div>
         <h2>SMK Bahrul Ulum</h2>
@@ -280,7 +280,7 @@ onUnmounted(() => {
   height: 74px;
   padding: 0 24px;
   background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -408,7 +408,7 @@ onUnmounted(() => {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 18px 40px rgba(35, 55, 42, 0.12);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(8px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

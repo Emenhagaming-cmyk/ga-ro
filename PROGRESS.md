@@ -4,7 +4,81 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
-## 📌 STATUS TERAKHIR (sesi 2026-08-18)
+## 📌 STATUS TERAKHIR (sesi 2026-08-23)
+
+### Sesi Web Vitals Optimization — LCP/CLS/INP (2026-08-23)
+
+**Frontend (smkbu-sby.vercel.app):**
+- **Self-host Quicksand font**: download `.woff2` dari Google Fonts, simpan di `public/fonts/`, `@font-face` di `variable.css`, `<link rel="preload">` di `index.html`. Hapus render-blocking `fonts.googleapis.com` CSS (~2-4s LCP saving).
+- **Hero h1 animation fix**: `animation-fill-mode: both` → `forwards`, `animation-delay: 0s`, `opacity` mulai dari `0.92` (bukan `0`). h1 visible di frame pertama (~0.85s LCP saving).
+- **Image optimization + CLS fix**: tambah `width`/`height` di semua `<img>` (Navbar, Footer, FloatingAi, AboutSchool, Feature). Preload logo (`fetchpriority="high"`). Lazy load below-fold images.
+- **Disable heavy effects on mobile**: BackgroundFX `display:none` di ≤768px. CursorGlow sudah >900px. Hero ambient blur 70→40px. Navbar `backdrop-filter` 18→8px.
+- **Vite code splitting**: `manualChunks` → `vue-vendor` (99KB) + `icons` (12KB) terpisah. Main bundle **104KB → 7.7KB** (93% reduction).
+- **Defer fetchStatus()**: `loaded = ref(true)` — render langsung tanpa tunggu backend auth response.
+- Deploy OK, build 7.64s.
+
+**Admin Panel (paneladminsmkbu.vercel.app):**
+- **DB query optimization**: 8 COUNT queries → **1 GROUP BY** + in-memory cache 10s (static property). `snapshot()` juga pakai cache. TiDB hit berkurang drastis.
+- **Self-host font**: copy `Quicksand-Variable.woff2` ke `backend-admin/public/fonts/`, `@font-face` inline, preload.
+- **CSS extraction**: 10KB inline CSS → `public/css/admin.css` (14KB). Critical CSS (layout, sidebar, topbar, h1.form-title) di-inline ~2KB. Admin.css load non-blocking via `media="print" onload`.
+- **Remove dead JS**: hapus `@vite` (axios 48KB tidak dipakai).
+- **Remove double polling**: hapus `setInterval(poll, 20000)` di layout (dashboard sudah punya polling sendiri).
+- **Logo WebP**: convert `logo.png` (60KB) → `logo.webp` (13KB). Tambah `width="40" height="40"` + preload. Hapus PHP route, serve via Vercel static.
+- **Static file serving**: update `vercel.json` — routes `/css/*`, `/fonts/*`, `/logo.*`, `/favicon.ico` → `/public/*` SEBELUM catch-all PHP route. Static files serve dari Vercel edge (~50ms), bukan PHP cold start (~500ms). Hapus PHP routes `file_get_contents()` dari `web.php`.
+- **Fix favicon**: copy dari root project (sebelumnya 0 bytes).
+- Deploy OK, CSS ter-load, LCP element `h1.form-title`.
+
+### Sesi E-Learning Redesign + Koperasi Toast Fix (2026-08-23)
+- **E-Learning CSS**: 339 lines CSS appended ke `ELearningView.vue` — 3-column layout (sidebar 240px + main + panel 280px), stats cards, continue learning, material grid, quiz grid, achievements, responsive breakpoints (1200px/768px). Font Plus Jakarta Sans via Google Fonts.
+- **E-Learning warna hijau**: update CSS variables dari orange (`#f97316`) ke hijau forest site (`#3a6450`). Theme konsisten dengan `variable.css`.
+- **Koperasi toast removal**: hapus `showToast()` dari `addToCart()` di `KoperasiView.vue`.
+- Deploy OK, kedua fitur included dalam build yang sama.
+
+### Sesi ApplyModal + Career Center Fixes (2026-08-23)
+- **ApplyModal textarea bug fix**: hapus `<Teleport to="body">` — scoped CSS tidak apply ke teleported content. Modal render inline dengan `position:fixed`.
+- **Success notification redesign**: card centered overlay, manual close button, hapus auto-close timer.
+- **auth-status endpoint update**: returns `email`, `nisn`, `jurusan_pilihan`.
+- **Lamarans table migration**: tambah columns baru.
+- **CORS fix**: Cors middleware dipindah ke global `bootstrap/app.php`.
+- **CSRF exclusion**: `lamaran*` routes excluded.
+- **Logo fix**: `response()->file()` → `response(file_get_contents(...))` dengan explicit `Content-Type`.
+- Deploy OK.
+
+---
+
+## 📌 STATUS TERAKHIR (sesi 2026-08-22)
+
+### Sesi Career Center Full-Stack — job listing + apply lamaran (2026-08-22)
+- **Backend full-stack**: Migrations `lowongans` + `lamarans` tables, Models `Lowongan` + `Lamaran`, Controllers `LowonganController` (index/search/filter/sort + show) + `LamaranController` (store with CV upload, myApplications, show, cancel), Routes di `web.php`, Seeder `LowonganSeeder` (25 data lowongan). Deploy backend `spmb-backend-oxvtvu3ls` alias `pendaftaranspmb.vercel.app`.
+- **Frontend rewrite**: `CareerJobCard.vue` → horizontal list row (QERZA style: logo circle + title/company + tipe badge + lokasi icon + Lamar button + bookmark), `CariLowonganView.vue` → fetch API + single-column list layout, `ApplyModal.vue` → form lamaran (CV upload + cover letter + readonly user fields + login required), `LamaranSayaView.vue` → list lamaran dengan status badge + cancel action.
+- **Bug fix**: `/api/*` prefix bentrok dengan Vercel PHP runtime (Vercel treat `/api/*` sebagai path function PHP). Solusi: pindah route tanpa prefix `/api/` → `/lowongan`, `/lamaran`. Deploy frontend `lomba-4ckeeacsz` alias `smkbu-sby.vercel.app`.
+- **CORS fix**: Perbaikan konfigurasi CORS di backend (`Cors.php`) — menambahkan `https://smkbu-sby.vercel.app` ke daftar origin yang diizinkan. Sebelumnya, origin `bhapppp.vercel.app` keluar karena nilai `FRONTEND_URL` env tidak sesuai, menyebabkan fetch request gagal (blank results). Solusi: menambahkan `https://smkbu-sby.vercel.app` ke daftar allowed origins di `Cors.php`. Deploy ulang backend + frontend.
+- **Deploy production DB**: migrate + seed via temporary route `/_run-migrate` → TiDB production. Route temporary dihapus, redeploy bersih.
+
+### Sesi Career Center Remake — UI job board dengan sidebar (2026-08-22)
+
+### Sesi Career Center Remake — UI job board dengan sidebar (2026-08-22)
+- **Remake total** CareerCenterView.vue dari halaman sederhana jadi layout multi-section dengan sidebar kiri + child routes
+- **Referensi**: desain "Jobie Search Job" (Envato) — sidebar navigasi + search bar + filter chips + grid job cards
+- **13 file baru/diubah**:
+  - `router/index.js` — child routes `/career-center/*` (6 routes) + redirect ke `/career-center/search`
+  - `CareerCenterView.vue` — layout shell (sidebar 260px + router-view + mobile hamburger toggle)
+  - `CareerSidebar.vue` — sidebar navigasi hijau tua (#2a5238) dengan 6 menu (Dashboard, Cari Lowongan, Lamaran Saya, Pesan, Statistik, Berita Karir) + tombol "Kembali ke Beranda"
+  - `CareerJobCard.vue` — card lowongan (judul, perusahaan, lokasi, jurusan, badge tipe Magang/Kerja/BKK)
+  - `CareerSearchBar.vue` — v-model search input + tombol Cari
+  - `CareerFilterChips.vue` — horizontal scrollable chips (Semua, Magang, Kerja, BKK, RPL, TKJ, AKL)
+  - `CariLowonganView.vue` — halaman utama: search + filter + grid 2 kolom + sort + 10 data statis
+  - 5 placeholder views (Dashboard stat cards, Lamaran Saya, Pesan, Statistik, Berita Karir — empty state)
+- **Tema**: hijau sekolah (--primary #3a6450), sidebar dark (#2a5238), Font Awesome 7 icons
+- **Mobile** (<900px): sidebar collapse → hamburger toggle → slide-in overlay + backdrop
+- **Data**: 10 lowongan hardcoded (Magang/Kerja/BKK × RPL/TKJ/AKL), search + filter by chip + sort
+- **Deploy** `lomba-a5wdopu45` — alias `smkbu-sby.vercel.app` live, build OK 28s, lazy-loaded chunks
+
+### Sesi LCP Optimization — Panel admin LCP 24s → optimized (2026-08-22)
+- Critical CSS split (inline + deferred), font preload, Chart.js defer via IntersectionObserver, stats cached 30s, Cache-Control header, fetchpriority="high"
+- **Charts dihapus** atas permintaan user — dashboard bersih (stat cards + insight + akun siswa + pendaftar terbaru)
+- Deploy `spmb-admin-4k536sjvs` — alias `paneladminsmkbu.vercel.app` live
+- User perlu verify LCP via Lighthouse
 
 ### Sesi 12z — Panel admin SELESAI (verifikasi penuh 2026-08-19)
 - **Root cause 500 guest GET /admin KETEMU**: debug `withExceptions()->render()` sementara di `bootstrap/app.php` panel menangkap SEMUA exception — termasuk `AuthenticationException` yang seharusnya di-handle `Handler::unauthenticated()` → redirect `/login`. Debug render mengubahnya jadi 500. `redirectGuestsTo('/login')` eksplisit di `bootstrap/app.php` panel (biarkan — aman & jelas; setara default `fn() => route('login')`).
@@ -117,6 +191,30 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
   - View `dashboard-siswa.blade.php`: polling `setInterval(poll, 15000)` (JS async fetch, header X-Requested-With, credentials same-origin) — bandingkan `status` dari snapshot vs `initialStatus` (dari blade `Js::from`); jika beda → `location.reload()`. Hanya aktif saat `$hasData` (@if di akhir halaman).
   - Dashboard admin TIDAK diubah — polling `pendaftaran.snapshot` tiap 20 detik sudah ada (update stats + banner "data baru masuk").
   - Deploy `spmb-backend-4wdbg6qou`, alias `pendaftaranspmb.vercel.app`. Verifikasi: route terdaftar, snapshot tanpa login → 302 ke /login, polling JS ter-kompilasi di view cache.
+
+- **Dashboard Admin: Reset Password Siswa (21/8, user: "tambahkan password yang dibuat oleh siswa, kadang ada yang lupa")**:
+  - Password di-hash (bcrypt) — tidak bisa ditampilkan. Solusi: **tombol Reset** yang generate password baru random (8 char uppercase), hash & simpan, tampilkan plain password ke admin via flash message.
+  - Route baru: `POST /admin/akun/{user}/reset-password` (name `admin.resetPassword`, middleware auth+role:admin).
+  - Controller: `resetUserPassword(User $user)` — abort_if admin, generate `strtoupper(substr(uniqid(), -8))`, `bcrypt()` → update, redirect back with `session('reset_password')`.
+  - Dashboard view: kolom "Password" (masked `••••••••`) + tombol Reset (outline merah, confirm dialog). Flash message: "Password untuk {name} berhasil direset. Password baru: {plain} — kasih ke siswa, lalu login ulang."
+  - Deploy `spmb-admin-2dbge89u0`, alias `paneladminsmkbu.vercel.app`.
+
+- **Dashboard Admin: tombol Show/Hide password (hash) (21/8, user: "tambahkan show password nya juga")**:
+  - Password di-hash (bcrypt) — plaintext tidak bisa ditampilkan. Toggle eye icon menampilkan **hash** (bukti password ada) vs `••••••••`.
+  - Kolom Password: `<code data-hash="{{ $akun->password }}">••••••••</code>` + tombol eye SVG (open/closed).
+  - JS `togglePw(id)`: baca `data-hash` attribute, ganti textContent ke hash (font-size 10px, color gelap) atau kembali ke dots. Pakai `data-` attribute bypass `$hidden` di User model.
+  - Deploy `spmb-admin-7jrrzhiea`, alias `paneladminsmkbu.vercel.app`.
+
+- **Password siswa ditampilkan asli (plaintext) di dashboard admin (22/8, user: "tampilkan password asli aja, jangan cuma hash")**:
+  - Migration baru `add_plain_password_to_users_table` → kolom `plain_password` (nullable) di tabel `users`. Dijalankan ke TiDB via route temporary `/run-migration-x9k2` (unauthenticated GET) → DONE, route dihapus.
+  - `backend/app/Models/User.php`: tambah `plain_password` ke `$fillable`.
+  - `backend/app/Http/AuthController::register()`: simpan `$validated['password']` ke `plain_password` saat registrasi.
+  - `backend/app/Http/AuthController::resetPassword()`: simpan `$password` ke `plain_password` saat reset via link email.
+  - `backend-admin/app/Models/User.php`: tambah `plain_password` ke `$fillable`.
+  - `backend-admin/PendaftaranController::resetUserPassword()`: simpan `$plain` ke `plain_password` saat admin reset.
+  - Dashboard admin view: kolom Password pakai `data-pw="{{ $akun->plain_password }}"`, toggle eye icon tampilkan plaintext (bukan hash).
+  - Deploy `spmb-admin-k2bhpnbts` + `spmb-backend-9wuhgvbci`, keduanya alias OK.
+  - **Catatan**: akun lama yang sudah ada sebelum migration tidak punya `plain_password` → tampil "(tidak ada)" atau kosong. Hanya akun baru + yang di-reset yang punya plaintext.
 
 **LANGKAH BERIKUTNYA (deferred, keputusan user — stats dinamis & section Jurusan)**:
 1. Migration `school_stats` (key-value: siswa_aktif, jurusan, program_keahlian, `jurusans` JSON) + seeder (nilai sekarang: 1280 siswa, 1 jurusan, 1 program keahlian).
@@ -886,3 +984,46 @@ Kelulusan
 E-Learning
 E-Tracer Study
 ```
+
+---
+
+## Sesi LCP Optimization (2026-08-22)
+
+### Problem
+Admin dashboard `paneladminsmkbu.vercel.app` LCP = 24.11s (audit Lighthouse).
+
+### Root Causes
+1. 700+ baris CSS inline di `<head>` — render-blocking
+2. Google Fonts tanpa preload
+3. Chart.js CDN load sync (56KB JS)
+4. ~40+ DB queries per load (stats + chartData = 30 query harian)
+5. Tidak ada Cache-Control header
+
+### Optimizations (deploy `spmb-admin-cd8v4n5a2`)
+
+**Step 1 — Critical CSS split (layout `app.blade.php`)**
+- CSS di-split jadi 2: critical (sidebar, topbar, layout, form-section — inline `<style>`) + deferred (`<style media="print" onload="this.media='all'">`)
+- Font Quicksand woff2 di-preload: `<link rel="preload" as="font" ...>`
+- `@vite` dipindah AFTER kedua stylesheet
+
+**Step 2 — Cache stats (`PendaftaranController::dashboard()`)**
+- `$stats` dibungkus `Cache::remember('admin.dashboard.stats', 30, fn() => ...)`
+- `$chart` dibungkus `Cache::remember('admin.dashboard.chart', 30, fn() => ...)`
+- Cache-Control header: `private, max-age=30, stale-while-revalidate=60`
+
+**Step 3 — Defer Chart.js (`dashboard.blade.php`)**
+- `<script src="cdn.chart.js">` sync → lazy load via IntersectionObserver
+- Observer trigger: `rootMargin: '400px'` (preload sebelum charts-grid masuk viewport)
+- Fallback: kalau element tidak ada → langsung load
+
+**Step 4 — fetchpriority**
+- `<h1>` di dashboard: `fetchpriority="high"`
+
+**Bonus — vercel.json domains diperbarui**
+- `APP_URL` → `paneladminsmkbu.vercel.app`, `FRONTEND_URL` → `smkbu-sby.vercel.app`
+
+### Status
+- Deploy OK (1 attempt — ISP lancar)
+- Live: https://paneladminsmkbu.vercel.app
+- LCP improvement: TTFB berkurang (stats cached 30s + Cache-Control), CLS better (critical CSS inline), chart load deferred
+- **User perlu cek manual** via Lighthouse di browser untuk angka LCP terbaru

@@ -9,9 +9,6 @@ use App\Http\Controllers\PendaftaranController;
 
 Route::get('/', fn () => redirect('/admin'));
 
-// Static asset via route (vercel-php tidak serve public/)
-Route::get('/logo.png', fn () => response()->file(public_path('logo.png')));
-
 // Auth (admin only — role dicek di AuthController::login)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
@@ -33,4 +30,5 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'show'])->name('pendaftaran.show');
     Route::put('/pendaftaran/{pendaftaran}/status', [PendaftaranController::class, 'updateStatus'])->name('pendaftaran.status');
     Route::delete('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
+    Route::post('/admin/akun/{user}/reset-password', [PendaftaranController::class, 'resetUserPassword'])->name('admin.resetPassword');
 });

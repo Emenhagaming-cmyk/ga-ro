@@ -49,7 +49,7 @@ function sessionFromStorage() {
 })();
 
 const session = ref(sessionFromStorage() || { ...GUEST });
-const loaded = ref(!!sessionStorage.getItem(STORAGE_KEY));
+const loaded = ref(true); // ponytail: start loaded, update async — jangan block render
 let bfcacheBound = false;
 let intervalBound = false;
 

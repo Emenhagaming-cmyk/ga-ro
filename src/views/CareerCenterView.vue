@@ -1,468 +1,258 @@
 <template>
-  <section class="career-page">
-    <div class="top-bar">
-      <button type="button" class="back-button" @click="goBack">
-        <span class="back-icon"><</span>
-      </button>
-    </div>
+  <div class="career-layout">
+    <div class="career-backdrop" :class="{ open: sidebarOpen }" @click="sidebarOpen = false" />
 
-    <div class="page-header">
-      <div>
-        <span class="page-label">Career Center</span>
-        <h1>Kesempatan Magang &amp; Lowongan untuk Siswa</h1>
-        <p>
-          Temukan perusahaan dan program yang sedang mencari siswa SMK untuk
-          magang, kerja, dan praktek industri.
-        </p>
-      </div>
-      <div class="header-actions">
-        <div class="action-panel">
-          <div class="summary-pill">
-            <strong>12</strong>
-            <span>Lowongan terbaru</span>
-          </div>
-          <div class="summary-pill">
-            <strong>8</strong>
-            <span>Perusahaan aktif</span>
-          </div>
+    <aside class="career-sidebar" :class="{ open: sidebarOpen }">
+      <div class="sidebar-brand">
+        <img src="/logo.png" alt="Logo" />
+        <div>
+          <span class="brand-name">Career Center</span>
+          <span class="brand-sub">SMK Bahrul Ulum</span>
         </div>
       </div>
+
+      <nav class="sidebar-nav">
+        <router-link
+          v-for="item in menuItems"
+          :key="item.path"
+          :to="item.path"
+          class="sidebar-link"
+          :class="{ active: $route.path === item.path }"
+          @click="sidebarOpen = false"
+        >
+          <i :class="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </router-link>
+      </nav>
+
+      <div class="sidebar-footer">
+        <router-link to="/" class="sidebar-link footer-link">
+          <i class="fas fa-arrow-left"></i>
+          <span>Kembali ke Beranda</span>
+        </router-link>
+      </div>
+    </aside>
+
+    <div class="career-main">
+      <header class="career-topbar">
+        <button class="hamburger" @click="sidebarOpen = !sidebarOpen">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h1 class="topbar-title">{{ currentTitle }}</h1>
+      </header>
+      <div class="career-content">
+        <router-view />
+      </div>
     </div>
-
-    <div class="search-row">
-      <input type="text" placeholder="Cari perusahaan, jurusan, atau lokasi" />
-      <button>Filter</button>
-    </div>
-
-    <div class="company-list">
-      <article class="company-card featured">
-        <div class="company-card-top">
-          <div>
-            <span class="company-label">Magang</span>
-            <h2>PT Bina Mandiri</h2>
-            <p>Magang Admin Support / Front Office</p>
-          </div>
-          <span class="company-badge">Terbuka</span>
-        </div>
-        <div class="company-details">
-          <div>
-            <strong>Lokasi</strong>
-            <span>Surabaya</span>
-          </div>
-          <div>
-            <strong>Durasi</strong>
-            <span>3 bulan</span>
-          </div>
-          <div>
-            <strong>Jurusan</strong>
-            <span>AKL / Multimedia</span>
-          </div>
-        </div>
-        <div class="company-meta">
-          <span>Deadline: 20 Agustus 2026</span>
-          <a href="#">Lihat detail</a>
-        </div>
-      </article>
-
-      <article class="company-card">
-        <div class="company-card-top">
-          <div>
-            <span class="company-label">Kerja</span>
-            <h2>CV Digital Nusantara</h2>
-            <p>Posisi Teknis Jaringan &amp; Support</p>
-          </div>
-          <span class="company-badge badge-secondary">Terbuka</span>
-        </div>
-        <div class="company-details">
-          <div>
-            <strong>Lokasi</strong>
-            <span>Surabaya</span>
-          </div>
-          <div>
-            <strong>Shift</strong>
-            <span>Senin-Jumat</span>
-          </div>
-          <div>
-            <strong>Jurusan</strong>
-            <span>TKJ / RPL</span>
-          </div>
-        </div>
-        <div class="company-meta">
-          <span>Deadline: 26 Agustus 2026</span>
-          <a href="#">Lihat detail</a>
-        </div>
-      </article>
-
-      <article class="company-card">
-        <div class="company-card-top">
-          <div>
-            <span class="company-label">BKK</span>
-            <h2>PT Sinar Maju</h2>
-            <p>Program magang produksi &amp; quality control</p>
-          </div>
-          <span class="company-badge badge-secondary">Terbuka</span>
-        </div>
-        <div class="company-details">
-          <div>
-            <strong>Lokasi</strong>
-            <span>Sidoarjo</span>
-          </div>
-          <div>
-            <strong>Durasi</strong>
-            <span>4 bulan</span>
-          </div>
-          <div>
-            <strong>Jurusan</strong>
-            <span>TKJ / AKL</span>
-          </div>
-        </div>
-        <div class="company-meta">
-          <span>Deadline: 28 Agustus 2026</span>
-          <a href="#">Lihat detail</a>
-        </div>
-      </article>
-
-      <article class="company-card">
-        <div class="company-card-top">
-          <div>
-            <span class="company-label">Magang</span>
-            <h2>SMK Bahrul Ulum</h2>
-            <p>Program pelatihan kerja praktik dan mentoring guru</p>
-          </div>
-          <span class="company-badge badge-secondary">Terbuka</span>
-        </div>
-        <div class="company-details">
-          <div>
-            <strong>Lokasi</strong>
-            <span>Surabaya</span>
-          </div>
-          <div>
-            <strong>Durasi</strong>
-            <span>2 bulan</span>
-          </div>
-          <div>
-            <strong>Jurusan</strong>
-            <span>Semua jurusan</span>
-          </div>
-        </div>
-        <div class="company-meta">
-          <span>Deadline: 15 September 2026</span>
-          <a href="#">Lihat detail</a>
-        </div>
-      </article>
-    </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
-const goBack = () => window.history.back();
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const sidebarOpen = ref(false)
+
+const menuItems = [
+  { path: '/career-center/dashboard', label: 'Dashboard', icon: 'fas fa-gauge-high' },
+  { path: '/career-center/search', label: 'Cari Lowongan', icon: 'fas fa-magnifying-glass' },
+  { path: '/career-center/applications', label: 'Lamaran Saya', icon: 'fas fa-file-lines' },
+  { path: '/career-center/messages', label: 'Pesan', icon: 'fas fa-envelope' },
+  { path: '/career-center/statistics', label: 'Statistik', icon: 'fas fa-chart-simple' },
+  { path: '/career-center/news', label: 'Berita Karir', icon: 'fas fa-newspaper' },
+]
+
+const currentTitle = computed(() => {
+  const item = menuItems.find(m => route.path.startsWith(m.path))
+  return item?.label || 'Career Center'
+})
 </script>
 
 <style scoped>
-.career-page {
-  padding: 80px 7%;
+.career-layout {
+  display: flex;
   min-height: 100vh;
-  min-height: 100dvh;
-  background: #eef4ec;
-  color: #1c2a23;
+  background: var(--background);
 }
 
-.page-header {
+/* Sidebar */
+.career-sidebar {
+  width: 260px;
+  background: var(--primary-dark);
+  color: #fff;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 28px;
+  flex-direction: column;
+  transition: transform 0.3s ease;
 }
 
-.top-bar {
+.sidebar-brand {
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 24px;
-}
-
-.header-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.back-button {
-  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
-  border: 1px solid rgba(47, 91, 58, 0.16);
-  background: #ffffff;
-  color: #2f5b45;
-  border-radius: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.back-button:hover {
-  background: rgba(58, 100, 80, 0.08);
-  transform: translateY(-1px);
-}
-
-.back-icon {
-  display: inline-flex;
-  font-size: 18px;
-  line-height: 1;
-}
-
-.page-label {
-  display: inline-flex;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(58, 100, 80, 0.14);
-  color: #2f5b45;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.page-header h1 {
-  margin: 16px 0 10px;
-  font-size: clamp(36px, 4vw, 52px);
-  line-height: 1.05;
-}
-
-.page-header p {
-  max-width: 640px;
-  color: #4e6456;
-  line-height: 1.8;
-}
-
-.action-panel {
-  display: grid;
   gap: 12px;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.summary-pill {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-width: 180px;
-  padding: 18px 20px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1px solid rgba(58, 100, 80, 0.12);
-  box-shadow: 0 12px 24px rgba(35, 55, 42, 0.06);
+.sidebar-brand img {
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 3px;
 }
 
-.summary-pill strong {
-  font-size: 28px;
+.brand-name {
+  font-size: 16px;
   font-weight: 800;
+  color: #fff;
 }
 
-.summary-pill span {
-  color: #6c7f6f;
-  font-size: 13px;
-}
-
-.search-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-
-.search-row input {
-  flex: 1;
-  padding: 16px 20px;
-  border: 1px solid rgba(58, 100, 80, 0.18);
-  border-radius: 18px;
-  background: #ffffff;
-  font-size: 14px;
-  color: #1c2a23;
-}
-
-.search-row button {
-  padding: 16px 24px;
-  border: none;
-  border-radius: 18px;
-  background: #2f5b45;
-  color: #ffffff;
+.brand-sub {
+  font-size: 10px;
   font-weight: 700;
-  cursor: pointer;
-}
-
-.company-list {
-  display: grid;
-  gap: 20px;
-}
-
-.company-card {
-  padding: 24px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1px solid rgba(58, 100, 80, 0.12);
-  box-shadow: 0 18px 40px rgba(35, 55, 42, 0.06);
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease;
-}
-
-.company-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 24px 50px rgba(35, 55, 42, 0.1);
-}
-
-.company-card.featured {
-  border-color: #1e3a2f;
-  background: #2b4a3c;
-}
-
-.company-card.featured .company-card-top h2,
-.company-card.featured .company-details span {
-  color: #fff;
-}
-
-.company-card.featured .company-card-top p,
-.company-card.featured .company-meta span,
-.company-card.featured .company-details strong {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.company-card.featured .company-label,
-.company-card.featured .company-badge {
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-}
-
-.company-card.featured .company-details div {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.company-card.featured .company-meta a {
-  color: #fff;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.company-card-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.company-label {
-  display: inline-flex;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(47, 91, 58, 0.14);
-  color: #2f5b45;
-  font-size: 12px;
-  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  display: block;
+  margin-top: 2px;
 }
 
-.company-card-top h2 {
-  margin: 6px 0 6px;
-  font-size: 22px;
+.sidebar-nav {
+  flex: 1;
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.company-card-top p {
-  margin: 0;
-  color: #5d6e5f;
-  line-height: 1.6;
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s ease;
 }
 
-.company-badge {
-  display: inline-flex;
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.sidebar-link.active {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-footer {
+  padding: 16px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Main content */
+.career-main {
+  flex: 1;
+  margin-left: 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.career-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hamburger {
+  display: none;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
   align-items: center;
   justify-content: center;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(47, 91, 58, 0.12);
-  color: #2f5b45;
-  font-size: 12px;
-  font-weight: 700;
 }
 
-.badge-secondary {
-  background: rgba(95, 113, 90, 0.1);
+.topbar-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
 }
 
-.company-details {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 18px;
+.career-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px;
 }
 
-.company-details div {
-  padding: 16px;
-  border-radius: 18px;
-  background: #f7fbf6;
+/* Backdrop */
+.career-backdrop {
+  display: none;
 }
 
-.company-details strong {
-  display: block;
-  font-size: 12px;
-  color: #5a6c5e;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.company-details span {
-  color: #1c2a23;
-  font-weight: 700;
-}
-
-.company-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
-
-.company-meta span {
-  color: #6c7f6f;
-  font-size: 14px;
-}
-
-.company-meta a {
-  color: #2f5b45;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-@media (max-width: 980px) {
-  .career-page {
-    padding: 70px 6%;
+/* Mobile */
+@media (max-width: 900px) {
+  .career-sidebar {
+    transform: translateX(-100%);
   }
 
-  .page-header,
-  .company-meta {
-    flex-direction: column;
-    align-items: stretch;
+  .career-sidebar.open {
+    transform: translateX(0);
   }
 
-  .company-details {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 700px) {
-  .page-header {
-    gap: 16px;
+  .career-main {
+    margin-left: 0;
   }
 
-  .search-row {
-    flex-direction: column;
+  .hamburger {
+    display: inline-flex;
   }
 
-  .search-row button {
-    width: 100%;
+  .career-topbar {
+    padding: 0 16px;
+  }
+
+  .career-content {
+    padding: 24px 16px;
+  }
+
+  .career-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 150;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .career-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
   }
 }
 </style>

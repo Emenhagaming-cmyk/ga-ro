@@ -98,7 +98,7 @@ const toggleLogin = () => {
   background: #7db88d;
   left: -60px;
   top: 140px;
-  filter: blur(70px);
+  filter: blur(40px);
 }
 
 .ambient2 {
@@ -107,7 +107,7 @@ const toggleLogin = () => {
   background: #c7d9c3;
   right: -90px;
   bottom: 80px;
-  filter: blur(70px);
+  filter: blur(40px);
 }
 
 .container {
@@ -285,7 +285,7 @@ button {
 h1,
 p,
 .buttons {
-  animation: rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: rise 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 .badge {
@@ -293,21 +293,21 @@ p,
 }
 
 h1 {
-  animation-delay: 0.15s;
+  animation-delay: 0s;
 }
 
 p {
-  animation-delay: 0.3s;
+  animation-delay: 0.1s;
 }
 
 .buttons {
-  animation-delay: 0.45s;
+  animation-delay: 0.2s;
 }
 
 @keyframes rise {
   from {
-    opacity: 0;
-    transform: translateY(18px);
+    opacity: 0.92;
+    transform: translateY(12px);
   }
   to {
     opacity: 1;

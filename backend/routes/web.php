@@ -3,20 +3,22 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
+use App\Http\Controllers\LowonganController;
+use App\Http\Controllers\LamaranController;
 
-Route::get('/', [PendaftaranController::class, 'create'])->name('home')->middleware(\App\Http\Middleware\Cors::class);
+Route::get('/', [PendaftaranController::class, 'create'])->name('home');
 
 // Static asset via route (vercel-php tidak serve public/ — file dibundel ke lambda)
-Route::get('/logo.png', fn () => response()->file(public_path('logo.png')));
-Route::get('/cs.png', fn () => response()->file(public_path('cs.png')));
+Route::get('/logo.png', fn () => response(file_get_contents(public_path('logo.png')), 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=604800']));
+Route::get('/cs.png', fn () => response(file_get_contents(public_path('cs.png')), 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=604800']));
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register')->middleware('guest');
 Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware([\App\Http\Middleware\Cors::class, 'auth']);
-Route::get('/auth-status', [AuthController::class, 'authStatus'])->middleware(\App\Http\Middleware\Cors::class);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+Route::get('/auth-status', [AuthController::class, 'authStatus']);
 
 // Reset kata sandi (tanpa email sender: link ditampilkan langsung di halaman)
 Route::get('/forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request')->middleware('guest');
@@ -38,4 +40,15 @@ Route::middleware('auth')->group(function () {
 // Surat keterangan diterima (bukti kelulusan) untuk pemilik pendaftaran
     Route::get('/pendaftaran/bukti', [PendaftaranController::class, 'downloadBukti'])
         ->name('pendaftaran.bukti');
+});
+
+// Career Center API
+Route::get('/lowongan', [LowonganController::class, 'index']);
+Route::get('/lowongan/{lowongan}', [LowonganController::class, 'show']);
+
+Route::middleware('auth')->group(function () {
+    Route::post('/lamaran', [LamaranController::class, 'store']);
+    Route::get('/lamaran/saya', [LamaranController::class, 'myApplications']);
+    Route::get('/lamaran/{lamaran}', [LamaranController::class, 'show']);
+    Route::delete('/lamaran/{lamaran}', [LamaranController::class, 'cancel']);
 });

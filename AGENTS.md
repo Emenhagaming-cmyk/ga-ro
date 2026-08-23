@@ -84,8 +84,14 @@ npm run dev
 - `app/Http/Middleware/HandleTokenMismatch.php` — penanganan 419/CSRF (cek response, bukan catch exception; `session()->save()` manual)
 - `app/Http/Middleware/Cors.php` — allow http://localhost:5174
 - `app/Models/Pendaftaran.php` — fillable semua field
+- `app/Models/Lowongan.php` — job listing model (title, company, location, jurusan, type, description, deadline, is_active)
+- `app/Models/Lamaran.php` — job application model (user_id, lowongan_id, cover_letter, cv_path, status)
+- `app/Http/Controllers/LowonganController.php` — index (search/filter/sort), show
+- `app/Http/Controllers/LamaranController.php` — store (CV upload), myApplications, show, cancel
 - `database/seeders/AdminSeeder.php` — admin account
+- `database/seeders/LowonganSeeder.php` — 10 sample job listings
 - Routes: `web.php` (publik: `/` `/login` `/register` `pendaftaran/create`+`store`; auth: dashboard-siswa, update; admin: `/admin`, index, export, show, edit, status, destroy) — `Route::resource` tidak dipakai
+  - Career Center: `/lowongan` (GET, public), `/lowongan/{lowongan}` (GET, public), `/lamaran` (POST, auth), `/lamaran/saya` (GET, auth), `/lamaran/{lamaran}` (GET/DELETE, auth). **Tanpa prefix `/api/`** — Vercel PHP runtime intercept `/api/*` sebagai function path.
 
 ## Style & Konvensi
 

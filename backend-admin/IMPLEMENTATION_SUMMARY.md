@@ -222,3 +222,24 @@ cd C:\Users\LENOVO\lomba\ga-ro; npm run dev
    - Tidak menambah tinggi kartu (bento row `minmax(170px, auto)` menyesuaikan otomatis)
 
 **File yang disentuh:** hanya `feature.vue` (template + style scoped). Tanpa perubahan backend/DB.
+
+---
+
+## 🚀 LCP Optimization — Sesi 2026-08-22
+
+Admin dashboard `paneladminsmkbu.vercel.app` mengalami LCP 24.11s (audit Lighthouse). Berikut optimasi yang dilakukan:
+
+### Perubahan File
+
+| File | Perubahan |
+|------|-----------|
+| `resources/views/layouts/app.blade.php` | CSS split: critical inline `<style>` (sidebar, topbar, layout, form-section) + deferred `<style media="print" onload="this.media='all'">` (tables, pagination, media queries). Font preload added. `@vite` dipindah setelah kedua stylesheet. |
+| `resources/views/pendaftaran/dashboard.blade.php` | Chart.js sync load → lazy load via IntersectionObserver (rootMargin 400px). `fetchpriority="high"` pada `<h1>`. |
+| `app/Http/Controllers/PendaftaranController.php` | Stats + chartData cached 30s (`Cache::remember`). Cache-Control header `private, max-age=30, stale-while-revalidate=60` pada response dashboard. |
+| `vercel.json` | `APP_URL` → `paneladminsmkbu.vercel.app`, `FRONTEND_URL` → `smkbu-sby.vercel.app` |
+
+### Impact
+- **TTFB**: ~40 queries cached 30s → server respond instant on repeat visits
+- **FCP/LCP**: critical CSS inline → browser render sidebar+topbar+stat-cards immediately, non-critical CSS loads async
+- **CLS**: font preload → no FOIT/FOUT
+- **Chart.js**: deferred → not blocking initial paint
