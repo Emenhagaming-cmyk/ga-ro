@@ -209,7 +209,7 @@
         }
 
         .input-wrap input::placeholder {
-            color: #313131;
+            color: #ccc;
         }
 
         .input-wrap input:focus {

@@ -17,8 +17,8 @@
       </nav>
       <div class="sidebar-promo">
         <div class="promo-icon">📚</div>
-        <p class="promo-title">Tips Belajar</p>
-        <p class="promo-desc">Selesaikan 1 materi setiap hari untuk membangun kebiasaan belajar yang konsisten.</p>
+        <p class="promo-title">Tips Belajar nih buat kamu!</p>
+        <p class="promo-desc">Selesaikan 1 materi setiap hari untuk membangun kebiasaan belajar yang konsisten :].</p>
       </div>
     </aside>
 
@@ -45,7 +45,7 @@
       </div>
 
       <div class="section-block" v-if="activeNav === 'overview' || activeNav === 'materi'">
-        <div class="section-header"><h2>Lanjutkan Belajar</h2><span class="section-sub">Materi yang baru saja kamu akses</span></div>
+        <div class="section-header"><h2>Lanjutkan Belajarnya dong :)</h2><span class="section-sub">Materi yang baru saja kamu akses</span></div>
         <div class="continue-grid">
           <div v-for="item in featuredMaterials" :key="item.id" class="continue-card">
             <div class="cc-visual" :style="{ background: item.bg }"><span class="cc-icon">{{ item.icon }}</span></div>
@@ -87,11 +87,11 @@
             </div>
           </article>
         </div>
-        <div v-if="filteredMaterials.length === 0" class="empty-state"><Package :size="40" :stroke-width="1.5" /><p>Belum ada materi di kategori ini.</p></div>
+        <div v-if="filteredMaterials.length === 0" class="empty-state"><Package :size="40" :stroke-width="1.5" /><p>Ups maaf ya belum ada materi di kategori ini.</p></div>
       </div>
 
       <div class="section-block" v-if="activeNav === 'overview' || activeNav === 'kuis'">
-        <div class="section-header"><h2>Kuis Interaktif</h2><span class="section-sub">Uji pemahamanmu dengan latihan soal</span></div>
+        <div class="section-header"><h2>Kuis Interaktif biar makin aktif!</h2><span class="section-sub">Uji pemahamanmu dengan latihan soal</span></div>
         <div class="quiz-grid">
           <article v-for="quiz in quizzes" :key="quiz.id" class="quiz-card">
             <div class="quiz-icon-wrap"><span class="quiz-icon">{{ quiz.icon }}</span></div>
@@ -115,7 +115,7 @@
         </div>
         <div class="info-banner">
           <Lightbulb :size="20" :stroke-width="2" class="info-icon" />
-          <div class="info-text"><strong>Cara Menggunakan:</strong> Pilih materi, tonton video atau download modul PDF, lalu kerjakan kuis untuk menguji pemahaman.</div>
+          <div class="info-text"><strong>Cara Belajar di E-Learning:</strong> Pilih materi, tonton video atau download modul PDF, lalu kerjakan kuis untuk menguji pemahaman. </div>
         </div>
       </div>
     </main>
@@ -131,7 +131,7 @@
         <div class="ps-item"><div class="ps-num green">{{ videoCount }}</div><div class="ps-label">Video</div></div>
       </div>
       <div class="panel-section">
-        <h4>Aktivitas Minggu Ini</h4>
+        <h4>Aktivitas Kamu Minggu Ini :D</h4>
         <div class="week-grid">
           <div v-for="(day, i) in weekDays" :key="i" :class="['week-day', { active: day.active, today: day.today }]">
             <span class="wd-label">{{ day.label }}</span><span class="wd-num">{{ day.date }}</span>

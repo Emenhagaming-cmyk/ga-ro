@@ -44,6 +44,11 @@ const routes = [
     component: () => import("../views/NewsView.vue"),
   },
   {
+    path: "/berita/:slug",
+    name: "berita-detail",
+    component: () => import("../views/NewsDetail.vue"),
+  },
+  {
     path: "/koperasi",
     component: () => import("../views/KoperasiView.vue"),
     meta: { requiresSiswa: true }

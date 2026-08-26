@@ -2,7 +2,7 @@
   <section class="berita-page">
     <div class="top-bar">
       <button type="button" class="back-button" @click="goBack">
-        <span class="back-icon">&lt;</span>
+        <span class="back-icon"><</span>
       </button>
     </div>
 
@@ -15,101 +15,89 @@
     </div>
 
     <div class="search-row">
-      <input type="text" v-model="searchQuery" placeholder="Cari berita..." />
-      <button @click="resetSearch" class="btn-reset" v-if="searchQuery">Reset</button>
+      <div class="search-wrapper">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <input type="text" v-model="searchQuery" placeholder="Cari berita..." />
+        <button @click="resetSearch" class="btn-reset" v-if="searchQuery">Reset</button>
+      </div>
     </div>
 
-    <div class="category-tabs">
+    <div class="category-chips">
       <button
         v-for="cat in categories"
         :key="cat"
-        :class="['tab', { active: activeCategory === cat }]"
+        :class="['chip', { active: activeCategory === cat }]"
         @click="activeCategory = cat"
       >
         {{ cat }}
       </button>
     </div>
 
-    <div class="berita-grid">
+    <!-- Featured News Card -->
+    <div v-if="featuredNews" class="featured-card" @click="openDetail(featuredNews)">
+      <div class="featured-image">
+        <img :src="featuredNews.image" :alt="featuredNews.title" loading="lazy" @error="handleImgError" />
+        <span class="featured-badge">{{ featuredNews.featured ? 'Unggulan' : '' }}</span>
+      </div>
+      <div class="featured-content">
+        <span class="featured-category" :style="{ backgroundColor: featuredNews.categoryColor }">
+          {{ featuredNews.category }}
+        </span>
+        <h2 class="featured-title">{{ featuredNews.title }}</h2>
+        <p class="featured-excerpt">{{ featuredNews.excerpt }}</p>
+        <span class="featured-meta">Oleh {{ featuredNews.author }} • {{ featuredNews.readTime }}</span>
+      </div>
+    </div>
+
+    <!-- Berita List -->
+    <div v-if="listNews.length > 0" class="berita-list">
       <article
-        v-for="item in filteredNews"
+        v-for="item in listNews"
         :key="item.id"
-        class="berita-card"
+        class="berita-item"
         @click="openDetail(item)"
       >
-        <div class="berita-image">
+        <div class="item-thumbnail">
           <img :src="item.image" :alt="item.title" loading="lazy" @error="handleImgError" />
-          <span class="berita-category" :style="{ backgroundColor: item.categoryColor }">
+          <span class="item-category" :style="{ backgroundColor: item.categoryColor }">
             {{ item.category }}
           </span>
-          <span v-if="item.featured" class="featured-badge">Unggulan</span>
         </div>
-        <div class="berita-content">
-          <time :datetime="item.publishedAt" class="berita-date">
-            {{ formatDate(item.publishedAt) }}
-          </time>
-          <h3 class="berita-title">{{ item.title }}</h3>
-          <p class="berita-excerpt">{{ item.excerpt }}</p>
-          <div class="berita-meta">
-            <span class="berita-author">{{ item.author }}</span>
-            <span class="berita-read-time">{{ item.readTime }}</span>
-          </div>
+        <div class="item-info">
+          <h3 class="item-title">{{ item.title }}</h3>
+          <span class="item-meta">{{ formatDate(item.publishedAt) }} • {{ item.readTime }}</span>
         </div>
       </article>
     </div>
 
-    <div v-if="filteredNews.length === 0" class="empty-state">
+    <div v-if="listNews.length === 0" class="empty-state">
       <p>Tidak ada berita yang cocok dengan pencarian atau filter.</p>
     </div>
-
-    <!-- DETAIL MODAL -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="selectedNews" class="modal-overlay" @click.self="closeDetail">
-          <div class="modal-content">
-            <button class="modal-close" @click="closeDetail">&times;</button>
-            <div class="modal-image">
-              <img :src="selectedNews.image" :alt="selectedNews.title" @error="handleImgError" />
-            </div>
-            <div class="modal-body">
-              <div class="modal-meta-top">
-                <span class="modal-category" :style="{ backgroundColor: selectedNews.categoryColor }">
-                  {{ selectedNews.category }}
-                </span>
-                <time :datetime="selectedNews.publishedAt">{{ formatDate(selectedNews.publishedAt) }}</time>
-                <span>{{ selectedNews.readTime }}</span>
-              </div>
-              <h2>{{ selectedNews.title }}</h2>
-              <p class="modal-author">Oleh {{ selectedNews.author }}</p>
-              <div class="modal-text" v-html="formatContent(selectedNews.content)"></div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const news = ref([]);
 const activeCategory = ref("Semua");
 const searchQuery = ref("");
-const selectedNews = ref(null);
 
 const categories = ["Semua", "Pengumuman", "Prestasi", "Kerjasama", "Kegiatan", "Acara"];
 
-async function fetchNews() {
-  try {
-    const res = await fetch("/data/news.json");
-    news.value = await res.json();
-  } catch (e) {
-    news.value = [];
-  }
-}
+// --- REFS: featured & list (dideklarasi dulu baru dipakai) ---
+const featuredNews = ref(null);
+const listNews = ref([]);
 
-const filteredNews = computed(() => {
+// --- HELPER: compute featured + list dari news + filters ---
+function computeFeaturedAndList() {
+  // Filter berdasarkan category + search
   let result = news.value;
   if (activeCategory.value !== "Semua") {
     result = result.filter((n) => n.category === activeCategory.value);
@@ -123,17 +111,53 @@ const filteredNews = computed(() => {
         n.content.toLowerCase().includes(q)
     );
   }
-  return result;
-});
 
-function openDetail(item) {
-  selectedNews.value = item;
-  document.body.style.overflow = "hidden";
+  // Featured: first item with featured=true, or first item
+  const featured = result.find((n) => n.featured) || result[0] || null;
+  featuredNews.value = featured;
+
+  // List: all filtered items minus featured
+  if (featured) {
+    listNews.value = result.filter((n) => n.id !== featured.id);
+  } else {
+    listNews.value = [...result];
+  }
 }
 
-function closeDetail() {
-  selectedNews.value = null;
-  document.body.style.overflow = "";
+// --- WATCH: recalculate whenever category or search changes ---
+watch([activeCategory, searchQuery], computeFeaturedAndList);
+
+// --- DATA SOURCE ---
+async function fetchNews() {
+  try {
+    const res = await fetch("/data/news.json");
+    news.value = await res.json();
+    computeFeaturedAndList();
+  } catch (e) {
+    news.value = [];
+    featuredNews.value = null;
+    listNews.value = [];
+  }
+}
+
+// --- onMounted ---
+onMounted(() => {
+  fetchNews();
+});
+
+// --- FUNCTIONS: formatting & error handling ---
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function handleImgError(e) {
+  e.target.style.display = "none";
+}
+
+// --- ROUTE & FUNCTIONS ---
+function openDetail(item) {
+  router.push(`/berita/${item.slug}`);
 }
 
 function resetSearch() {
@@ -141,32 +165,13 @@ function resetSearch() {
 }
 
 function goBack() {
-  window.history.back();
+  router.push("/berita");
 }
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-}
-
-function formatContent(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\n\n/g, "</p><p>")
-    .replace(/\n- /g, "</p><li>")
-    .replace(/\n/g, "<br>");
-}
-
-function handleImgError(e) {
-  e.target.style.display = "none";
-}
-
-onMounted(() => {
-  fetchNews();
-});
 </script>
 
 <style scoped>
+/* ============ PAGE LAYOUT ============ */
+
 .berita-page {
   padding: 80px 7%;
   min-height: 100vh;
@@ -203,6 +208,7 @@ onMounted(() => {
   line-height: 1;
 }
 
+/* Page header */
 .page-label {
   display: inline-flex;
   padding: 10px 16px;
@@ -228,15 +234,30 @@ onMounted(() => {
   line-height: 1.8;
 }
 
+/* Search row */
 .search-row {
   display: flex;
   gap: 12px;
   margin: 28px 0 20px;
 }
 
-.search-row input {
+.search-wrapper {
   flex: 1;
-  padding: 16px 20px;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a9a8f;
+  pointer-events: none;
+}
+
+.search-row input {
+  width: 100%;
+  padding: 16px 20px 16px 40px;
   border: 1px solid rgba(58, 100, 80, 0.18);
   border-radius: 18px;
   background: #ffffff;
@@ -260,14 +281,15 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.category-tabs {
+/* Category chips */
+.category-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 32px;
 }
 
-.tab {
+.chip {
   padding: 10px 20px;
   border: 1px solid rgba(58, 100, 80, 0.18);
   border-radius: 999px;
@@ -277,71 +299,52 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.tab:hover {
+.chip:hover {
   border-color: #3a6450;
   color: #3a6450;
 }
 
-.tab.active {
+.chip.active {
   background: #3a6450;
   border-color: #3a6450;
   color: #fff;
 }
 
-.berita-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
+/* ============ FEATURED CARD ============ */
 
-.berita-card {
-  position: relative;
-  border-radius: 20px;
+.featured-card {
+  margin-bottom: 40px;
+  border-radius: 24px;
   overflow: hidden;
   background: #fff;
-  border: 1px solid rgba(58, 100, 80, 0.12);
-  box-shadow: 0 12px 28px rgba(35, 55, 42, 0.06);
+  box-shadow: 0 20px 60px rgba(35, 55, 42, 0.15);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
 }
 
-.berita-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(35, 55, 42, 0.12);
+.featured-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 80px rgba(35, 55, 42, 0.2);
 }
 
-.berita-image {
+.featured-image {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: linear-gradient(135deg, #e8f0e6, #d4dbd8);
 }
 
-.berita-image img {
+.featured-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.berita-category {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .featured-badge {
   position: absolute;
   top: 12px;
-  right: 12px;
+  left: 12px;
   padding: 4px 10px;
   border-radius: 999px;
   background: #f39c12;
@@ -349,201 +352,138 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
+  font-style: italic;
 }
 
-.berita-content {
-  padding: 20px 22px 24px;
+.featured-content {
+  padding: 24px 28px;
 }
 
-.berita-date {
-  font-size: 12px;
-  color: #8a9a8f;
-}
-
-.berita-title {
-  margin: 10px 0;
-  font-size: 17px;
-  font-weight: 700;
+.featured-title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 800;
   color: #1a2620;
-  line-height: 1.35;
+  line-height: 1.25;
+}
+
+.featured-excerpt {
+  margin: 0;
+  font-size: 14px;
+  color: #647067;
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.berita-excerpt {
-  margin: 0;
-  font-size: 13.5px;
-  color: #647067;
-  line-height: 1.6;
+.featured-meta {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #8a9a8f;
+}
+
+/* ============ BERITA LIST ============ */
+
+.berita-list {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .berita-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .berita-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .berita-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.berita-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(35, 55, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.berita-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(35, 55, 42, 0.12);
+}
+
+.item-thumbnail {
+  width: 120px;
+  height: 80px;
+  flex-shrink: 0;
+  position: relative;
+  background: #f8fafc;
+}
+
+.item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px 0 0 12px;
+}
+
+.item-thumbnail .item-category {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #3a6450;
+}
+
+.item-info {
+  flex: 1;
+  padding: 12px 16px;
+}
+
+.item-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2620;
+  line-height: 1.3;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.berita-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(58, 100, 80, 0.08);
-  font-size: 12px;
+.item-meta {
+  font-size: 11px;
   color: #8a9a8f;
 }
+
+/* ============ EMPTY STATE ============ */
 
 .empty-state {
   text-align: center;
   padding: 60px;
   color: #8a9a8f;
-}
-
-/* MODAL */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.modal-content {
-  position: relative;
-  width: 100%;
-  max-width: 700px;
-  max-height: 85vh;
-  overflow-y: auto;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 24px 60px rgba(35, 55, 42, 0.25);
-}
-
-.modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  font-size: 22px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: background 0.2s;
-}
-
-.modal-close:hover {
-  background: rgba(0, 0, 0, 0.75);
-}
-
-.modal-image {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  border-radius: 20px 20px 0 0;
-  background: linear-gradient(135deg, #e8f0e6, #d4dbd8);
-}
-
-.modal-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.modal-body {
-  padding: 28px 32px 36px;
-}
-
-.modal-meta-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: #647067;
-}
-
-.modal-category {
-  padding: 4px 10px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.modal-body h2 {
-  margin: 0 0 8px;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.25;
-  color: #13231c;
-}
-
-.modal-author {
-  margin: 0 0 20px;
-  font-size: 13px;
-  color: #5d7666;
-}
-
-.modal-text {
-  color: #3d4d41;
-  font-size: 15px;
-  line-height: 1.8;
-}
-
-.modal-text :deep(p) {
-  margin-bottom: 12px;
-}
-
-.modal-text :deep(strong) {
-  color: #1a2620;
-}
-
-.modal-text :deep(li) {
-  margin-left: 20px;
-  margin-bottom: 6px;
-}
-
-/* TRANSITIONS */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-@media (max-width: 1024px) {
-  .berita-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .berita-page {
-    padding: 70px 5%;
-  }
-  .berita-grid {
-    grid-template-columns: 1fr;
-  }
-  .search-row {
-    flex-direction: column;
-  }
-  .modal-body {
-    padding: 20px 22px 28px;
-  }
 }
 </style>

@@ -1,0 +1,105 @@
+- generic [ref=e3]:
+  - button [ref=e4] [cursor=pointer]:
+    - img "BU AI" [ref=e6]
+  - generic [ref=e8]:
+    - banner [ref=e9]:
+      - link [ref=e10] [cursor=pointer]:
+        - /url: "#top"
+        - img "Logo Sekolah" [ref=e11]
+        - generic [ref=e12]:
+          - heading "SMK Bahrul Ulum" [level=2] [ref=e13]
+          - text: Surabaya
+      - navigation [ref=e14]:
+        - link "Beranda" [ref=e15] [cursor=pointer]:
+          - /url: "#top"
+        - button "Layanan" [ref=e17] [cursor=pointer]
+        - button "Informasi" [ref=e21] [cursor=pointer]
+        - button "Tentang" [ref=e25] [cursor=pointer]
+        - link "Kontak" [ref=e28] [cursor=pointer]:
+          - /url: "#contact"
+      - button "SPMB" [ref=e30] [cursor=pointer]
+    - generic [ref=e32]:
+      - generic [ref=e33]: Pendaftaran SPMB Dibuka
+      - heading "Belajar Berkarya Berprestasi" [level=1] [ref=e34]
+      - paragraph [ref=e35]: Sekolah menengah kejuruan unggulan yang membekali siswa dengan keterampilan nyata untuk masa depan.
+      - generic: SCHOOL
+      - generic [ref=e37]:
+        - button "Login" [ref=e38] [cursor=pointer]
+        - generic:
+          - link "Login Siswa" [ref=e39] [cursor=pointer]:
+            - /url: https://pendaftaranspmb.vercel.app/login
+          - link "Login Pendaftar" [ref=e40] [cursor=pointer]:
+            - /url: https://pendaftaranspmb.vercel.app/login
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: Tentang Sekolah
+          - heading "Sejarah & Tentang Sekolah Kami" [level=2] [ref=e47]
+          - paragraph [ref=e48]: SMK Bahrul Ulum berdiri sejak 1998 dengan visi mencetak generasi muda yang kompeten, kreatif, dan berwawasan teknologi. Kami fokus pada pendidikan vokasi yang menggabungkan pengetahuan akademis dengan pengalaman praktik langsung.
+          - paragraph [ref=e49]: Sejak awal, sekolah ini berkembang dari sebuah lembaga kecil menjadi pusat pendidikan kejuruan yang dipercaya oleh masyarakat. Perjalanan kami dilandasi nilai disiplin, kerja sama, dan inovasi, sehingga setiap lulusan siap menyongsong dunia kerja dan studi lanjut.
+        - img "SMK Bahrul Ulum" [ref=e52]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic [ref=e56]: "1.280"
+          - generic [ref=e57]: Siswa Aktif
+        - generic [ref=e58]:
+          - generic [ref=e59]: "7"
+          - generic [ref=e60]: Jurusan Saat Ini
+        - generic [ref=e61]:
+          - generic [ref=e62]: "24"
+          - generic [ref=e63]: Program Keahlian
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - generic [ref=e67]: Berita & Pengumuman
+        - heading "Terbaru dari SMK Bahrul Ulum" [level=2] [ref=e68]
+        - paragraph [ref=e69]: Kegiatan, prestasi, dan informasi penting untuk siswa, orang tua, dan masyarakat.
+      - generic [ref=e70]:
+        - complementary [ref=e71]:
+          - heading "Kategori" [level=3] [ref=e72]
+          - button "Semua" [ref=e73] [cursor=pointer]
+          - button "Pengumuman" [ref=e74] [cursor=pointer]
+          - button "Prestasi" [ref=e75] [cursor=pointer]
+          - button "Kerjasama" [ref=e76] [cursor=pointer]
+          - button "Kegiatan" [ref=e77] [cursor=pointer]
+          - button "Acara" [ref=e78] [cursor=pointer]
+        - generic [ref=e79]:
+          - paragraph [ref=e81]: Tidak ada berita di kategori ini.
+          - link "Lihat Semua Berita di Website Sekolah" [ref=e83] [cursor=pointer]:
+            - /url: https://pendaftaranspmb.vercel.app/berita
+    - contentinfo [ref=e84]:
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - img "Logo SMK Bahrul Ulum" [ref=e89]
+              - generic [ref=e90]:
+                - heading "SMK Bahrul Ulum" [level=3] [ref=e91]
+                - paragraph [ref=e92]: Sekolah Expert IT
+                - paragraph [ref=e93]: Mencetak Generasi Qur'ani dan Unggul di Bidang Teknologi Informasi dengan komitmen penuh terhadap pengembangan karakter, integritas, dan keunggulan akademik untuk mempersiapkan generasi pemimpin masa depan.
+            - navigation [ref=e94]:
+              - link "Beranda" [ref=e95] [cursor=pointer]:
+                - /url: "#top"
+              - link "Layanan" [ref=e96] [cursor=pointer]:
+                - /url: "#layanan"
+              - link "Tentang" [ref=e97] [cursor=pointer]:
+                - /url: "#tentang"
+              - link "Kontak" [ref=e98] [cursor=pointer]:
+                - /url: "#contact"
+          - generic [ref=e99]:
+            - heading "Informasi Kontak" [level=4] [ref=e100]
+            - link "info@smk-bahrululum.sch.id" [ref=e101] [cursor=pointer]:
+              - /url: mailto:info@smk-bahrululum.sch.id
+            - generic [ref=e105]:
+              - paragraph [ref=e106]: "Ikuti kami:"
+              - generic [ref=e107]:
+                - link "Instagram" [ref=e108] [cursor=pointer]:
+                  - /url: https://www.instagram.com/smkbu.sby?igsh=Mmlnemt1dTM5Ymcz
+                - link "TikTok" [ref=e111] [cursor=pointer]:
+                  - /url: https://tiktok.com/@smkbahrululum
+          - generic [ref=e114]:
+            - heading "Lokasi" [level=4] [ref=e115]
+            - iframe [ref=e117]:
+              
+        - generic [ref=e118]:
+          - paragraph [ref=e119]: © 2026 SMK Bahrul Ulum
+          - paragraph [ref=e120]: Made by RPL SMK Bahrul Ulum

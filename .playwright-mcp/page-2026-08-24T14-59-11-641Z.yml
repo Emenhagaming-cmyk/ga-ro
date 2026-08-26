@@ -1,0 +1,192 @@
+- generic [ref=f8e3]:
+  - button [ref=f8e4] [cursor=pointer]:
+    - img "BU AI" [ref=f8e6]
+  - generic [ref=f8e8]:
+    - banner [ref=f8e9]:
+      - link [ref=f8e10] [cursor=pointer]:
+        - /url: "#top"
+        - img "Logo Sekolah" [ref=f8e11]
+        - generic [ref=f8e12]:
+          - heading "SMK Bahrul Ulum" [level=2] [ref=f8e13]
+          - text: Surabaya
+      - navigation [ref=f8e14]:
+        - link "Beranda" [ref=f8e15] [cursor=pointer]:
+          - /url: "#top"
+        - button "Layanan" [ref=f8e17] [cursor=pointer]
+        - button "Informasi" [ref=f8e21] [cursor=pointer]
+        - button "Tentang" [ref=f8e25] [cursor=pointer]
+        - link "Kontak" [ref=f8e28] [cursor=pointer]:
+          - /url: "#contact"
+      - button "SPMB" [ref=f8e30] [cursor=pointer]
+    - generic [ref=f8e32]:
+      - generic [ref=f8e33]: Pendaftaran SPMB Dibuka
+      - heading "Belajar Berkarya Berprestasi" [level=1] [ref=f8e34]
+      - paragraph [ref=f8e35]: Sekolah menengah kejuruan unggulan yang membekali siswa dengan keterampilan nyata untuk masa depan.
+      - generic: SCHOOL
+      - generic [ref=f8e37]:
+        - button "Login" [ref=f8e38] [cursor=pointer]
+        - generic:
+          - link "Login Siswa" [ref=f8e39] [cursor=pointer]:
+            - /url: https://pendaftaranspmb.vercel.app/login
+          - link "Login Pendaftar" [ref=f8e40] [cursor=pointer]:
+            - /url: https://pendaftaranspmb.vercel.app/login
+    - generic [ref=f8e43]:
+      - generic [ref=f8e44]:
+        - generic [ref=f8e45]:
+          - generic [ref=f8e46]: Tentang Sekolah
+          - heading "Sejarah & Tentang Sekolah Kami" [level=2] [ref=f8e47]
+          - paragraph [ref=f8e48]: SMK Bahrul Ulum berdiri sejak 1998 dengan visi mencetak generasi muda yang kompeten, kreatif, dan berwawasan teknologi. Kami fokus pada pendidikan vokasi yang menggabungkan pengetahuan akademis dengan pengalaman praktik langsung.
+          - paragraph [ref=f8e49]: Sejak awal, sekolah ini berkembang dari sebuah lembaga kecil menjadi pusat pendidikan kejuruan yang dipercaya oleh masyarakat. Perjalanan kami dilandasi nilai disiplin, kerja sama, dan inovasi, sehingga setiap lulusan siap menyongsong dunia kerja dan studi lanjut.
+        - img "SMK Bahrul Ulum" [ref=f8e52]
+      - generic [ref=f8e54]:
+        - generic [ref=f8e55]:
+          - generic [ref=f8e56]: "1.280"
+          - generic [ref=f8e57]: Siswa Aktif
+        - generic [ref=f8e58]:
+          - generic [ref=f8e59]: "7"
+          - generic [ref=f8e60]: Jurusan Saat Ini
+        - generic [ref=f8e61]:
+          - generic [ref=f8e62]: "24"
+          - generic [ref=f8e63]: Program Keahlian
+    - generic [ref=f8e65]:
+      - generic [ref=f8e66]:
+        - heading [level=2] [ref=f8e67]:
+          - text: Satu Kotak
+          - emphasis [ref=f8e68]: Beragam Layanan
+        - paragraph [ref=f8e69]: Satu ruang untuk menemukan informasi, layanan, dan peluang yang ada di SMK Bahrul Ulum.
+      - generic [ref=f8e70]:
+        - generic [ref=f8e71]:
+          - generic [ref=f8e72]:
+            - img "SPMB SMK Bahrul Ulum" [ref=f8e73]
+            - generic [ref=f8e74]: PMB 2027
+          - generic [ref=f8e75]:
+            - generic [ref=f8e76]:
+              - generic [ref=f8e77]:
+                - generic [ref=f8e78]: "1.247"
+                - generic [ref=f8e79]: Siswa Mendaftar
+              - generic [ref=f8e81]:
+                - generic [ref=f8e82]: "1"
+                - generic [ref=f8e83]: Jurusan
+            - generic [ref=f8e84]:
+              - generic [ref=f8e85]: Gelombang 1 · 2027
+              - generic [ref=f8e86]: RPL
+              - generic [ref=f8e87]: Online & Offline
+            - generic [ref=f8e88]:
+              - generic [ref=f8e89]: Gratis biaya daftar
+              - generic [ref=f8e93]: Proses 1 hari
+              - generic [ref=f8e97]: Edit kurang dari 3 hari
+              - generic [ref=f8e101]: Pendaftaran mudah
+            - generic [ref=f8e104]: "Batas pendaftaran: 2027-09-15"
+            - generic [ref=f8e105]:
+              - link "Daftar Sekarang" [ref=f8e106] [cursor=pointer]:
+                - /url: https://pendaftaranspmb.vercel.app/pendaftaran/create
+                - text: Daftar Sekarang
+                - generic [ref=f8e107]: →
+              - link "Info & Biaya" [ref=f8e108] [cursor=pointer]:
+                - /url: /spmb-info
+                - text: Info & Biaya
+                - generic [ref=f8e109]: ↗
+        - generic [ref=f8e110]:
+          - generic [ref=f8e111]: "01"
+          - generic [ref=f8e117]:
+            - generic [ref=f8e118]: "6"
+            - generic [ref=f8e119]: Berita
+          - paragraph [ref=f8e120]: Kegiatan dan pengumuman terbaru dari sekolah.
+          - generic [ref=f8e121] [cursor=pointer]:
+            - text: Baca berita
+            - generic [ref=f8e122]: ↗
+        - generic [ref=f8e123]:
+          - generic [ref=f8e124]: "02"
+          - generic [ref=f8e131]:
+            - generic [ref=f8e132]: "0"
+            - generic [ref=f8e133]: Lowongan Aktif
+          - generic [ref=f8e140] [cursor=pointer]:
+            - text: Lihat peluang
+            - generic [ref=f8e141]: ↗
+        - generic [ref=f8e142]:
+          - generic [ref=f8e143]: "03"
+          - generic [ref=f8e151]:
+            - generic [ref=f8e152]: 25+
+            - generic [ref=f8e153]: Tahun Mendidik
+          - paragraph [ref=f8e154]: SMK Bahrul Ulum berdiri sejak 1998, mencetak generasi qur'ani dan unggul di bidang teknologi.
+          - generic [ref=f8e155] [cursor=pointer]:
+            - text: Kenali kami
+            - generic [ref=f8e156]: ↗
+        - generic [ref=f8e157]:
+          - generic [ref=f8e158]: "04"
+          - generic [ref=f8e164]:
+            - generic [ref=f8e165]: 16+
+            - generic [ref=f8e166]: Produk
+          - paragraph [ref=f8e167]: Seragam, alat tulis, dan kebutuhan siswa lainnya tersedia secara online.
+          - generic [ref=f8e168] [cursor=pointer]:
+            - text: Buka koperasi
+            - generic [ref=f8e169]: ↗
+        - generic [ref=f8e170]:
+          - generic [ref=f8e171]: "05"
+          - generic [ref=f8e176]:
+            - generic [ref=f8e177]:
+              - generic [ref=f8e178]: 10+
+              - generic [ref=f8e179]: Karya Siswa
+            - generic [ref=f8e180]:
+              - generic [ref=f8e181]: RPL
+              - generic [ref=f8e182]: TKJ
+              - generic [ref=f8e183]: AKL
+              - generic [ref=f8e184]: Multimedia
+          - paragraph [ref=f8e185]: Galeri produk digital dan kerajinan buatan siswa SMK Bahrul Ulum.
+          - generic [ref=f8e186] [cursor=pointer]:
+            - text: Lihat karya
+            - generic [ref=f8e187]: ↗
+    - generic [ref=f8e189]:
+      - generic [ref=f8e190]:
+        - generic [ref=f8e191]: Berita & Pengumuman
+        - heading "Terbaru dari SMK Bahrul Ulum" [level=2] [ref=f8e192]
+        - paragraph [ref=f8e193]: Kegiatan, prestasi, dan informasi penting untuk siswa, orang tua, dan masyarakat.
+      - generic [ref=f8e194]:
+        - complementary [ref=f8e195]:
+          - heading "Kategori" [level=3] [ref=f8e196]
+          - button "Semua" [ref=f8e197] [cursor=pointer]
+          - button "Pengumuman" [ref=f8e198] [cursor=pointer]
+          - button "Prestasi" [ref=f8e199] [cursor=pointer]
+          - button "Kerjasama" [ref=f8e200] [cursor=pointer]
+          - button "Kegiatan" [ref=f8e201] [cursor=pointer]
+          - button "Acara" [ref=f8e202] [cursor=pointer]
+        - generic [ref=f8e203]:
+          - paragraph [ref=f8e205]: Tidak ada berita di kategori ini.
+          - link "Lihat Semua Berita di Website Sekolah" [ref=f8e207] [cursor=pointer]:
+            - /url: https://pendaftaranspmb.vercel.app/berita
+    - contentinfo [ref=f8e208]:
+      - generic [ref=f8e209]:
+        - generic [ref=f8e210]:
+          - generic [ref=f8e211]:
+            - generic [ref=f8e212]:
+              - img "Logo SMK Bahrul Ulum" [ref=f8e213]
+              - generic [ref=f8e214]:
+                - heading "SMK Bahrul Ulum" [level=3] [ref=f8e215]
+                - paragraph [ref=f8e216]: Sekolah Expert IT
+                - paragraph [ref=f8e217]: Mencetak Generasi Qur'ani dan Unggul di Bidang Teknologi Informasi dengan komitmen penuh terhadap pengembangan karakter, integritas, dan keunggulan akademik untuk mempersiapkan generasi pemimpin masa depan.
+            - navigation [ref=f8e218]:
+              - link "Beranda" [ref=f8e219] [cursor=pointer]:
+                - /url: "#top"
+              - link "Layanan" [ref=f8e220] [cursor=pointer]:
+                - /url: "#layanan"
+              - link "Tentang" [ref=f8e221] [cursor=pointer]:
+                - /url: "#tentang"
+              - link "Kontak" [ref=f8e222] [cursor=pointer]:
+                - /url: "#contact"
+          - generic [ref=f8e223]:
+            - heading "Informasi Kontak" [level=4] [ref=f8e224]
+            - link "info@smk-bahrululum.sch.id" [ref=f8e225] [cursor=pointer]:
+              - /url: mailto:info@smk-bahrululum.sch.id
+            - generic [ref=f8e229]:
+              - paragraph [ref=f8e230]: "Ikuti kami:"
+              - generic [ref=f8e231]:
+                - link "Instagram" [ref=f8e232] [cursor=pointer]:
+                  - /url: https://www.instagram.com/smkbu.sby?igsh=Mmlnemt1dTM5Ymcz
+                - link "TikTok" [ref=f8e235] [cursor=pointer]:
+                  - /url: https://tiktok.com/@smkbahrululum
+          - generic [ref=f8e238]:
+            - heading "Lokasi" [level=4] [ref=f8e239]
+            - iframe [ref=f8e241]
+        - generic [ref=f8e242]:
+          - paragraph [ref=f8e243]: © 2026 SMK Bahrul Ulum
+          - paragraph [ref=f8e244]: Made by RPL SMK Bahrul Ulum
