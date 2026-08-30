@@ -20,7 +20,7 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
   - `spmb-admin.vercel.app` → deployment baru
 
 **Catatan penting:**
-- Migrasi baru (`tabungans`, `koperasi_orders`, `beritas`, `add_input_by_to_tabungans_table`) BELUM dijalankan ke TiDB production. Jalankan `php artisan migrate --force` di environment production agar halaman Tabungan/Koperasi/Berita tidak error.
+- Migrasi baru (`tabungans`, `koperasi_orders`, `add_input_by_to_tabungans_table`) SUDAH dijalankan ke TiDB production. Tabel `beritas` sudah ada dari migrasi sebelumnya.
 - File `.env.local` yang dibuat `vercel link` sudah dihapus sesuai trap AGENTS.md.
 
 ---
