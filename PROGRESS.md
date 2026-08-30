@@ -4,7 +4,20 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
-## 📌 STATUS TERAKHIR (sesi 2026-08-30 sore — deploy fitur Tabungan, Koperasi, & Berita ke panel admin)
+## 📌 STATUS TERAKHIR (sesi 2026-08-30 malam — fix 500 panel admin Tabungan/Koperasi)
+
+### Fix 500 Internal Server Error di Panel Admin (2026-08-30)
+
+**Root cause:** Model `User` di `backend-admin/app/Models/User.php` tidak memiliki relasi `tabungans()` dan `koperasiOrders()`. Controller `TabunganController::adminIndex()` memakai `withSum('tabungans', ...)` yang membutuhkan relasi tersebut, sehingga memicu 500 di production.
+
+**Fix yang diterapkan:**
+- Tambah `tabungans(): HasMany` dan `koperasiOrders(): HasMany` ke `User` model panel admin.
+- Commit: `9fed9ee` — fix: tambah relasi tabungans dan koperasiOrders di model User panel admin.
+- Deploy Vercel production: `spmb-admin-4eeh2wab8` → `paneladminsmkbu.vercel.app` + `spmb-admin.vercel.app`.
+
+**Status:** Deploy berhasil. Coba akses `/tabungan` dan `/koperasi` lagi — seharusnya 500 sudah hilang.
+
+---
 
 ### Deploy Fitur Tabungan, Koperasi, dan Berita ke Panel Admin (2026-08-30)
 
