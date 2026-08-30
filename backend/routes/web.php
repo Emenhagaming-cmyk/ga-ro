@@ -6,6 +6,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\LamaranController;
 use App\Http\Controllers\TabunganController;
+use App\Http\Controllers\SppController;
 
 Route::get('/', [PendaftaranController::class, 'create'])->name('home');
 
@@ -64,4 +65,19 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/tabungan', [TabunganController::class, 'adminIndex'])->name('admin.tabungan.index');
     Route::post('/admin/tabungan', [TabunganController::class, 'store'])->name('admin.tabungan.store');
+});
+
+// SPP Siswa
+Route::middleware('auth')->group(function () {
+    Route::get('/spp', [SppController::class, 'index'])->name('spp.index');
+});
+
+// SPP (kasir / admin) input pembayaran
+Route::middleware(['auth', 'role:kasir,admin'])->group(function () {
+    Route::post('/spp/pay', [SppController::class, 'store'])->name('spp.pay');
+});
+
+// SPP (admin) rekap semua
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/spp', [SppController::class, 'adminIndex'])->name('admin.spp.index');
 });
