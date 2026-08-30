@@ -77,7 +77,7 @@ Route::middleware(['auth', 'role:kasir,admin'])->group(function () {
     Route::post('/spp/pay', [SppController::class, 'store'])->name('spp.pay');
 });
 
-// SPP (admin) rekap semua
-Route::middleware(['auth', 'role:admin'])->group(function () {
+// SPP (admin & guru) rekap semua (read-only untuk guru)
+Route::middleware(['auth', 'role:guru,admin'])->group(function () {
     Route::get('/admin/spp', [SppController::class, 'adminIndex'])->name('admin.spp.index');
 });

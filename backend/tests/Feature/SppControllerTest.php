@@ -124,6 +124,23 @@ class SppControllerTest extends TestCase
         ])->assertStatus(403);
     }
 
+    public function test_guru_bisa_lihat_rekap_tapi_tidak_bisa_menginput_pembayaran(): void
+    {
+        $guru = $this->makeUser('guru', 'Guru Satu', 'guru1');
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $this->makeBill($siswa);
+
+        $this->actingAs($guru)->getJson('/admin/spp')
+            ->assertStatus(200)
+            ->assertJsonCount(1);
+
+        $this->actingAs($guru)->postJson('/spp/pay', [
+            'bill_id' => $this->makeBill($siswa, 100000)->id,
+            'metode' => 'tunai',
+            'amount' => 100000,
+        ])->assertStatus(403);
+    }
+
     public function test_admin_bisa_input_pembayaran_dan_lihat_rekap(): void
     {
         $admin = $this->makeUser('admin', 'Admin', 'admin');
