@@ -45,7 +45,7 @@
             @endphp
             <div class="ot-item">
                 <div class="ot-item-head">
-                    <strong>{{ \Carbon\Carbon::parse($b->periode . '-01')->translatedFormat('F Y') }}</strong>
+                    <strong>{{ formatPeriode($b->periode) }}</strong>
                     <span class="ot-badge {{ $lunas ? 'lunas' : 'belum' }}">{{ $lunas ? 'Lunas' : 'Belum' }}</span>
                 </div>
                 <div class="ot-item-rows">

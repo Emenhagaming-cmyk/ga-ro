@@ -60,7 +60,7 @@
                 <tr>
                     <th>Siswa</th>
                     @foreach ($periodeBulan = $siswa->flatMap(fn ($s) => $s->sppBills->pluck('periode'))->unique()->sort()->values() as $p)
-                    <th class="rk-period">{{ \Carbon\Carbon::parse($p . '-01')->translatedFormat('M y') }}</th>
+                    <th class="rk-period">{{ formatPeriodeShort($p) }}</th>
                     @endforeach
                 </tr>
             </thead>

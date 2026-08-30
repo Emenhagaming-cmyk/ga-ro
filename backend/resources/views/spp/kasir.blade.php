@@ -86,7 +86,7 @@
                         <strong style="color:#1c2a23;">{{ $bill->user->name }}</strong>
                         <div style="font-size:12px;color:#8a9890;">{{ $bill->user->username }}</div>
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($bill->periode . '-01')->translatedFormat('F Y') }}</td>
+                    <td>{{ formatPeriode($bill->periode) }}</td>
                     <td>{{ number_format($bill->nominal, 0, ',', '.') }}</td>
                     <td><strong style="color:#c0444f;">{{ number_format($sisa, 0, ',', '.') }}</strong></td>
                     <td>
