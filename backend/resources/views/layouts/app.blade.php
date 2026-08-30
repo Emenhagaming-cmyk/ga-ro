@@ -361,6 +361,85 @@
             margin-bottom: 16px;
         }
 
+        /* ── Sidebar layout ── */
+        .app-shell { display: flex; min-height: 100vh; }
+        .app-sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: 250px; background: #1c2a23;
+            display: flex; flex-direction: column;
+            z-index: 200; padding: 0;
+            transition: transform 0.25s ease;
+        }
+        .sb-brand {
+            display: flex; align-items: center; gap: 12px;
+            padding: 24px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .sb-brand img { height: 36px; width: auto; border-radius: 10px; background: #fff; padding: 4px; }
+        .sb-brand span { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .sb-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .sb-nav a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 16px; border-radius: 12px;
+            color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 600;
+            text-decoration: none; transition: all 0.2s ease;
+        }
+        .sb-nav a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .sb-nav a.active { color: #fff; background: #3a6450; font-weight: 700; }
+        .sb-nav a svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .sb-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 16px; }
+        .sb-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .sb-footer a {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 16px; border-radius: 12px;
+            color: rgba(255,255,255,0.5); font-size: 14px; font-weight: 600;
+            text-decoration: none; transition: all 0.2s ease;
+        }
+        .sb-footer a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        .sb-footer a svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .app-main { flex: 1; margin-left: 250px; }
+        .app-topbar {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.96);
+            padding: 0 32px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(223,228,221,0.95);
+            box-shadow: 0 4px 20px rgba(28,42,35,0.04);
+        }
+        .app-topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1c2a23; }
+        .app-topbar-brand img { height: 32px; }
+        .app-topbar-brand span { font-size: 16px; font-weight: 800; color: #1c2a23; }
+        .app-topbar-right { display: flex; align-items: center; gap: 14px; }
+        .app-topbar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 14px 6px 8px; border-radius: 999px;
+            background: #f0f4ee; font-size: 13px; font-weight: 700; color: #1c2a23;
+        }
+        .app-topbar-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #3a6450; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 800;
+        }
+        .sb-hamburger {
+            display: none; width: 40px; height: 40px; border-radius: 10px;
+            border: 1px solid #dfe4dd; background: #fff;
+            align-items: center; justify-content: center; cursor: pointer;
+            color: #3a6450; flex-shrink: 0;
+        }
+        .sb-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            z-index: 199;
+        }
+        @media (max-width: 768px) {
+            .app-sidebar { transform: translateX(-100%); }
+            .app-sidebar.open { transform: translateX(0); }
+            .sb-overlay.open { display: block; }
+            .app-main { margin-left: 0; }
+            .sb-hamburger { display: flex; }
+            .app-topbar { padding: 0 16px; }
+            .app-topbar-brand span { display: none; }
+        }
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -448,6 +527,53 @@
     </style>
 </head>
 <body>
+@if (View::hasSection('sidebar'))
+<div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar()"></div>
+<aside class="app-sidebar" id="appSidebar">
+    <div class="sb-brand">
+        <img src="{{ asset('logo.png') }}" alt="Logo" />
+        <span>SMK Bahrul Ulum</span>
+    </div>
+    <nav class="sb-nav">
+        @yield('sidebar')
+    </nav>
+    <div class="sb-footer">
+        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form-sb').submit();">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Keluar
+        </a>
+    </div>
+</aside>
+<form id="logout-form-sb" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
+<div class="app-main">
+    <div class="app-topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <button class="sb-hamburger" onclick="toggleSidebar()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <a href="{{ frontendAuthUrl() }}" class="app-topbar-brand">
+                <img src="{{ asset('logo.png') }}" alt="Logo SMK Bahrul Ulum" />
+                <span>SMK Bahrul Ulum</span>
+            </a>
+        </div>
+        <div class="app-topbar-right">
+            <div class="app-topbar-user">
+                <div class="app-topbar-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'S', 0, 1)) }}</div>
+                {{ Auth::user()->name ?? 'Siswa' }}
+            </div>
+        </div>
+    </div>
+    <div style="padding:28px 32px 48px;">
+        @yield('content')
+    </div>
+</div>
+<script>
+function toggleSidebar() {
+    document.getElementById('appSidebar').classList.toggle('open');
+    document.getElementById('sbOverlay').classList.toggle('open');
+}
+</script>
+@else
 <nav class="navbar">
     <div style="display:flex;align-items:center;gap:12px;">
         @auth
@@ -465,9 +591,7 @@
         </a>
     </div>
 </nav>
-
-    {{-- Navbar kini hanya menampilkan brand/logo --}}
-        @yield('content')
-    </div>
+    @yield('content')
+@endif
 </body>
 </html>

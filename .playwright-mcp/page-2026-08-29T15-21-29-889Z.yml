@@ -1,0 +1,29 @@
+- generic [ref=f6e352]:
+  - generic [ref=f6e353]:
+    - generic [ref=f6e354]:
+      - button "Kembali" [ref=f6e355] [cursor=pointer]
+      - img "Logo Sekolah" [ref=f6e358]
+      - generic [ref=f6e359]: Tabungan Siswa
+    - button "Muat ulang" [ref=f6e360] [cursor=pointer]
+  - main [ref=f6e366]:
+    - generic [ref=f6e367]:
+      - generic [ref=f6e368]:
+        - generic [ref=f6e369]: Saldo Tabungan
+        - generic [ref=f6e373]: Membangun Masa Depan
+      - generic [ref=f6e377]: Rp0
+      - generic [ref=f6e378]: Siswa Demo
+    - generic [ref=f6e416]:
+      - button "Setor Uang Tambah tabungan" [ref=f6e417] [cursor=pointer]:
+        - generic [ref=f6e421]: Setor Uang
+        - generic [ref=f6e422]: Tambah tabungan
+      - button "Tarik Uang Saldo tersedia Rp0" [ref=f6e423] [cursor=pointer]:
+        - generic [ref=f6e427]: Tarik Uang
+        - generic [ref=f6e428]: Saldo tersedia Rp0
+    - generic [ref=f6e429]:
+      - generic [ref=f6e430]:
+        - heading "Riwayat Transaksi" [level=2] [ref=f6e431]
+        - generic [ref=f6e432]: 0 transaksi
+      - generic [ref=f6e433]:
+        - text: 🌱
+        - paragraph [ref=f6e434]: Belum ada transaksi
+        - text: Mulai setor tabungan pertamamu sekarang!

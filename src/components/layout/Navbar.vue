@@ -62,12 +62,12 @@
           </a>
           <a href="/e-learning" class="dropdown-item">
             <span class="di-text">
-              <span class="di-title">E-Learning</span>
+              <span class="di-title">Materi RPL</span>
             </span>
           </a>
           <a href="/e-tracer" class="dropdown-item">
             <span class="di-text">
-              <span class="di-title">E-Tracer Study</span>
+              <span class="di-title">Laman Alumni</span>
             </span>
           </a>
         </div>
@@ -279,13 +279,17 @@ onUnmounted(() => {
   width: min(1180px, 92%);
   height: 74px;
   padding: 0 24px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-radius: 28px;
-  box-shadow: 0 16px 36px rgba(28, 42, 35, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 16px 36px rgba(28, 42, 35, 0.08);
   transition: all 0.35s ease;
   z-index: 999;
 }
@@ -294,6 +298,7 @@ onUnmounted(() => {
   height: 64px;
   width: min(980px, 88%);
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
 }
 
 .logo {
@@ -406,9 +411,11 @@ onUnmounted(() => {
   width: max-content;
   padding: 10px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   box-shadow: 0 18px 40px rgba(35, 55, 42, 0.12);
-  backdrop-filter: blur(8px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -424,7 +431,9 @@ onUnmounted(() => {
   transform: translateX(-50%) rotate(45deg);
   width: 12px;
   height: 12px;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.85);
+  border-left: 1px solid rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
 }
 
 .dropdown-panel.open {
@@ -785,7 +794,10 @@ onUnmounted(() => {
     height: 66px;
     padding: 0 18px;
     width: 92%;
-    background: rgba(255, 255, 255, 0.97);
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
   }
 }
 </style>

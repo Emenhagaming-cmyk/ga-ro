@@ -1,0 +1,54 @@
+- generic [ref=f8e119]:
+  - generic [ref=f8e258]: Saldo tidak cukup untuk penarikan.
+  - generic [ref=f8e120]:
+    - generic [ref=f8e121]:
+      - button "Kembali" [ref=f8e122] [cursor=pointer]
+      - img "Logo Sekolah" [ref=f8e125]
+      - generic [ref=f8e126]: Tabungan Siswa
+    - button "Muat ulang" [ref=f8e127] [cursor=pointer]
+  - main [ref=f8e133]:
+    - generic [ref=f8e134]:
+      - generic [ref=f8e135]:
+        - generic [ref=f8e136]: Saldo Tabungan
+        - generic [ref=f8e140]: Membangun Masa Depan
+      - generic [ref=f8e230]: Rp50.000
+      - generic [ref=f8e145]: Siswa Demo
+    - generic [ref=f8e183]:
+      - button "Setor Uang Tambah tabungan" [ref=f8e184] [cursor=pointer]:
+        - generic [ref=f8e188]: Setor Uang
+        - generic [ref=f8e189]: Tambah tabungan
+      - button "Tarik Uang Saldo tersedia Rp50.000" [ref=f8e231] [cursor=pointer]:
+        - generic [ref=f8e194]: Tarik Uang
+        - generic [ref=f8e195]: Saldo tersedia Rp50.000
+    - generic [ref=f8e196]:
+      - generic [ref=f8e197]:
+        - heading "Riwayat Transaksi" [level=2] [ref=f8e198]
+        - generic [ref=f8e199]: 2 transaksi
+      - generic [ref=f8e200]:
+        - generic [ref=f8e232]:
+          - generic [ref=f8e236]:
+            - generic [ref=f8e237]: Beli buku
+            - generic [ref=f8e238]: 29 Agu 2026, 22.29
+          - generic [ref=f8e239]: −Rp25.000
+        - generic [ref=f8e201]:
+          - generic [ref=f8e205]:
+            - generic [ref=f8e206]: Setoran pertama
+            - generic [ref=f8e207]: 29 Agu 2026, 22.27
+          - generic [ref=f8e208]: +Rp75.000
+  - generic [ref=f8e241]:
+    - generic [ref=f8e242]:
+      - heading "Tarik Tabungan" [level=2] [ref=f8e243]
+      - button "Tutup" [ref=f8e244] [cursor=pointer]
+    - generic [ref=f8e248]:
+      - generic [ref=f8e249]: Saldo saat ini
+      - strong [ref=f8e250]: Rp50.000
+    - generic [ref=f8e251]:
+      - generic [ref=f8e252]: Nominal (Rp)
+      - textbox "Nominal (Rp)" [ref=f8e253]:
+        - /placeholder: Masukkan nominal
+        - text: "999999"
+    - generic [ref=f8e254]:
+      - generic [ref=f8e255]: Keterangan (opsional)
+      - textbox "Keterangan (opsional)" [ref=f8e256]:
+        - /placeholder: "cth: Tabungan mingguan"
+    - button "Tarik Sekarang" [ref=f8e257] [cursor=pointer]

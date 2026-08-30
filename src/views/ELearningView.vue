@@ -2,9 +2,7 @@
   <section class="el">
     <aside class="el-sidebar">
       <div class="sidebar-brand">
-        <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 10 3 12 0v-5"/></svg>
-        </div>
+        <img src="/logo.png" alt="Logo Sekolah" />
         <span class="brand-text">SMK Bahrul Ulum</span>
       </div>
       <span class="sidebar-label">MENU</span>
@@ -225,7 +223,7 @@ function goBack() { window.history.back(); }
 .el{--primary:#3a6450;--primary-light:#e8f0e6;--accent:#7db88d;--accent-pale:#c7d9c3;--blue-500:#3b82f6;--blue-100:#dbeafe;--teal-500:#2a8a6a;--teal-100:#d4f0e7;--purple-500:#6b7a5e;--purple-100:#e8ede4;--surface:#f2f4f1;--white:#fff;--text-1:#1c2a23;--text-2:#647067;--text-3:#96a098;--border:#dfe4dd;--radius:16px;--radius-sm:10px;display:grid;grid-template-columns:240px 1fr 280px;min-height:100vh;background:var(--surface);font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text-1);-webkit-font-smoothing:antialiased}
 .el-sidebar{background:var(--white);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
 .sidebar-brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:0 8px}
-.brand-icon{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center}
+.sidebar-brand img{height:38px;border-radius:10px;background:rgba(255,255,255,0.9);padding:4px}
 .brand-text{font-size:14px;font-weight:800;color:var(--text-1)}
 .sidebar-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);padding:0 8px;margin-bottom:8px}
 .sidebar-nav{display:flex;flex-direction:column;gap:4px;margin-bottom:auto}

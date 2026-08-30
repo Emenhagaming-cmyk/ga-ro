@@ -1,0 +1,27 @@
+- generic [ref=f2e2]:
+  - generic [ref=f2e8]:
+    - generic [ref=f2e9]:
+      - generic [ref=f2e10]:
+        - img "Logo SMK Bahrul Ulum" [ref=f2e11]
+        - generic [ref=f2e12]: SMK Bahrul Ulum
+      - heading "Selamat Datang di SMK Bahrul Ulum" [level=1] [ref=f2e13]
+      - paragraph [ref=f2e14]: Silahkan Login untuk menikmati fitur yang tersedia di SMK Bahrul Ulum
+    - generic [ref=f2e15]:
+      - heading "Masuk" [level=1] [ref=f2e16]
+      - paragraph [ref=f2e17]: Hai Siswa! Login Terlebih dahulu ya
+      - generic [ref=f2e18]:
+        - generic [ref=f2e19]:
+          - generic [ref=f2e20]: Username
+          - textbox "Masukkan username" [active] [ref=f2e25]
+        - generic [ref=f2e26]:
+          - generic [ref=f2e27]: Password
+          - textbox "password" [ref=f2e32]
+        - button "Masuk" [ref=f2e33] [cursor=pointer]
+      - paragraph [ref=f2e34]:
+        - link "Lupa kata sandi?" [ref=f2e35] [cursor=pointer]:
+          - /url: https://pendaftaranspmb.vercel.app/forgot-password
+      - paragraph [ref=f2e36]:
+        - text: Belum punya akun?
+        - link "Daftar dulu ya!" [ref=f2e37] [cursor=pointer]:
+          - /url: https://pendaftaranspmb.vercel.app/register
+  - img "Doodle Illustration" [ref=f2e40]

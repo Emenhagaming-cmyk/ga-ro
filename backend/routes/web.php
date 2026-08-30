@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\LamaranController;
+use App\Http\Controllers\TabunganController;
 
 Route::get('/', [PendaftaranController::class, 'create'])->name('home');
 
@@ -51,4 +52,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/lamaran/saya', [LamaranController::class, 'myApplications']);
     Route::get('/lamaran/{lamaran}', [LamaranController::class, 'show']);
     Route::delete('/lamaran/{lamaran}', [LamaranController::class, 'cancel']);
+});
+
+// Tabungan Siswa
+Route::middleware('auth')->group(function () {
+    Route::get('/tabungan', [TabunganController::class, 'index'])->name('tabungan.index');
+    Route::post('/tabungan', [TabunganController::class, 'store'])->name('tabungan.store');
+});
+
+// Tabungan (admin)
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/tabungan', [TabunganController::class, 'adminIndex'])->name('admin.tabungan.index');
+    Route::post('/admin/tabungan', [TabunganController::class, 'store'])->name('admin.tabungan.store');
 });

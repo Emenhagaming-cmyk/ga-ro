@@ -1,0 +1,41 @@
+- generic [ref=f12e3]:
+  - generic [ref=f12e104]: Setoran berhasil.
+  - generic [ref=f12e4]:
+    - generic [ref=f12e5]:
+      - button "Kembali" [ref=f12e6] [cursor=pointer]
+      - img "Logo Sekolah" [ref=f12e9]
+      - generic [ref=f12e10]: Tabungan Siswa
+    - button "Muat ulang" [ref=f12e11] [cursor=pointer]
+  - main [ref=f12e17]:
+    - generic [ref=f12e18]:
+      - generic [ref=f12e19]:
+        - generic [ref=f12e20]: Saldo Tabungan
+        - generic [ref=f12e24]: Membangun Masa Depan
+      - generic [ref=f12e29]: Siswa Demo
+    - generic [ref=f12e67]:
+      - button "Setor Uang Tambah tabungan" [ref=f12e68] [cursor=pointer]:
+        - generic [ref=f12e72]: Setor Uang
+        - generic [ref=f12e73]: Tambah tabungan
+      - button "Tarik Uang Saldo tersedia Rp0" [ref=f12e74] [cursor=pointer]:
+        - generic [ref=f12e78]: Tarik Uang
+        - generic [ref=f12e79]: Saldo tersedia Rp0
+    - generic [ref=f12e81]:
+      - heading "Riwayat Transaksi" [level=2] [ref=f12e82]
+      - generic [ref=f12e83]: 0 transaksi
+  - generic [ref=f12e87]:
+    - generic [ref=f12e88]:
+      - heading "Setor Tabungan" [level=2] [ref=f12e89]
+      - button "Tutup" [ref=f12e90] [cursor=pointer]
+    - generic [ref=f12e94]:
+      - generic [ref=f12e95]: Saldo saat ini
+      - strong [ref=f12e96]: Rp0
+    - generic [ref=f12e97]:
+      - generic [ref=f12e98]: Nominal (Rp)
+      - textbox "Nominal (Rp)" [ref=f12e99]:
+        - /placeholder: Masukkan nominal
+        - text: "1000"
+    - generic [ref=f12e100]:
+      - generic [ref=f12e101]: Keterangan (opsional)
+      - textbox "Keterangan (opsional)" [ref=f12e102]:
+        - /placeholder: "cth: Tabungan mingguan"
+    - button "Memproses..." [disabled] [ref=f12e106]

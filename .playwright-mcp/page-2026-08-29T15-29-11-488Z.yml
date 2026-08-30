@@ -1,0 +1,48 @@
+- generic [ref=f8e119]:
+  - generic [ref=f8e227]: Penarikan berhasil.
+  - generic [ref=f8e120]:
+    - generic [ref=f8e121]:
+      - button "Kembali" [ref=f8e122] [cursor=pointer]
+      - img "Logo Sekolah" [ref=f8e125]
+      - generic [ref=f8e126]: Tabungan Siswa
+    - button "Muat ulang" [ref=f8e127] [cursor=pointer]
+  - main [ref=f8e133]:
+    - generic [ref=f8e134]:
+      - generic [ref=f8e135]:
+        - generic [ref=f8e136]: Saldo Tabungan
+        - generic [ref=f8e140]: Membangun Masa Depan
+      - generic [ref=f8e145]: Siswa Demo
+    - generic [ref=f8e183]:
+      - button "Setor Uang Tambah tabungan" [ref=f8e184] [cursor=pointer]:
+        - generic [ref=f8e188]: Setor Uang
+        - generic [ref=f8e189]: Tambah tabungan
+      - button "Tarik Uang Saldo tersedia Rp75.000" [ref=f8e190] [cursor=pointer]:
+        - generic [ref=f8e194]: Tarik Uang
+        - generic [ref=f8e195]: Saldo tersedia Rp75.000
+    - generic [ref=f8e196]:
+      - generic [ref=f8e197]:
+        - heading "Riwayat Transaksi" [level=2] [ref=f8e198]
+        - generic [ref=f8e199]: 1 transaksi
+      - generic [ref=f8e201]:
+        - generic [ref=f8e205]:
+          - generic [ref=f8e206]: Setoran pertama
+          - generic [ref=f8e207]: 29 Agu 2026, 22.27
+        - generic [ref=f8e208]: +Rp75.000
+  - generic [ref=f8e210]:
+    - generic [ref=f8e211]:
+      - heading "Tarik Tabungan" [level=2] [ref=f8e212]
+      - button "Tutup" [ref=f8e213] [cursor=pointer]
+    - generic [ref=f8e217]:
+      - generic [ref=f8e218]: Saldo saat ini
+      - strong [ref=f8e219]: Rp75.000
+    - generic [ref=f8e220]:
+      - generic [ref=f8e221]: Nominal (Rp)
+      - textbox "Nominal (Rp)" [ref=f8e222]:
+        - /placeholder: Masukkan nominal
+        - text: "25000"
+    - generic [ref=f8e223]:
+      - generic [ref=f8e224]: Keterangan (opsional)
+      - textbox "Keterangan (opsional)" [ref=f8e225]:
+        - /placeholder: "cth: Tabungan mingguan"
+        - text: Beli buku
+    - button "Memproses..." [disabled] [ref=f8e229]

@@ -8,7 +8,7 @@
 
     <div class="page-header">
       <div>
-        <span class="page-label">E-Tracer Study</span>
+        <span class="page-label">Laman Alumni</span>
         <h1>Tracer Study Alumni</h1>
         <p>Trace perjalanan lulusan SMK Bahrul Ulum setelah menyelesaikan pendidikan. Data ini penting untuk pengembangan kurikulum dan peningkatan mutu pendidikan.</p>
       </div>
@@ -53,7 +53,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: #f4ecf7;">🚀</div>
+        <div class="stat-icon" style="background: #f4ecf7;"></div>
         <div class="stat-info">
           <strong>{{ stats.entrepreneur }}%</strong>
           <span>Wirausaha</span>
@@ -73,7 +73,6 @@
           <div class="form-group">
             <label for="nama">Nama Lengkap *</label>
             <select id="nama" v-model="form.nama" required>
-              <option value="">-- Pilih Nama --</option>
               <option v-for="name in alumniNames" :key="name" :value="name">{{ name }}</option>
             </select>
           </div>
@@ -109,7 +108,6 @@
           <div class="form-group">
             <label for="tahunLulus">Tahun Lulus *</label>
             <select id="tahunLulus" v-model="form.tahunLulus" required>
-              <option value="">-- Pilih Tahun --</option>
               <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
             </select>
           </div>
@@ -120,7 +118,6 @@
           <div class="form-group">
             <label for="pendidikanTerakhir">Pendidikan Terakhir</label>
             <select id="pendidikanTerakhir" v-model="form.pendidikanTerakhir">
-              <option value="">-- Pilih --</option>
               <option>SMA/SMK</option>
               <option>D1</option>
               <option>D2</option>
@@ -246,7 +243,7 @@
     <div class="info-banner">
       <div class="info-icon">📊</div>
       <div class="info-text">
-        <strong>Mengapa Tracer Study?</strong> Data alumni membantu sekolah mengevaluasi kurikulum, meningkatkan mutu pembelajaran, dan memperkuat link & match dengan dunia kerja. Partisipasi Anda sangat berharga.
+        <strong>Apa fungsi Tracer Study? </strong>Tracer Study Berfungsi Sebagai Data alumni membantu sekolah mengevaluasi kurikulum, meningkatkan mutu pembelajaran, dan memperkuat link & match dengan dunia kerja. Partisipasi Anda sangat berharga.
       </div>
     </div>
   </section>

@@ -1,0 +1,125 @@
+- generic [active] [ref=f11e1]:
+  - banner [ref=f11e2]:
+    - generic [ref=f11e3]:
+      - link "Kembali ke beranda" [ref=f11e4] [cursor=pointer]:
+        - /url: http://localhost:5174/?auth=eyJsb2dnZWRfaW4iOnRydWUsInJvbGUiOiJzaXN3YSIsIm5hbWUiOiJTaXN3YSBEZW1vIiwiaGFzX3BlbmRhZnRhcmFuIjpmYWxzZSwic3RhdHVzIjpudWxsfQ%3D%3D
+      - link [ref=f11e7] [cursor=pointer]:
+        - /url: http://localhost:5174/?auth=eyJsb2dnZWRfaW4iOnRydWUsInJvbGUiOiJzaXN3YSIsIm5hbWUiOiJTaXN3YSBEZW1vIiwiaGFzX3BlbmRhZnRhcmFuIjpmYWxzZSwic3RhdHVzIjpudWxsfQ%3D%3D
+        - img "Logo SMK Bahrul Ulum" [ref=f11e8]
+        - generic [ref=f11e9]:
+          - heading "SMK Bahrul Ulum" [level=2] [ref=f11e10]
+          - text: Smart School
+    - navigation [ref=f11e11]:
+      - link "Beranda" [ref=f11e12] [cursor=pointer]:
+        - /url: http://localhost:5174/?auth=eyJsb2dnZWRfaW4iOnRydWUsInJvbGUiOiJzaXN3YSIsIm5hbWUiOiJTaXN3YSBEZW1vIiwiaGFzX3BlbmRhZnRhcmFuIjpmYWxzZSwic3RhdHVzIjpudWxsfQ%3D%3D
+      - link "Layanan" [ref=f11e13] [cursor=pointer]:
+        - /url: http://localhost:5174/?auth=eyJsb2dnZWRfaW4iOnRydWUsInJvbGUiOiJzaXN3YSIsIm5hbWUiOiJTaXN3YSBEZW1vIiwiaGFzX3BlbmRhZnRhcmFuIjpmYWxzZSwic3RhdHVzIjpudWxsfQ%3D%3D#layanan
+      - link "Tentang" [ref=f11e14] [cursor=pointer]:
+        - /url: http://localhost:5174/?auth=eyJsb2dnZWRfaW4iOnRydWUsInJvbGUiOiJzaXN3YSIsIm5hbWUiOiJTaXN3YSBEZW1vIiwiaGFzX3BlbmRhZnRhcmFuIjpmYWxzZSwic3RhdHVzIjpudWxsfQ%3D%3D#tentang
+      - link "Kontak" [ref=f11e15] [cursor=pointer]:
+        - /url: http://localhost:5174/?auth=eyJsb2dnZWRfaW4iOnRydWUsInJvbGUiOiJzaXN3YSIsIm5hbWUiOiJTaXN3YSBEZW1vIiwiaGFzX3BlbmRhZnRhcmFuIjpmYWxzZSwic3RhdHVzIjpudWxsfQ%3D%3D#contact
+    - button "Logout" [ref=f11e18] [cursor=pointer]
+  - generic [ref=f11e19]:
+    - complementary [ref=f11e20]:
+      - generic [ref=f11e21]:
+        - generic [ref=f11e22]: SPMB 2025/2026
+        - heading "Pendaftaran" [level=3] [ref=f11e23]
+        - paragraph [ref=f11e24]: Lengkapi data diri kamu dengan benar ya sob untuk memulai proses pendaftaran SPMB SMK Bahrul Ulum.
+      - generic [ref=f11e25]:
+        - generic [ref=f11e26]:
+          - generic [ref=f11e27]: "1"
+          - generic [ref=f11e28]:
+            - heading "Data Diri" [level=4] [ref=f11e29]
+            - paragraph [ref=f11e30]: Lengkapi identitas diri calon peserta
+        - generic [ref=f11e31]:
+          - generic [ref=f11e32]: "2"
+          - generic [ref=f11e33]:
+            - heading "Data Sekolah" [level=4] [ref=f11e34]
+            - paragraph [ref=f11e35]: Informasi sekolah asal dan nilai
+        - generic [ref=f11e36]:
+          - generic [ref=f11e37]: "3"
+          - generic [ref=f11e38]:
+            - heading "Data Orang Tua" [level=4] [ref=f11e39]
+            - paragraph [ref=f11e40]: Informasi orang tua / wali
+        - generic [ref=f11e41]:
+          - generic [ref=f11e42]: "4"
+          - generic [ref=f11e43]:
+            - heading "Unggah Berkas" [level=4] [ref=f11e44]
+            - paragraph [ref=f11e45]: Upload dokumen persyaratan
+        - generic [ref=f11e46]:
+          - generic [ref=f11e47]: "5"
+          - generic [ref=f11e48]:
+            - heading "Konfirmasi" [level=4] [ref=f11e49]
+            - paragraph [ref=f11e50]: Periksa & kirim pendaftaran
+      - generic [ref=f11e52]:
+        - heading "Butuh Bantuan?" [level=4] [ref=f11e53]
+        - paragraph [ref=f11e54]: Jika mengalami kendala saat pendaftaran, hubungi tim kami segera.
+        - link "Hubungi Kami" [ref=f11e55] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=f11e61]:
+      - generic [ref=f11e62]:
+        - heading "Data Diri Calon Peserta" [level=2] [ref=f11e63]
+        - paragraph [ref=f11e64]: Pastikan semua informasi diisi dengan benar.
+      - generic [ref=f11e65]:
+        - generic [ref=f11e66]:
+          - generic [ref=f11e67]:
+            - generic [ref=f11e68]:
+              - generic [ref=f11e69]: Nama Lengkap
+              - textbox "Masukkan nama lengkap" [ref=f11e70]
+            - generic [ref=f11e71]:
+              - generic [ref=f11e72]: Nama Panggilan
+              - 'textbox "Contoh: Ahmad" [ref=f11e73]'
+          - generic [ref=f11e74]:
+            - generic [ref=f11e75]:
+              - generic [ref=f11e76]: NISN
+              - textbox "Masukkan NISN" [ref=f11e77]
+            - generic [ref=f11e78]:
+              - generic [ref=f11e79]: Tanggal Lahir
+              - textbox [ref=f11e80]:
+                - /placeholder: dd/mm/yyyy
+          - generic [ref=f11e81]:
+            - generic [ref=f11e82]:
+              - generic [ref=f11e83]: Tempat Lahir
+              - textbox "Masukkan tempat lahir" [ref=f11e84]
+            - generic [ref=f11e85]:
+              - generic [ref=f11e86]: Umur
+              - spinbutton "Masukkan umur" [ref=f11e87]
+          - generic [ref=f11e88]:
+            - generic [ref=f11e89]:
+              - generic [ref=f11e90]: Agama
+              - combobox [ref=f11e91]:
+                - option "Islam" [selected]
+            - generic [ref=f11e92]:
+              - generic [ref=f11e93]: Jenis Kelamin
+              - combobox [ref=f11e94]:
+                - option "Laki-laki" [selected]
+                - option "Perempuan"
+          - generic [ref=f11e95]:
+            - generic [ref=f11e96]:
+              - generic [ref=f11e97]: Kewarnegaraan
+              - combobox [ref=f11e98]:
+                - option "Indonesia" [selected]
+            - generic [ref=f11e99]:
+              - generic [ref=f11e100]: Kategori Pendaftar
+              - combobox [ref=f11e101]:
+                - option "SMP Bahrul Ulum" [selected]
+                - option "Yatim Piatu"
+                - option "Yatim"
+          - generic [ref=f11e102]:
+            - generic [ref=f11e103]:
+              - generic [ref=f11e104]: Alamat Lengkap
+              - textbox "Masukkan alamat lengkap" [ref=f11e105]
+            - generic [ref=f11e106]:
+              - generic [ref=f11e107]: RT / RW
+              - 'textbox "Contoh: RT.01 / RW.12" [ref=f11e108]'
+          - generic [ref=f11e109]:
+            - generic [ref=f11e110]:
+              - generic [ref=f11e111]: Kode Pos
+              - 'textbox "Contoh: 60295" [ref=f11e112]'
+            - generic [ref=f11e113]:
+              - generic [ref=f11e114]: No. Telepon / WhatsApp
+              - textbox "081234567890" [ref=f11e115]
+          - generic [ref=f11e117]:
+            - generic [ref=f11e118]: Email (Opsional)
+            - textbox "Masukkan email" [ref=f11e119]
+        - button "Selanjutnya" [ref=f11e122] [cursor=pointer]

@@ -1,0 +1,116 @@
+- generic [ref=f16e366]:
+  - generic [ref=f16e367]:
+    - generic [ref=f16e368]:
+      - button "Kembali" [ref=f16e369] [cursor=pointer]
+      - img "Logo Sekolah" [ref=f16e372]
+      - generic [ref=f16e373]: Koperasi
+    - button "Buka keranjang" [ref=f16e374] [cursor=pointer]:
+      - generic [ref=f16e378]: Keranjang
+  - generic [ref=f16e379]:
+    - heading "Koperasi Siswa" [level=1] [ref=f16e380]
+    - paragraph [ref=f16e381]: Belanja kebutuhan sekolah — seragam, alat tulis, dan perlengkapan siswa.
+  - generic [ref=f16e382]:
+    - generic [ref=f16e383]:
+      - button "Semua" [ref=f16e384] [cursor=pointer]
+      - button "Seragam" [ref=f16e385] [cursor=pointer]
+      - button "Alat Tulis" [ref=f16e386] [cursor=pointer]
+      - button "Aksesoris" [ref=f16e387] [cursor=pointer]
+      - button "Minuman" [ref=f16e388] [cursor=pointer]
+    - generic [ref=f16e389]: 12 Produk
+  - generic [ref=f16e390]:
+    - article [ref=f16e391] [cursor=pointer]:
+      - img "Seragam Putih" [ref=f16e393]
+      - generic [ref=f16e394]:
+        - generic [ref=f16e395]:
+          - heading "Seragam Putih" [level=3] [ref=f16e396]
+          - paragraph [ref=f16e397]: Kaos seragam putih lengan pendek bahan katun premium.
+          - text: Rp 75.000
+        - button "Tambah Seragam Putih ke keranjang" [ref=f16e398]
+    - article [ref=f16e400] [cursor=pointer]:
+      - img "Rok/Celana Biru Tua" [ref=f16e402]
+      - generic [ref=f16e403]:
+        - generic [ref=f16e404]:
+          - heading "Rok/Celana Biru Tua" [level=3] [ref=f16e405]
+          - paragraph [ref=f16e406]: Rok plisket putri & celana panjang putra warna navy.
+          - text: Rp 85.000
+        - button "Tambah Rok/Celana Biru Tua ke keranjang" [ref=f16e407]
+    - article [ref=f16e409] [cursor=pointer]:
+      - img "Jaket Almamater" [ref=f16e411]
+      - generic [ref=f16e412]:
+        - generic [ref=f16e413]:
+          - heading "Jaket Almamater" [level=3] [ref=f16e414]
+          - paragraph [ref=f16e415]: Jaket bomber almamater dengan bordir logo sekolah.
+          - text: Rp 185.000
+        - button "Tambah Jaket Almamater ke keranjang" [ref=f16e416]
+    - article [ref=f16e418] [cursor=pointer]:
+      - img "Buku Tulis Sekolah" [ref=f16e420]
+      - generic [ref=f16e421]:
+        - generic [ref=f16e422]:
+          - heading "Buku Tulis Sekolah" [level=3] [ref=f16e423]
+          - paragraph [ref=f16e424]: Buku tulis 38 lembar, cover bergambar logo sekolah.
+          - text: Rp 8.000
+        - button "Tambah Buku Tulis Sekolah ke keranjang" [ref=f16e425]
+    - article [ref=f16e427] [cursor=pointer]:
+      - img "Pensil 2B & Penghapus" [ref=f16e429]
+      - generic [ref=f16e430]:
+        - generic [ref=f16e431]:
+          - heading "Pensil 2B & Penghapus" [level=3] [ref=f16e432]
+          - paragraph [ref=f16e433]: Set pensil 2B kayu berkualitas + penghapus non-debu.
+          - text: Rp 5.000
+        - button "Tambah Pensil 2B & Penghapus ke keranjang" [ref=f16e434]
+    - article [ref=f16e436] [cursor=pointer]:
+      - img "Pulpen Gel Hitam 0.5mm" [ref=f16e438]
+      - generic [ref=f16e439]:
+        - generic [ref=f16e440]:
+          - heading "Pulpen Gel Hitam 0.5mm" [level=3] [ref=f16e441]
+          - paragraph [ref=f16e442]: Pulpen gel tinta hitam cepat kering, tidak bocor.
+          - text: Rp 3.000
+        - button "Tambah Pulpen Gel Hitam 0.5mm ke keranjang" [ref=f16e443]
+    - article [ref=f16e445] [cursor=pointer]:
+      - img "Sabuk Sekolah Hitam" [ref=f16e447]
+      - generic [ref=f16e448]:
+        - generic [ref=f16e449]:
+          - heading "Sabuk Sekolah Hitam" [level=3] [ref=f16e450]
+          - paragraph [ref=f16e451]: Sabuk kulit sintetis hitam lebar 3cm, buckle anti karat.
+          - text: Rp 25.000
+        - button "Tambah Sabuk Sekolah Hitam ke keranjang" [ref=f16e452]
+    - article [ref=f16e454] [cursor=pointer]:
+      - img "Dasi Sekolah Merah" [ref=f16e456]
+      - generic [ref=f16e457]:
+        - generic [ref=f16e458]:
+          - heading "Dasi Sekolah Merah" [level=3] [ref=f16e459]
+          - paragraph [ref=f16e460]: Dasi polyester merah marun dengan logo sekolah.
+          - text: Rp 20.000
+        - button "Tambah Dasi Sekolah Merah ke keranjang" [ref=f16e461]
+    - article [ref=f16e463] [cursor=pointer]:
+      - img "Topi Sekolah" [ref=f16e465]
+      - generic [ref=f16e466]:
+        - generic [ref=f16e467]:
+          - heading "Topi Sekolah" [level=3] [ref=f16e468]
+          - paragraph [ref=f16e469]: Topi baseball hitam/navy bordir logo sekolah, adjustable.
+          - text: Rp 35.000
+        - button "Tambah Topi Sekolah ke keranjang" [ref=f16e470]
+    - article [ref=f16e472] [cursor=pointer]:
+      - img "Air Mineral 600ml" [ref=f16e474]
+      - generic [ref=f16e475]:
+        - generic [ref=f16e476]:
+          - heading "Air Mineral 600ml" [level=3] [ref=f16e477]
+          - paragraph [ref=f16e478]: Air mineral botol 600ml, segar & higienis.
+          - text: Rp 4.000
+        - button "Tambah Air Mineral 600ml ke keranjang" [ref=f16e479]
+    - article [ref=f16e481] [cursor=pointer]:
+      - img "Teh Botol 350ml" [ref=f16e483]
+      - generic [ref=f16e484]:
+        - generic [ref=f16e485]:
+          - heading "Teh Botol 350ml" [level=3] [ref=f16e486]
+          - paragraph [ref=f16e487]: Teh manis botol 350ml rasa jasmine, manis pas.
+          - text: Rp 5.000
+        - button "Tambah Teh Botol 350ml ke keranjang" [ref=f16e488]
+    - article [ref=f16e490] [cursor=pointer]:
+      - img "Kaos Kaki Putih Sekolah" [ref=f16e492]
+      - generic [ref=f16e493]:
+        - generic [ref=f16e494]:
+          - heading "Kaos Kaki Putih Sekolah" [level=3] [ref=f16e495]
+          - paragraph [ref=f16e496]: Kaos kaki putih cotton stretch, tinggi mata kaki standar.
+          - text: Rp 12.000
+        - button "Tambah Kaos Kaki Putih Sekolah ke keranjang" [ref=f16e497]

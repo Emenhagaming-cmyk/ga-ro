@@ -65,28 +65,6 @@ const majors = {
     dsp: 3000000,
     desc: "Pemrograman Web, Mobile App, Game & Database modern.",
   },
-  tkj: {
-    id: "tkj",
-    name: "Teknik Komputer & Jaringan",
-    short: "TKJ",
-    icon: Network,
-    badge: "Industri 4.0",
-    spp: 350000,
-    labFee: 500000,
-    dsp: 3000000,
-    desc: "MikroTik, Cisco, Fiber Optic & Cloud Infrastructure.",
-  },
-  akl: {
-    id: "akl",
-    name: "Akuntansi Keuangan Lembaga",
-    short: "AKL",
-    icon: CalcIcon,
-    badge: "Siap Kerja",
-    spp: 300000,
-    labFee: 400000,
-    dsp: 2750000,
-    desc: "Perbankan Mini, MYOB Digital, Pajak & Akuntansi Bisnis.",
-  },
 };
 
 const waves = {
@@ -399,7 +377,7 @@ function toggleFaq(index) {
         <div class="stat-pill">
           <span class="stat-label">Pilihan Jurusan</span>
           <strong>3 Kejuruan</strong>
-          <span class="stat-sub">RPL · TKJ · AKL</span>
+          <span class="stat-sub">RPL</span>
         </div>
         <div class="stat-pill">
           <span class="stat-label">Kemudahan Bayar</span>

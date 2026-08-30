@@ -4,13 +4,20 @@ import Navbar from "@/components/layout/Navbar.vue";
 import Footer from "@/components/layout/Footer.vue";
 import Hero from "@/components/sections/Hero.vue";
 import AboutSchool from "@/components/sections/AboutSchool.vue";
-import Feature from "@/components/sections/feature.vue";
-import News from "@/components/sections/News.vue";
+import SpmbBanner from "@/components/sections/SpmbBanner.vue";
+import BeritaPreview from "@/components/sections/BeritaPreview.vue";
+import CareerPreview from "@/components/sections/CareerPreview.vue";
+import KoperasiPreview from "@/components/sections/KoperasiPreview.vue";
+import ProdukPreview from "@/components/sections/ProdukPreview.vue";
+import TabunganBanner from "@/components/sections/TabunganBanner.vue";
 import BackgroundFX from "@/components/common/BackgroundFX.vue";
 import FloatingAi from "@/components/chatbot/FloatingAi.vue";
+import ContactModal from "@/components/common/ContactModal.vue";
+import { ref } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 
 const { session, BACKEND } = useAuthSession();
+const showContact = ref(false);
 const showStudentCard = () =>
   session.value.logged_in && session.value.role === "siswa";
 const statusLabel = () => (session.value.status || "").toUpperCase();
@@ -89,9 +96,14 @@ const scLabel = () => {
       </div>
       <Hero />
       <AboutSchool />
-      <Feature />
-      <News />
-      <Footer />
+      <SpmbBanner />
+      <BeritaPreview />
+      <CareerPreview />
+      <KoperasiPreview />
+      <ProdukPreview />
+      <TabunganBanner />
+      <Footer @open-contact="showContact = true" />
+      <ContactModal v-model="showContact" />
     </div>
   </div>
 </template>

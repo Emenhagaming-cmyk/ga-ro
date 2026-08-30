@@ -46,6 +46,37 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi 2026-08-29)
+
+### Sesi Tabungan Siswa — fitur menabung lengkap (2026-08-29)
+
+**Backend (pendaftaranspmb.vercel.app):**
+- Migration `2026_08_29_140000_create_tabungans_table.php`: `id, user_id FK cascade, type enum('setor','tarik'), amount unsignedBigInteger, description nullable, timestamps`.
+- Models: `Tabungan.php` + relasi `tabungans()` (HasMany) di `User.php`.
+- `TabunganController.php`: `index` (saldo = sum setor − sum tarik + transaksi terbaru), `store` (setor/tarik, tarik cek saldo cukup → 422 "Saldo tidak cukup untuk penarikan.", admin wajib `user_id`), `adminIndex` (semua siswa + saldo via `withSum`).
+- Routes `web.php`: `GET/POST /tabungan` (auth), `GET/POST /admin/tabungan` (role admin). Tanpa prefix `/api/`.
+- **CSRF fix penting**: `bootstrap/app.php` — `validateCsrfTokens(except: ['lamaran*', 'tabungan*'])`. Sebelumnya POST JSON `/tabungan` kena TokenMismatch → 419 → redirect → error CORS (fetch dilempar ke `/login`). Pola sama dengan `lamaran*`.
+- Migrasi prod TiDB pakai pattern `vercel env pull --environment=production` + `MYSQL_ATTR_SSL_CA` (bukan `DB_MYSQL_ATTR_SSL_CA` — salah nama dulu, error cafile stream) + `php artisan migrate --force`. Temp `.env.production.local` dihapus.
+- Deploy OK.
+
+**Frontend (smkbu-sby.vercel.app):**
+- `src/components/sections/TabunganBanner.vue`: section promo standalone (DI LUAR bento grid) di landing antara `<Feature />` dan `<News />` — kicker "Menabung Jadi Seru", headline + 3 checklist, CTA "Buka Tabungan Siswa" (siswa → `/tabungan`, guest → backend `/login`), doodle `public/doodles/plant.png` (dari `Open Doodles - Plant.png` Downloads) dengan blob/confetti/koin + tag "Saldo Aktif Rp0". Banner tampil untuk semua visitor (promo), halaman-nya khusus siswa.
+- `src/views/TabunganView.vue`: topbar (kembali/logo/refresh), saldo-card hijau (barcode dekorasi), aksi Setor/Tarik (nominal bebas), riwayat transaksi (terbaru di atas), modal setor/tarik, toast.
+- Route `/tabungan` dengan `meta: { requiresSiswa: true }`.
+- **Bug fix query**: `closeModal()` di-guard `modalBusy` sehingga no-op saat submit → modal nggak ketutup setelah transaksi sukses. Fix: set `modalBusy.value = false; modalOpen.value = false;` langsung di success path.
+- Deploy OK.
+
+**Verifikasi E2E lokal (login `siswa`/`test1234`):**
+- Setor 75000 → saldo Rp75.000, riwayat "+Rp75.000". Tarik 25000 → saldo Rp50.000. Tarik 999999 → 422, toast "Saldo tidak cukup untuk penarikan.", modal tetap buka. Modal ketutup otomatis saat sukses.
+- Guest klik banner → redirect ke backend `/login`. Guest `/tabungan` → redirect home. Data test dihapus setelah uji.
+
+### Sesi Koperasi — tombol "Beli Sekarang" terpotong FIXED (2026-08-29)
+- Root cause: tidak ada reset global `box-sizing`, `.drawer` `height:100%` + `padding:20px 22px` (content-box) → 42px lebih tinggi dari viewport → footer terpotong.
+- Fix: `.drawer { box-sizing:border-box }`, `.drawer-foot { flex-shrink:0; padding:16px 0 env(safe-area-inset-bottom,8px) }`, `.kop-btn.full { min-height:48px }`.
+- Deploy OK.
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi 2026-08-22)
 
 ### Sesi Career Center Full-Stack — job listing + apply lamaran (2026-08-22)
@@ -1027,3 +1058,127 @@ Admin dashboard `paneladminsmkbu.vercel.app` LCP = 24.11s (audit Lighthouse).
 - Live: https://paneladminsmkbu.vercel.app
 - LCP improvement: TTFB berkurang (stats cached 30s + Cache-Control), CLS better (critical CSS inline), chart load deferred
 - **User perlu cek manual** via Lighthouse di browser untuk angka LCP terbaru
+
+---
+
+### Sesi Contact Modal — Footer "Hubungi Kami" (2026-08-26)
+
+**Frontend (smkbu-sby.vercel.app):**
+- **New component**: `src/components/common/ContactModal.vue` — glassmorphism modal, form fields: Nama, Email, No. WhatsApp (+62 prefix), Pesan. Teleport ke `<body>`, v-model open/close, transition fade, success state tanpa backend (UX-only).
+- **Footer button**: tombol "Hubungi Kami" di kolom "Informasi Kontak" (`Footer.vue`). Emit `openContact` event → wire ke `HomeView.vue` → toggle `showContact` ref → buka modal.
+- Style: glassmorphism card (`backdrop-filter: blur(24px) saturate(1.4)`, `background: rgba(255,255,255,0.82)`), green theme (#3a6450), button hover transform.
+- **No backend yet**: submit hanya simulasi (800ms delay → success state). Backend `/api/contact` bisa ditambah nanti.
+
+### Status
+- Deploy OK (build 3.62s, 1817 modules)
+- Live: https://smkbu-sby.vercel.app
+
+### Sesi ContactModal UI Redesign (2026-08-26)
+
+**Frontend (`ContactModal.vue`):**
+- **Complete visual redesign** to match Justinmind reference:
+  - Card: solid `#fff` (no glassmorphism), `border-radius: 20px`, subtle shadow
+  - Header: bold 28px "Hubungi Kami" title only (no icon box, no subtitle)
+  - Info text: email + phone shown below title (`smkbahrululum.sch.id | +62 812-3456-7890`)
+  - Inputs: **bottom-border only** (`border: none; border-bottom: 1.5px solid #e5e7e6`), no labels, placeholder only
+  - Phone field: `<select>` dropdown for country code (+62, +60, +65, +1, +44) + text input, side by side
+  - Textarea: same bottom-border style
+  - Button: dark/black (`#1c2a23`), rounded 12px, not green
+  - Success: chat bubble SVG icon (dark circle + white bubble + checkmark), "Terima Kasih!!", black "Kembali" button
+  - Mobile: phone row stacks vertically, select becomes full-width
+
+### Status
+- Deploy OK (build 2.61s, ISP retried 3x)
+- Live: https://smkbu-sby.vercel.app
+
+---
+
+## STATUS TERAKHIR (sesi 2026-08-29)
+
+### Dashboard Siswa Redesign + Back Button (backend)
+- layouts/app.blade.php: tambah dukungan sidebar layout — CSS sidebar + @if View::hasSection('sidebar') → sidebar (brand, nav, logout) + topbar (hamburger mobile, logo, avatar user). Non-sidebar halaman pake navbar lama.
+- dashboard-siswa.blade.php: rewrite total — sidebar (Dashboard, Status, Edit), welcome banner gradient hijau + doodle images/doodle-studying.png, 3 stat cards (status, jurusan, tanggal daftar), detail status card, pesan status, quick actions, form edit (jika status baru & <3 hari), polling status tiap 15s. Tambah tombol **Kembali** (←) di atas banner → rontendAuthUrl().
+- Deploy backend OK: https://pendaftaranspmb.vercel.app
+
+### E-Learning Logo (frontend)
+- ELearningView.vue: ganti ikon SVG graduasi di sidebar brand → <img src="/logo.png"> (pola sama CareerCenter, background putih rounded). Deploy OK.
+
+### Koperasi — Keranjang & Checkout di-restore (frontend)
+- Investigasi: koperasi berubah karena commit  e6b0dd "fff" (sesi sebelumnya) rewrite total KoperasiView.vue (434 ins / 1558 del) dan MENGHAPUS sistem keranjang + checkout. User tidak menyadari. Versi lama punya keranjang: commit 6fb645d.
+- Solusi (opsi B dipilih user): integrasikan ulang keranjang & checkout ke desain baru, simpan aksi + pada tiap kartu, floating cart (badge + total), cart sheet (qty +/-/hapus), checkout (QRIS/Transfer + total), halaman pending (QR CSS / rekening BSI copyable + countdown 1 jam), sukses (order id + notifikasi). Juga tombol **Tambah ke Keranjang** di modal detail. Pakai lucide-vue-next (sudah dependency).
+- Deploy OK: https://smkbu-sby.vercel.app
+- **Koperasi redesign ulang (referensi Chanta store)**: bg putih bersih, topbar sticky (back btn + logo + brand kiri, tombol Keranjang dengan badge kanan), judul besar bold, filter pill (active = dark), grid 4 kolom (3/2/1 responsif), card minimal tanpa shadow (gambar bg #f5f6f7, nama, desc 1 baris ellipsis, harga bold), cart drawer slide dari kanan (420px). Checkout/QRIS/transfer/pending/sukses & modal detail dipertahankan. Warna aksen berubah dari hijau ke dark #1c2a23.
+- Deploy OK: https://smkbu-sby.vercel.app
+- **Fix bug koperasi**: (1) crop kanan → tambah overflow-x: hidden di .koperasi-page; (2) tombol + kembali di tiap card produk (lingkaran 34px dark #1c2a23, @click.stop supaya tidak trigger modal), layout .produk-info jadi flex.
+- Deploy OK: https://smkbu-sby.vercel.app
+
+---
+## Sesi (2026-08-29) - Koperasi: tombol Beli Sekarang terpotong
+FIXED. Root cause: tidak ada global box-sizing, .drawer content-box (height:100% + padding 42px) melebihi viewport -> footer terpotong ke bawah. Fix: ox-sizing:border-box + lex-shrink:0 di .drawer-foot + min-height 48px tombol + safe-area inset bottom. Deployed smkbu-sby.vercel.app.
+
+
+---
+## Sesi Tabungan (lanjutan) + Bento Restructure + Agent Skills (2026-08-29)
+
+### Tabungan POST CORS/419 FIXED (backend)
+- Root cause: /tabungan tidak ada di CSRF exceptions (hanya lamaran*). 419 -> HandleTokenMismatch -> redirect -> CORS blocked.
+- Fix: `backend/bootstrap/app.php` `validateCsrfTokens(except: ['lamaran*', 'tabungan*'])`. Deployed pendaftaranspmb.vercel.app.
+
+### Modal tidak menutup setelah submit sukses (TabunganView.vue)
+- Root cause: closeModal() di-guard modalBusy (no-op saat submit). Fix: set `modalBusy.value=false; modalOpen.value=false` langsung di path sukses lalu `await loadData()`.
+- E2E lokal verifikasi penuh (login siswa/test1234): setor 75000->Rp75.000, tarik 25000->Rp50.000, tarik 999999->422 toast "Saldo tidak cukup", modal auto-close sukses. Data diclear via `php artisan tinker --execute="\App\Models\Tabungan::query()->delete();"`.
+- Frontend deployed smkbu-sby.vercel.app. Verifikasi prod: POST cross-origin dari smkbu-sby -> /tabungan -> preflight OK, guest -> 302 /login (finalUrl /login), type:cors, tanpa CORS error. Catatan: fetch manual tak bisa spoof Origin header (forbidden) jadi tes OPTIONS tanpa ACAO adalah artefak tes.
+
+### Saldo Aktif di banner landing (TabunganBanner.vue)
+- Bug: banner tampil Rp0 padahal saldo ada. Fix: ref `saldo` + `loadSaldo()` (fetch `${BACKEND}/tabungan`, credentials include), `watch(isSiswaLoggedIn, immediate:true)`, listener `pageshow` (bfcache - back dari /tabungan tak remount HomeView). Tampil `Math.round(saldo).toLocaleString("id-ID")`.
+- Verifikasi lokal: setor 1000 -> /tabungan Rp1.000 -> banner "Saldo Aktif Rp1.000". BELUM di-deploy saat fix selesai - ikut deploy bento restructure.
+
+### Agent Skills (OpenCode) - install addyosmani/agent-skills
+- Clone GitHub -> copy 25 skill ke `.agents/skills/` (total 27 termasuk design-taste-frontend & imagegen-frontend-web existing) + 7 reference files ke `.agents/references/`.
+- AGENTS.md ditambah section "Agent Skills (OpenCode)": intent->skill mapping (spec-driven-development, incremental-implementation, test-driven-development, planning-and-task-breakdown, debugging-and-error-recovery, code-review-and-quality, code-simplification, api-and-interface-design, frontend-ui-engineering, design-taste-frontend, performance-optimization, shipping-and-launch) + execution model (panggil skill tool sebelum bertindak). Temp clone dihapus.
+
+### Bento Restructure - bento grid dihapus, diganti section biasa
+- User pilih: "Remove bento, split to sections". `feature.vue` (~750 baris) DIHAPUS (sudah konfirmasi plan). 5 komponen baru di `src/components/sections/`:
+  - **SpmbBanner.vue** - banner gelap full-width SPMB (stats 1.247 pendaftar, 3 jurusan, chips Gelombang 1/Online & Offline/Gratis, CTA Daftar Sekarang + Info & Biaya), visual pmb_smkbu.webp + card kuota.
+  - **BeritaPreview.vue** - 3 kartu berita terbaru dari `public/data/news.json` (klik -> /berita/:slug), tombol Semua berita -> /berita.
+  - **CareerPreview.vue** - band horizontal dengan hitungan lowongan LIVE dari backend `${BACKEND}/lowongan` (bukan /api/lowongan - itu bug lama feature.vue yang bikin 404 di console selama ini). Tampil 25 di prod.
+  - **KoperasiPreview.vue** - section split promo koperasi, grid gambar produk (ser/sepatu/topi), CTA gate siswa (non-siswa -> toast).
+  - **ProdukPreview.vue** - section split karya siswa (ikon lucide Monitor/Hammer), CTA gate siswa.
+- HomeView.vue: urutan Hero -> AboutSchool -> SpmbBanner -> BeritaPreview -> CareerPreview -> KoperasiPreview -> ProdukPreview -> TabunganBanner -> News -> Footer. Kartu "Tentang Sekolah" dari bento dibuang (redundant dgn AboutSchool).
+- Design: skill design-taste-frontend, palette forest-green #3a6450, Quicksand, v-reveal, variasi layout (banner/stats, grid berita, band karir, split koperasi, split produk). Fix id duplikat `#berita` (BeritaPreview, News tetap punya id).
+- Verifikasi lokal: semua section render, no console error, career count live (25), gate koperasi siswa OK, mobile 390px no horizontal overflow.
+- DEPLOY (PENTING): deploy harus dari **repo root** `C:\Users\LENOVO\lomba\ga-ro` (project `lomba`, alias smkbu-sby.vercel.app). Jangan dari `src/` - itu project lain (orphan `src-5j08dhjl3...` yang salah deploy, debris). Frontend deployed OK: https://smkbu-sby.vercel.app. Backend tidak berubah -> tidak redeploy.
+- Verifikasi prod: semua section baru render, career count 25, tidak ada .fc-card (bento hilang), pageHeight 6678.
+
+
+---
+## Sesi - Hapus section berita kedua (News.vue) (2026-08-29/30)
+
+- Setelah bento restructure ada 2 section berita di landing: BeritaPreview (atas) dan News.vue (bawah Tabungan). User pilih hapus yang bawah Tabungan.
+- HomeView.vue: hapus `import News` + `<News />`. File `src/components/sections/News.vue` dihapus. Konten news tetap bisa dilihat via halaman `/berita` (NewsView) & `/berita/:slug` (NewsDetail) yang tidak tersentuh.
+- Build OK, deploy dari repo root OK: https://smkbu-sby.vercel.app (pernah retry 1x: error "Not authorized" transient, `vercel whoami` masih zakkyilhamf-7419).
+- Konvensi ke depan: percakapan & dokumentasi proyek pakai Bahasa Indonesia.
+
+
+---
+## Sesi - Foto news.json tidak muncul (2026-08-29/30)
+
+- Foto yang ditambahkan user di `public/newsP/spmb.jpeg` tidak tampil: path di news.json salah (`/public/newsP/spmb.jpeg`). Di Vite folder `public/` = root URL, jadi path benar tanpa prefiks `/public` -> `/newsP/spmb.jpeg`.
+- Fix: ganti path id 2 di `public/data/news.json`. Rebuild + deploy smkbu-sby.vercel.app. Verifikasi prod: `/newsP/spmb.jpeg` HTTP 200.
+- CATATAN: 5 berita lain masih broken (404, gambar di-hide oleh handler @error): id1 image "/", id3-6 `/images/news/*.jpg` - folder `public/images/news` (dan folder images di repo) tidak ada. Perlu file foto + perbaikan path bila mau ditampilkan.
+
+
+---
+## Sesi - Navbar glassmorphism (2026-08-30)
+
+- User beri referensi foto (WhatsApp) glass effect. Navbar sebelumnya terlalu solid (bg 0.82, blur 8px, tanpa border) sehingga efek glass kurang terlihat.
+- Navbar.vue: background -> rgba(255,255,255,0.55) + backdrop-filter blur(20px) saturate(160%) (dengan prefix -webkit) + border 1px rgba(255,255,255,0.35) + inner highlight shadow. .shrink -> bg 0.68. Mobile -> bg 0.65 + blur sama. Dropdown panel & panah juga dibuat glass konsisten.
+- Build OK, deploy OK: https://smkbu-sby.vercel.app
+
+
+---
+## Sesi - Glass card Kuota Terbatas + Fix doodle login backend (2026-08-30)
+
+- SpmbBanner.vue .visual-card (kartu "Kuota Terbatas"): blur 12px -> blur(20px) saturate(160%) + -webkit prefix, border 0.14 -> 0.2, tambah inset highlight shadow. Deploy smkbu-sby.vercel.app.
+- Doodle login/pendaftar broken di produksi: root cause vercel.json backend pakai route catch-all `/(.*) -> api/index.php` sehingga /images/*.png masuk ke Laravel -> 404 (logo.png di root public ikut di-serve, tapi subfolder images tidak).
+- Fix: backend/vercel.json tambah route static sebelum catch-all: `/images/(.*) -> /public/images/$1` dan `/doodles/(.*) -> /public/doodles/$1`. Deploy pendaftaranspmb.vercel.app. Verifikasi: /images/doodle-selfie.png HTTP 200.

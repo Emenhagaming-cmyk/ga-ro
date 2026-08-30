@@ -102,3 +102,34 @@ npm run dev
 - **WAJIB: update PROGRESS.md SETIAP selesai mengerjakan sesuatu** (perintah/pengerjaan apapun) — tambahkan entri sesi baru langsung setelah pekerjaan selesai, jangan ditunda ke akhir sesi. Sinkronkan juga `IMPLEMENTATION_SUMMARY.md` jika ada perubahan teknis/verifikasi baru.
 - **JANGAN sentuh/mengubah `.env` (termasuk `src/server/.env` & key Groq) dan file chatbot (`api/chat.js`, `api/knowledge/**`, `vite.config.js` bagian chat) KECUALI diperintah user secara eksplisit.**
 - JANGAN hapus folder/file tanpa konfirmasi user (pelajaran Sesi 8).
+
+## Agent Skills (OpenCode)
+
+Skills dari `addyosmani/agent-skills` diinstall di `.agents/skills/<name>/SKILL.md` (plus `design-taste-frontend` & `imagegen-frontend-web` existing). Checklist bersama ada di `.agents/references/`.
+
+### Core Rules
+
+- Jika task cocok dengan suatu skill, panggil `skill` tool SEBELUM bertindak.
+- Skill ada di `.agents/skills/<skill-name>/SKILL.md`.
+- Ikuti workflow skill secara ketat; jangan separuh-separuh.
+- Jangan skip step wajib (spec, plan, test) ketika skill menuntutnya.
+
+### Intent → Skill Mapping
+
+- Fitur / fungsionalitas baru → `spec-driven-development`, lalu `incremental-implementation` dan `test-driven-development`
+- Perencanaan / breakdown → `planning-and-task-breakdown`
+- Bug / gagal / perilaku tak terduga → `debugging-and-error-recovery`
+- Code review → `code-review-and-quality`
+- Refactor / simplification → `code-simplification`
+- Desain API atau interface → `api-and-interface-design`
+- Kerja UI → `frontend-ui-engineering`
+- Redesign/UI landing page → `design-taste-frontend`
+- Web performance / Core Web Vitals → `performance-optimization`
+- Deploy / production → `shipping-and-launch`
+
+### Execution Model
+
+1. Tentukan apakah ada skill yang berlaku (meski kemungkinannya kecil).
+2. Load skill dengan `skill({ name: "<skill-name>" })`.
+3. Ikuti alur skill persis.
+4. Baru lanjut implementasi setelah step wajib selesai.

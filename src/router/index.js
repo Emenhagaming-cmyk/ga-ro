@@ -54,6 +54,11 @@ const routes = [
     meta: { requiresSiswa: true }
   },
   {
+    path: "/tabungan",
+    component: () => import("../views/TabunganView.vue"),
+    meta: { requiresSiswa: true }
+  },
+  {
     path: "/produk-siswa",
     component: () => import("../views/ProdukSiswaView.vue"),
     meta: { requiresSiswa: true }

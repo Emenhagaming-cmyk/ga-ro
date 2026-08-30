@@ -1,9 +1,14 @@
+import { readFileSync } from "node:fs"
 import systemPrompt from "./systemPrompt.js"
 
-import school from "./data/school.json" with { type:"json" }
-import ppdb from "./data/ppdb.json" with { type:"json" }
-import jurusan from "./data/jurusan.json" with { type:"json" }
-import koperasi from "./data/koperasi.json" with { type:"json" }
+function loadJson(file) {
+  return JSON.parse(readFileSync(new URL(file, import.meta.url), "utf8"))
+}
+
+const school = loadJson("./data/school.json")
+const ppdb = loadJson("./data/ppdb.json")
+const jurusan = loadJson("./data/jurusan.json")
+const koperasi = loadJson("./data/koperasi.json")
 
 const modules=[
     school,

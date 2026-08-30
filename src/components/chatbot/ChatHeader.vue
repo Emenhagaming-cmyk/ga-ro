@@ -13,7 +13,7 @@
 
       <div>
 
-        <h3>NOVA</h3>
+        <h3>BISA</h3>
 
         <span class="status">
           <i class="dot"></i>

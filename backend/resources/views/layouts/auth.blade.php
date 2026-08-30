@@ -84,7 +84,7 @@
             align-items: center;
             justify-content: center;
             gap: 28px;
-            width: 100%;
+            padding: 0 40px;
         }
 
         .auth-illustration-content {
@@ -282,7 +282,37 @@
             border-color: rgba(153, 27, 27, 0.15);
         }
 
+        .auth-right {
+            flex: 0 0 380px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-right-content {
+            text-align: center;
+        }
+
+        .doodle-img {
+            max-width: 380px;
+            width: 100%;
+            height: auto;
+            animation: doodle-float 4s ease-in-out infinite;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
+        }
+
+        @keyframes doodle-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-14px); }
+        }
+
         @media (max-width: 768px) {
+            .auth-right {
+                display: none;
+            }
+
             .auth-illustration-content .brand {
                 margin-bottom: 14px;
             }
@@ -362,6 +392,11 @@
         </div>
         <div class="auth-card">
             @yield('content')
+        </div>
+    </div>
+    <div class="auth-right">
+        <div class="auth-right-content">
+            <img src="{{ asset('images/doodle-selfie.png') }}" alt="Doodle Illustration" class="doodle-img" />
         </div>
     </div>
 </div>
