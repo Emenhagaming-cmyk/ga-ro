@@ -55,4 +55,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Tabungan::class);
     }
+
+    public function sppBills(): HasMany
+    {
+        return $this->hasMany(SppBill::class);
+    }
 }
