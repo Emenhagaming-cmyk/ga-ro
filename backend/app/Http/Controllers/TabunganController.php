@@ -65,6 +65,7 @@ class TabunganController extends Controller
             'type' => $data['type'],
             'amount' => $data['amount'],
             'description' => $data['description'] ?? null,
+            'input_by' => $request->user()->id,
         ]);
 
         return response()->json([
@@ -72,6 +73,40 @@ class TabunganController extends Controller
             'tabungan' => $tabungan,
             'saldo' => $saldoBaru,
         ], 201);
+    }
+
+    public function adminShow(int $userId)
+    {
+        $user = User::findOrFail($userId);
+        if ($user->role !== 'siswa') {
+            return response()->json(['message' => 'Tabungan hanya untuk akun siswa.'], 422);
+        }
+
+        $tabungans = Tabungan::where('user_id', $userId)
+            ->with('inputter:id,name,username')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'siswa' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'email' => $user->email,
+            ],
+            'saldo' => self::saldoFor($userId),
+            'transaksi' => $tabungans->map(fn ($t) => [
+                'id' => $t->id,
+                'type' => $t->type,
+                'amount' => $t->amount,
+                'description' => $t->description,
+                'created_at' => $t->created_at,
+                'inputter' => $t->inputter ? [
+                    'name' => $t->inputter->name,
+                    'username' => $t->inputter->username,
+                ] : null,
+            ]),
+        ]);
     }
 
     public function adminIndex()

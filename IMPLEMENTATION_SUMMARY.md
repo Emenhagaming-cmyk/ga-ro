@@ -290,6 +290,13 @@ Siswa bayar SPP sekali di kasir → status langsung terlihat siswa (login), guru
 
 ---
 
+## Perbaikan UI Profil Siswa & Dashboard (Sesi 2026-08-30)
+
+- `backend/resources/views/pendaftaran/dashboard-siswa.blade.php`: redesign UI dengan CSS custom properties (design token), perbaikan heading hierarchy (h1 banner, h2 card title), tambah ARIA labels (`role="status"`, `aria-live`, `aria-hidden` pada dekoratif), form labels dengan `for` + `id` eksplisit, banner subtitle, stat cards hover dengan top border accent, detail grid hover state, button `white-space: nowrap`, edit form section dengan `margin-top` khusus, breakpoint `480px` tambahan.
+- `backend/resources/views/auth/profile.blade.php`: redesign total — hero section dengan avatar glass-style, section-based layout (`Akun` + `Data Pendaftaran`), profile card rows dengan label/value, badge status pendaftaran warna-conditional, tombol `Lihat Dashboard` + `Logout` dengan proper form + aria-label, responsive `max-width: 520px` (hero column, row column, button full width).
+
+---
+
 ## TODO
 
 - [ ] Dynamic School Statistics (admin-managed) — disetujui user

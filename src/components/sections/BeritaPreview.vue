@@ -56,6 +56,18 @@ function goDetail(slug) {
 }
 
 onMounted(async () => {
+  const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  try {
+    // Coba API backend dulu
+    const res = await fetch(`${BACKEND}/berita`, { credentials: "include" });
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      previewNews.value = data.slice(0, 3);
+      return;
+    }
+  } catch (_) { /* fallback */ }
+
+  // Fallback: news.json lokal
   try {
     const res = await fetch("/data/news.json");
     const news = await res.json();

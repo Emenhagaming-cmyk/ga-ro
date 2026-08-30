@@ -4,6 +4,87 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi 2026-08-30 — perbaikan UI profil siswa)
+
+### Perbaikan UI Halaman Profil & Dashboard Siswa (2026-08-30)
+
+**File yang diperbaiki:**
+- `backend/resources/views/pendaftaran/dashboard-siswa.blade.php` — halaman utama profil/status siswa
+- `backend/resources/views/auth/profile.blade.php` — halaman akun siswa
+
+**Perbaikan yang diterapkan (design system + aksesibilitas):**
+- Konsolidasi design token dengan CSS custom properties (`:root`) untuk warna, radius, shadow, transition
+- Heading hierarchy diperbaiki (`h1` untuk banner title, `h2` untuk card title — tidak skip level)
+- Tambah `aria-label`, `role="status"`, `aria-live="polite"`/`assertive`, `aria-hidden="true"` pada elemen dekoratif
+- Semua form input punya `id` + `label for` eksplisit (tidak lagi label tanpa for)
+- Banner siswa ditambah subtitle untuk konteks tambahan
+- Stat cards ditambah hover state dengan top border accent + subtle lift
+- Detail grid items ditambah hover state
+- tombol aksi ditambah `white-space: nowrap` untuk mencegah teks pecah
+- Edit form section ditambah margin-top khusus (`ds-card--edit`)
+- Responsive breakpoint tambahan `480px` untuk mobile kecil (button full width, actions stack vertikal)
+- Profile page di-redesign total: hero dengan avatar glass-style, section-based layout, consistent card rows, proper logout form dengan aria-label
+- Back button ditambah `aria-label="Kembali ke beranda"`
+- Alert messages ditambah `role` + `aria-live`
+
+**Catatan:** LSP Blade menampilkan false-positive errors pada inline `style="background:{{ ... }};"` — ini normal untuk Blade syntax dan bukan error runtime.
+
+---
+
+## 📌 STATUS TERAKHIR (sesi 2026-08-30 malam — UI Berita + Fitur Kelola Berita Admin)
+
+### Redesign UI Berita + Fitur Tambah Berita di Panel Admin (2026-08-30)
+
+**Backend-admin (paneladminsmkbu.vercel.app):**
+- Migration `2026_08_30_200000_create_beritas_table.php`: tabel `beritas` (id, title, slug unique, category, category_color, excerpt, content, image_path, author, published_at, featured, read_time, is_published, user_id FK, timestamps). Dijalankan ke TiDB production.
+- Model `Berita.php`: fillable lengkap, cast boolean, `generateSlug()`, `getImageUrlAttribute()`, `toApiArray()` (format untuk frontend Vue).
+- `BeritaController.php`: CRUD lengkap (index, create, store, edit, update, destroy). Upload gambar ke `storage/public/berita` via `store('berita','public')`. Auto-estimasi `read_time` dari word count. Hapus gambar lama saat update/destroy.
+- Views blade: `berita/index.blade.php` (tabel + thumbnail + badge kategori + stat bar), `berita/create.blade.php` (form dengan drag-and-drop upload gambar, preview langsung, excerpt counter, checkbox featured/tayang), `berita/edit.blade.php` (form pre-filled + tampil gambar lama).
+- Routes: GET/POST/PUT/DELETE `/berita` + `/berita/create` + `/berita/{berita}/edit` di admin group (role:admin).
+- Sidebar: menu "Kelola Berita" dengan icon koran ditambah di layout admin.
+
+**Backend (pendaftaranspmb.vercel.app):**
+- Model `Berita.php` + migration dicopy dari backend-admin.
+- `BeritaApiController.php`: `GET /berita` (JSON list, fallback array kosong jika tabel belum ada), `GET /berita/{slug}` (detail satu berita). Header `Cache-Control: public, max-age=60`.
+- Routes: `/berita` dan `/berita/{slug}` publik (sebelum `/spp/ortu/{user}`).
+
+**Frontend (smkbu-sby.vercel.app):**
+- `NewsView.vue` di-redesign total:
+  - Featured card: layout split (gambar kiri 50% / teks kanan 50%), gambar `object-fit:cover` + hover scale, fallback gradient warna per kategori jika gambar 404, badge "Unggulan" + chip kategori di atas gambar.
+  - Grid cards: 3 kolom vertikal, aspect-ratio 16/10 untuk gambar, fallback gradient, chip kategori, "Baca →" CTA.
+  - Skeleton loading saat fetch.
+  - Empty state + Reset Filter button.
+  - Fetch dari backend API `/berita` dengan fallback ke `news.json` lokal.
+- `BeritaPreview.vue`: fetch dari backend API dulu, fallback ke news.json.
+
+**Deploy & Verifikasi:**
+- Backend: `spmb-backend-lxv2on84d` → `pendaftaranspmb.vercel.app`. `/berita` → 200 ✅
+- Admin: `spmb-admin-5d2qeub71` → `paneladminsmkbu.vercel.app` + `spmb-admin.vercel.app`. `/berita` → 302 login ✅
+- Frontend: `lomba-kex6om6f6` → `smkbu-sby.vercel.app`. `/berita` → 200 ✅
+- TiDB: `beritas` table berhasil di-migrate.
+
+---
+
+## 📌 STATUS TERAKHIR (sesi fix blocker 500 — 2026-08-30)
+
+### Root Cause 500 Fresh Deploy — SOLVED ✅
+
+**Root cause:** `config/database.php` di KEDUA `backend/` dan `backend-admin/` menggunakan `use Pdo\Mysql;` (baris 2) dan konstanta `Mysql::ATTR_SSL_CA`. Namespace `Pdo\Mysql` baru tersedia di **PHP 8.5**, sedangkan Vercel menjalankan **PHP 8.3** (via `vercel-php@0.7.4`). Hasil: **Fatal error saat config di-load** → semua route 500 body-kosong. `/up` tetap 200 karena tidak merender blade dan tidak memanggil DB config.
+
+**Fix yang diterapkan:**
+- `backend/config/database.php`: hapus `use Pdo\Mysql;`, ganti `Mysql::ATTR_SSL_CA` → `PDO::MYSQL_ATTR_SSL_CA` (2 lokasi: mysql + mariadb).
+- `backend-admin/config/database.php`: fix sama persis.
+- `backend/api/phpinfo.php`: diagnostik baru (cek PHP version, extensions, env, tmp writable).
+- `backend/vercel.json`: tambah route `/phpinfo` + function `api/phpinfo.php`.
+
+**Deploy & Verifikasi production (2026-08-30):**
+- `backend`: `spmb-backend-fsbvtwt9k` → alias otomatis `pendaftaranspmb.vercel.app`. `/up` 200 ✅, `/login` 200 ✅, `/register` 200 ✅.
+- `backend-admin`: `spmb-admin-gweif3xr1` → alias otomatis `paneladminsmkbu.vercel.app` + alias manual `spmb-admin.vercel.app`. `/up` 200 ✅, `/login` 200 ✅.
+
+**Semua fitur yang sebelumnya tertahan sekarang LIVE di produksi:** SPP, security hardening, optimasi performa, panel admin optimasi.
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi debug produksi — 2026-08-30 malam)
 
 ### Investigasi 500 produksi (backend + admin) — BELUM SOLVED

@@ -383,6 +383,10 @@
 <script setup>
 import { ref, computed, onUnmounted } from "vue";
 import { Plus, Minus, X, Trash2, ShoppingBag, ChevronLeft, QrCode, CreditCard, Check, Copy, Info, Bell } from "lucide-vue-next";
+import { useAuthSession } from "@/composable/useAuthSession";
+import { getCsrfToken } from "@/services/csrf";
+
+const { BACKEND } = useAuthSession();
 
 const activeCategory = ref("Semua");
 const selected = ref(null);
@@ -596,14 +600,44 @@ function processPayment() {
   startTimer();
 }
 
-function confirmPayment() {
+async function confirmPayment() {
   isProcessing.value = true;
-  setTimeout(() => {
+  try {
+    const csrf = await getCsrfToken();
+    const res = await fetch(`${BACKEND}/koperasi/checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrf,
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        items: cart.value.map((i) => ({
+          id: i.product.id,
+          title: i.product.title,
+          qty: i.quantity,
+          price: i.product.price,
+        })),
+        metode: payMethod.value,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Gagal menyimpan pesanan.");
+    }
+  } catch (e) {
+    showToast(e.message || "Gagal memproses pembayaran.", "error");
     isProcessing.value = false;
-    if (timerInterval) clearInterval(timerInterval);
-    view.value = "success";
-    showToast("Pembayaran berhasil dikonfirmasi!");
-  }, 2000);
+    view.value = "checkout";
+    return;
+  }
+
+  isProcessing.value = false;
+  if (timerInterval) clearInterval(timerInterval);
+  view.value = "success";
+  showToast("Pembayaran berhasil dikonfirmasi!");
 }
 
 function backToShop() {
