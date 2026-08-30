@@ -32,7 +32,6 @@ class AuthController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'plain_password' => $validated['password'],
             'role' => 'pendaftar',
         ]);
 
@@ -71,6 +70,14 @@ class AuthController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $this->restorePendingDraft($request);
 
+        if ($user->role === 'kasir') {
+            return redirect()->route('spp.kasir');
+        }
+
+        if ($user->role === 'guru') {
+            return redirect()->route('spp.rekap');
+        }
+
         return redirect(frontendAuthUrl());
     }
 
@@ -92,6 +99,7 @@ class AuthController extends Controller
                 'name' => null,
                 'has_pendaftaran' => false,
                 'status' => null,
+                'csrf_token' => csrf_token(),
             ]);
         }
 
@@ -112,6 +120,7 @@ class AuthController extends Controller
             'jurusan' => $pendaftaran?->jurusan_pilihan,
             'has_pendaftaran' => (bool) $pendaftaran,
             'status' => $pendaftaran?->status,
+            'csrf_token' => csrf_token(),
         ]);
     }
 
@@ -159,8 +168,15 @@ class AuthController extends Controller
         $token = Password::broker()->createToken($user);
         $link = route('password.reset', $token);
 
-        // ponytail: tanpa mailer, link tampil langsung di halaman (cukup utk demo/lokal)
-        return back()->with('success', 'Link reset kata sandi Anda: ' . $link . ' (buka di tab baru)');
+        // Tanpa mailer, link harus tampil di halaman. Di production link dicatat ke log agar
+        // tidak terekspos murni di halaman (bisa terlihat dari belakang layar / shared computer).
+        if (app()->isLocal()) {
+            return back()->with('success', 'Link reset kata sandi Anda: ' . $link . ' (buka di tab baru)');
+        }
+
+        logger('Password reset link untuk ' . $user->username . ': ' . $link);
+
+        return back()->with('success', 'Link reset kata sandi telah dikirim. Cek log sistem atau hubungi admin untuk mendapatkan link-nya.');
     }
 
     public function showResetForm(string $token)
@@ -188,7 +204,6 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->password = Hash::make($password);
-                $user->plain_password = $password;
                 $user->save();
             }
         );

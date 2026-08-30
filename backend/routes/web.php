@@ -16,21 +16,22 @@ Route::get('/cs.png', fn () => response(file_get_contents(public_path('cs.png'))
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest', 'throttle:5,1');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register')->middleware('guest');
-Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
+Route::post('/register', [AuthController::class, 'register'])->middleware('guest', 'throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 Route::get('/auth-status', [AuthController::class, 'authStatus']);
+Route::get('/csrf-token', [AuthController::class, 'csrfToken']);
 
 // Reset kata sandi (tanpa email sender: link ditampilkan langsung di halaman)
 Route::get('/forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request')->middleware('guest');
-Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('guest');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email')->middleware('guest', 'throttle:3,1');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset')->middleware('guest');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('guest');
 
 // Publik: form pendaftaran + submit (guest ditangani di store via draft session)
 Route::get('/pendaftaran/create', [PendaftaranController::class, 'create'])->name('pendaftaran.create');
-Route::post('/pendaftaran', [PendaftaranController::class, 'store'])->name('pendaftaran.store');
+Route::post('/pendaftaran', [PendaftaranController::class, 'store'])->name('pendaftaran.store')->middleware('throttle:10,1');
 
 // Login siswa & admin: dashboard siswa + update form sendiri
 Route::middleware('auth')->group(function () {
@@ -74,10 +75,12 @@ Route::middleware('auth')->group(function () {
 
 // SPP (kasir / admin) input pembayaran
 Route::middleware(['auth', 'role:kasir,admin'])->group(function () {
+    Route::get('/spp/kasir', [SppController::class, 'kasirIndex'])->name('spp.kasir');
     Route::post('/spp/pay', [SppController::class, 'store'])->name('spp.pay');
 });
 
 // SPP (admin & guru) rekap semua (read-only untuk guru)
 Route::middleware(['auth', 'role:guru,admin'])->group(function () {
     Route::get('/admin/spp', [SppController::class, 'adminIndex'])->name('admin.spp.index');
+    Route::get('/admin/spp/rekap', [SppController::class, 'rekapIndex'])->name('spp.rekap');
 });

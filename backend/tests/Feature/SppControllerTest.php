@@ -43,10 +43,18 @@ class SppControllerTest extends TestCase
             $table->foreignId('input_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+
+        Schema::create('pendaftarans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->nullable();
+            $table->string('status')->default('baru');
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
     {
+        Schema::dropIfExists('pendaftarans');
         Schema::dropIfExists('spp_payments');
         Schema::dropIfExists('spp_bills');
         Schema::dropIfExists('users');
@@ -158,5 +166,55 @@ class SppControllerTest extends TestCase
             ->assertJsonCount(1)
             ->assertJsonPath('0.name', 'Siswa Satu')
             ->assertJsonPath('0.bills.0.status', 'lunas');
+    }
+
+    public function test_kasir_buka_halaman_input_dan_posting_form_redirect_back(): void
+    {
+        $kasir = $this->makeUser('kasir', 'Kasir Satu', 'kasir1');
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $bill = $this->makeBill($siswa);
+
+        $this->actingAs($kasir)->get('/spp/kasir')
+            ->assertStatus(200)
+            ->assertSee('Input Pembayaran SPP');
+
+        $this->actingAs($kasir)->post('/spp/pay', [
+            'bill_id' => $bill->id,
+            'metode' => 'tunai',
+            'amount' => 150000,
+        ])->assertStatus(302)
+            ->assertSessionHas('success');
+
+        $this->assertSame('lunas', $bill->fresh()->status);
+    }
+
+    public function test_guru_buka_rekap_tapi_tidak_bisa_akses_halaman_kasir(): void
+    {
+        $guru = $this->makeUser('guru', 'Guru Satu', 'guru1');
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $this->makeBill($siswa);
+
+        $this->actingAs($guru)->get('/admin/spp/rekap')
+            ->assertStatus(200)
+            ->assertSee('Rekapitulasi SPP');
+
+        $this->actingAs($guru)->get('/spp/kasir')->assertRedirect(route('login'));
+    }
+
+    public function test_admin_bisa_buka_halaman_kasir_dan_rekap(): void
+    {
+        $admin = $this->makeUser('admin', 'Admin', 'admin');
+        $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+
+        $this->actingAs($admin)->get('/spp/kasir')->assertStatus(200);
+        $this->actingAs($admin)->get('/admin/spp/rekap')->assertStatus(200);
+    }
+
+    public function test_siswa_tidak_bisa_akses_halaman_kasir_dan_rekap(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+
+        $this->actingAs($siswa)->get('/spp/kasir')->assertRedirect(route('login'));
+        $this->actingAs($siswa)->get('/admin/spp/rekap')->assertRedirect(route('login'));
     }
 }

@@ -48,10 +48,12 @@ class SppController extends Controller
         $bill = SppBill::findOrFail($data['bill_id']);
 
         if ($bill->user->role !== 'siswa') {
-            return response()->json(['message' => 'Tagihan SPP hanya untuk akun siswa.'], 422);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Tagihan SPP hanya untuk akun siswa.'], 422)
+                : back()->withErrors(['bill_id' => 'Tagihan SPP hanya untuk akun siswa.']);
         }
 
-        $payment = SppPayment::create([
+        SppPayment::create([
             'bill_id' => $bill->id,
             'metode' => $data['metode'],
             'amount' => $data['amount'],
@@ -64,9 +66,12 @@ class SppController extends Controller
             $bill->update(['status' => 'lunas']);
         }
 
+        if (!$request->expectsJson()) {
+            return back()->with('success', "Pembayaran SPP {$bill->periode} sebesar Rp" . number_format($data['amount'], 0, ',', '.') . " tercatat.");
+        }
+
         return response()->json([
             'message' => 'Pembayaran SPP tercatat.',
-            'payment' => $payment,
             'bill' => [
                 'id' => $bill->id,
                 'periode' => $bill->periode,
@@ -74,6 +79,36 @@ class SppController extends Controller
                 'sisa' => max($bill->nominal - $terbayar, 0),
             ],
         ], 201);
+    }
+
+    public function kasirIndex(Request $request)
+    {
+        $q = trim((string) $request->query('q'));
+
+        $bills = SppBill::with(['user', 'payments'])
+            ->whereHas('user', fn ($u) => $u->where('role', 'siswa')
+                ->when($q !== '', fn ($u) => $u->where(function ($w) use ($q) {
+                    $w->where('name', 'like', "%{$q}%")->orWhere('username', 'like', "%{$q}%");
+                })))
+            ->orderByDesc('periode')
+            ->get();
+
+        $bills = $bills->filter(fn (SppBill $b) => $b->payments->sum('amount') < $b->nominal);
+
+        return view('spp.kasir', [
+            'bills' => $bills,
+            'q' => $q,
+        ]);
+    }
+
+    public function rekapIndex()
+    {
+        $siswa = User::where('role', 'siswa')
+            ->with(['sppBills' => fn ($q) => $q->with('payments')->orderBy('periode')])
+            ->orderBy('name')
+            ->get();
+
+        return view('spp.rekap', ['siswa' => $siswa]);
     }
 
     public function adminIndex()
