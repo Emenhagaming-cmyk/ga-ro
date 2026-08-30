@@ -2,7 +2,6 @@
   <section id="koperasi" class="kop-preview">
     <div class="kp-shell">
       <div class="kp-text" v-reveal>
-        <span class="kp-kicker">Koperasi Online</span>
         <h2>
           Kebutuhan Sekolah,<br />
           <em>Tanpa Ribet</em>
