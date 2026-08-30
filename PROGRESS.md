@@ -4,6 +4,52 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi deploy — 2026-08-30)
+
+### Deploy SPP + Optimasi ke Produksi
+
+- **Migrasi TiDB** (pattern `vercel env pull --environment=production`: pull → `.env.local` → rename `.env.production.local` → set env proses DB_* + `MYSQL_ATTR_SSL_CA=backend\certs\isrgrootx1.pem` — path runtime `/var/task/user/certs/...` ≠ lokal → `php artisan migrate --force` di **satu shell** → hapus file) → 3 migrasi `Ran`: `100000` role enum guru/kasir, `100001` spp_bills+spp_payments, `110000` drop plain_password. Verifikasi schema: spp_bills ✓ spp_payments ✓ plain_password gone ✓.
+- **Backend** `pendaftaranspmb.vercel.app` (deploy `spmb-backend-i3q1mpmcj-...`, alias otomatis): `/login` 200, `/csrf-token` balas token (CSRF except list kini tertutup — frontend pakai header X-CSRF-TOKEN via `src/services/csrf.js`), `/lowongan/count` 200, `/spp`+`/spp/kasir`+`/admin/spp/rekap` 302 (guest), `/spp/ortu/1` 403 (signed route aktif). `SecurityHeaders` middleware aktif.
+- **Panel** `spmb-admin.vercel.app` (deploy `spmb-admin-nfsixudzy-...`; alias otomatis `paneladminsmkbu.vercel.app` + manual alias `spmb-admin`): `/login` 200, `/admin` & `/admin/spp` 302 (guest). Rekap SPP di panel live.
+- **Frontend** `smkbu-sby.vercel.app` (deploy `lomba-493toh3pc-...`, alias otomatis): `/` 200, bundle `SppView-5ziMPgHy.js` live; `bhapppp.vercel.app` 307 (legacy, masih hidup).
+- **kasirIndex**: filter belum-lunas dipindah ke SQL **subquery portable** (`whereRaw ... < nominal`), menggantikan `havingRaw COALESCE(paid,0)` (MySQL-only → error `HAVING` di sqlite). Maksud perf (filter di SQL) tetap, suite test sqlite tetap hijau (19 passed).
+- `APP_DEBUG` di `backend/vercel.json` dikembalikan **false** (di working tree sempat `true` — bocor stack trace, sekuriti).
+- Deploy: `vercel.cmd deploy --prod --yes` per app (root/backend/backend-admin), auth `zakkyilhamf-7419`.
+
+---
+
+## 📌 STATUS TERAKHIR (sesi 2026-08-30 sore — PERFORMANCE AUDIT & OPTIMIZATION)
+
+### Sesi Optimasi Performa Menyeluruh (2026-08-30) — 3 bagian
+
+Gejala: load lambat, interaksi berat (geser/klik), API lama. Audit → fix → ukur ulang. Ledger: `PERF.md`.
+
+**Frontend (smkbu-sby.vercel.app):**
+- `CursorGlow.vue`: reactivitas ref tiap `mousemove` + CSS transition `left/top` di elemen fixed → ganti ke `requestAnimationFrame` + tulis langsung `el.style`, `passive:true`, hapus transition. (Perbaikan INP utama saat geser kursor/scroll di desktop.)
+- `HomeView.vue`: 6 section di bawah fold (SpmbBanner, BeritaPreview, CareerPreview, KoperasiPreview, ProdukPreview, TabunganBanner) jadi `defineAsyncComponent` + lazy-`mount` via wrapper baru `components/common/LazyMount.vue` (IntersectionObserver, rootMargin 600px). Bundle route awal HomeView **37.33→25.36 kB** (gz 11.33→8.34), CSS 46.2→28.3 kB; tiap section jadi chunk ~1-1.6 kB gz yang di-fetch saat scroll masuk.
+- **CareerPreview** pakai endpoint ringan `/lowongan/count` (sebelumnya unduh seluruh list hanya utk angka).
+- `useAuthSession.js`: polling `/auth-status` setiap 30s kini HANYA saat login (guest di landing publik tidak fetch tiap 30s); interval tetap singleton modul.
+
+**Backend (pendaftaranspmb.vercel.app):**
+- Endpoint baru `GET /lowongan/count` (COUNT is_active saja; route sebelum `/{lowongan}`).
+- `TabunganController`: saldo via **1 query aggregate** `SUM(CASE WHEN type...)` di `index` & `store` (helper `saldoFor()`), bukan load semua transaksi + reduce di PHP. **Verifikasi hasil identik** (agg=php=1000, match).
+- `SppController::kasirIndex`: filter bill belum-lunas pindah ke **SQL** (`withSum('payments as paid')` + `havingRaw('COALESCE(paid,0) < nominal')`).
+
+**Panel Admin (spmb-admin.vercel.app):**
+- `chartData()`: 30×COUNT query → **1×GROUP BY DATE(created_at)** + reuse cache `freshStats()`.
+- `laporan()`: 8×COUNT terpisah → pakai `freshStats()` cached (bentuk `$stats` sama, view tetap jalan).
+
+**Keputusan / dilewati (log di PERF.md):**
+- Index DB tidak dibuat — tabel kecil (seq scan lebih murah), pajak tulis tanpa bukti query plan.
+- Hard-limit `/lowongan` ditunda — halaman cari butuh list penuh utk filter client-side.
+- LoadingScreen.vue tidak dipakai di mana pun (bukan bottleneck).
+
+**Verifikasi:** `php -l` bersih (backend & admin); `route:list` bersih; HTTP `/lowongan/count` → `{"total":25}`; aggregate Tabungan == reduce PHP; build Vite sukses; browser dev → semua lazy section render benar saat scroll (error console hanya CORS karena test pakai port 5175 ≠ 5174 diizinkan — normalnya pakai 5174).
+
+> Catatan deploy: perubahan backend `backend/` & panel `backend-admin/` perlu di-deploy ke Vercel masing-masing (kasirIndex & aggregate memakai query MySQL baru — pesan pakai `php artisan serve` lokal utk cek, lalu deploy).
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi 2026-08-30)
 
 ### Sesi Fitur SPP — bukti bayar satu arah (2026-08-30)
@@ -1244,3 +1290,42 @@ User lapor error saat chat. Investigasi + fix:
 Debug notes: pull env Vercel hasilnya di-mask `[SENSITIVE]` (tak bisa baca key). Loging: `vercel logs https://smkbu-sby.vercel.app/api/chat`. Tes 400/kosong via curl itu artefak escaping JSON di PowerShell - pakai body file + `--data-binary "@file"`.
 
 Verifikasi produksi: POST /api/chat -> 200, balasan real ~1.3s, knowledge matching OK (biaya -> ppdb). Deploy smkbu-sby.vercel.app.
+
+## Sesi - Security Hardening komprehensif (2026-08-30)
+
+Audit keamanan menyeluruh (auth, input, secrets, LLM, headers, CORS, privacy, deps) + fix semuanya sebelum deadline jam 3. Deployed: backend `pendaftaranspmb.vercel.app` & frontend `smkbu-sby.vercel.app`.
+
+**CRITICAL:**
+1. **Plaintext password dihapus** — kolom `plain_password` di `users` (sebelumnya disimpan saat register & reset password, dan ada di `User::$fillable` TIDAK di `$hidden`). Migration `2026_08_30_110000_drop_plain_password_from_users_table.php` jalan di local + TiDB. Referensi dihapus dari `AuthController` (register + resetPassword) & `User.php`. (Ikut jalan ke TiDB: migration SPP `add_guru_kasir_roles` + `create_spp_bills` yang sebelumnya tertunda - schema kini sinkron total.)
+2. **XSS chatbot** — `src/components/chatbot/ChatMessages.vue` render `marked()` + `v-html` tanpa sanitasi (confirmed `marked` v18 loloskan `<script>`/`<img onerror>`). Fix: pasang **DOMPurify** (`npm i dompurify`), sanitize output LLM (allowlist tag/attr ketat).
+3. **Reset token password tidak lagi tampil di layar di production** — hanya tampil saat `app()->isLocal()`; di production link di-log (`logger`) + pesan arahkan ke admin. Tanpa mailer, link tetap bisa diambil dari log Vercel oleh admin.
+
+**HIGH:**
+4. **Rate limiting** — throttle di routes: login `5,1`, register `5,1`, forgot-password `3,1`, pendaftaran `10,1` (brute-force login dulunya unlimited). Verifikasi: 5x gagal → 6th = **429**. **TRAP**: vercel.json `CACHE_STORE` sebelumnya `"array"` → counter throttle hilang tiap cold start (throttle tidak jalan!). Ganti `"database"` (tabel `cache`/`cache_locks` sudah ada di TiDB).
+5. **CSRF diaktifkan kembali** — exception `lamaran*`, `tabungan*`, `spp*` dihapus dari `bootstrap/app.php`. Karena frontend & backend same-site (`*.vercel.app` → cookie SameSite=Lax tetap terkirim cross-subdomain → CSRF nyata). Alur: backend `authStatus()` & route baru `GET /csrf-token` balas `csrf_token`; frontend `src/services/csrf.js` (getCsrfToken cache sekali/sesi) kirim header `X-CSRF-TOKEN` di POST/DELETE (ApplyModal /lamaran, TabunganView /tabungan, LamaranSayaView /lamaran/{id}).
+6. **IDOR TabunganController** fix — non-admin kini `user_id => 'prohibited'`; target user SELALU `$request->user()->id` (dulu bisa isi id user lain). Admin tetap bisa pilih user.
+7. **Security headers middleware baru** `app/Http/Middleware/SecurityHeaders.php` (X-Content-Type-Options nosniff, X-Frame-Options DENY, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy none, HSTS saat https). Terdaftar di `bootstrap/app.php`. Verifikasi header live OK.
+8. **CORS** — origin tak dikenal kini TIDAK dikirim header (dulu fallback ke origin pertama = salah).
+
+**MEDIUM:**
+9. **Upload hardening** — validasi `mimetypes` (finfo real content) ditambahkan untuk foto_3x4, kk_file, ijazah_file, sktm_file (bukan hanya ekstensi).
+10. **Race condition pendaftaran** — cek `exists` + `create` dibungkus `DB::transaction` + `lockForUpdate` (1 pendaftaran/user atomic).
+11. **Chatbot input validation** — `api/chat.js` & `src/services/chat.js`: max 20 pesan/history, max 2000 char/pesan, validasi array + role whitelist, `console.log(knowledge)` (kebocoran prompt) dihapus.
+
+**LOW/debt:**
+12. `npm audit fix` → 0 vulnerabilities (sebelumnya 2 high: nanoid, postcss — dev-only).
+13. Skip sementara (debt): private storage upload (file pendaftaran tidak pernah di-serve via URL publik — 0 referensi `/storage/` di views; di Vercel storage ephemeral); SESSION_LIFETIME 10080 & SESSION_ENCRYPT belum diubah.
+
+**Verifikasi live:** `/csrf-token` 200 + token real, `auth-status` balas csrf_token, chat POST 200 balasan BISA real, throttle 429, CSRF tanpa token 302, lowongan 200, landing 200, doodle frontend 200.
+
+**Penting utk sesi depan:** (a) JANGAN buka kembali CSRF exception tanpa sync frontend header; (b) vercel.json CACHE_STORE wajib `database` agar throttle jalan; (c) admin panel (`/admin`, spp/tabungan store di `backend-admin`) pakai blade + CSRF normal — tak terpengaruh. Test `PendaftaranControllerTest` dkk belum dijalankan ulang setelah race-condition refactor — jalan `php artisan test --filter=Pendaftaran` saat ada waktu.
+
+### Sesi - Code Review hasil Security Hardening + fix review (2026-08-30)
+
+Code review (skill `code-review-and-quality`) atas diff security hardening. 2 fix diterapkan & di-deploy, 1 temuan di-review & dibatalkan (false positive):
+
+1. **`src/services/csrf.js` — retry saat token gagal** (Critical dulu): `catch(() => null)` + cache permanen = semua POST/DELETE jadi 419 selamanya kalau fetch `/csrf-token` gagal sekali. Fix: kalau hasil null → `tokenPromise` di-reset → retry di panggilan berikutnya.
+2. **`TabunganController.php` — user_id admin wajib diisi** (Required dulu): rule admin `'nullable|exists:users,id'` → `'required|exists:users,id'`. Sebelumnya admin tanpa user_id → `User::findOrFail(null)` = 404. `$data['user_id'] ?? null` disederhanakan (sudah terjamin ada).
+3. **`PendaftaranController` double exists-check — TIDAK diubah (false positive)**: cek line 97 (fast-path UX, sebelum validasi) + guard `lockForUpdate` di transaksi (authoritative) adalah pola yang benar. `pendaftarans.user_id` cuma FK (bukan UNIQUE index) sehingga guard transaksi memang dibutuhkan; menghapus cek awal cuma menurunkan UX (yang double-submit kena validasi dulu).
+
+Verifikasi: `php -l` OK, `vite build` OK, backend redeploy (aliased `pendaftaranspmb.vercel.app`), frontend redeploy (aliased `smkbu-sby.vercel.app`). Solusi tetap: no `php artisan test` baru diperlukan (perubahan tidak menyentuh logic SPP/Pendaftaran validasi).
