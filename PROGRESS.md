@@ -4,6 +4,47 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi 2026-08-30)
+
+### Sesi Fitur SPP — bukti bayar satu arah (2026-08-30)
+
+Fitur SPP: bayar sekali di kasir → status langsung terlihat siswa, guru, admin, ortu. Tanpa payment gateway, input manual.
+
+**Arsitektur (per keputusan skoping):**
+- Web utama (blade): kasir input + guru rekap + siswa lihat status. Admin login ke panel (backend-admin) — web utama tetap TOLAK login admin.
+- Panel backend-admin: rekap read-only untuk admin.
+- Roles enum users → `('admin','siswa','pendaftar','guru','kasir')`.
+
+**Backend `backend/` (semua committed):**
+- Migrations: `2026_08_30_100000_add_guru_kasir_roles_to_users_table.php` (enum, kini driver-safe → skip di sqlite, jalan di MySQL/TiDB), `2026_08_30_100001_create_spp_bills_table.php` (`spp_bills` + `spp_payments`).
+- Models `SppBill.php` (`user`, `payments`), `SppPayment.php` (`bill`, `inputter`); relasi `sppBills()` di `User.php`.
+- `SppController.php`: `index` (siswa: bills+payments, terbayar/sisa), `store` (kasir/admin; POST JSON **dan** form blade — redirect back + sukses/error; `lunas` jika terbayar ≥ nominal), `adminIndex` (JSON `/admin/spp`), `kasirIndex` (view, search q), `rekapIndex` (view), `ortuIndex` (signed URL publik).
+- Routes: `GET /spp` (auth), `GET /spp/kasir` (kasir,admin), `POST /spp/pay` (kasir,admin), `GET /admin/spp` (JSON, guru,admin), `GET /admin/spp/rekap` (guru,admin), `GET /spp/ortu/{user}` (publik signed).
+- `AuthController::login`: guru → `/admin/spp/rekap`, kasir → `/spp/kasir`.
+- `GenerateSppBills.php` artisan command `spp:generate {--periode=} {--nominal=}` (default periode sekarang, nominal 150000; idempotent per user+periode via firstOrCreate).
+- Views `resources/views/spp/`: `kasir.blade.php` (input + search + stats), `rekap.blade.php` (+ tombol salin Link ortu), `ortu.blade.php` (tanpa akun, signed URL).
+- Helper `formatPeriode(periode)` / `formatPeriodeShort()` di `app/helpers.php` (bulan Indonesia locale-independent).
+- **Ortu link tanpa akun** = Laravel signed route (`URL::signedRoute('spp.ortu', ['user'=>id])`), validasi `hasValidSignature()` → 403 tanpa signature. Ditampilkan di rekap (guru/admin) utk di-share WhatsApp.
+- Test: `SppModelTest` (3), `SppCommandTest` (2), `SppControllerTest` (11 — termasuk ortu signed/no-signature, kasir/guru/admin/siswa guard). **Total 19 passed (55 assertions)**.
+
+**Frontend `backend-admin/` (committed):**
+- Copy: migrations SPP, models SppBill/SppPayment, helper `formatPeriode`(+Short), `SppController::rekapIndex`, route `GET /admin/spp` (role admin, name `admin.spp.index`), view `resources/views/spp/rekap.blade.php`, link sidebar "Rekap SPP".
+- `User.php` + `sppBills()` relasi.
+- Catatan: panel lokal `php artisan migrate` di-sqlite sudah lama rusak (migrasi lama pakai `ALTER TABLE ... MODIFY ENUM` non-sqlite) — bukan regresi sesi ini. Migrasi SPP baru dibuat driver-safe.
+
+**Frontend Vue `src/` (committed):**
+- `SppView.vue`: halaman siswa lihat ringkasan sisa + riwayat tagihan per periode (status lunas/belum, pembayaran). Route `/spp` `meta:{requiresSiswa}`. Link di navbar dropdown Layanan ("SPP", guard `guardSiswa`).
+- Role guru/kasir pada payload `?auth=` sudah didukung langsung (`frontendAuthUrl` role generik) — tidak perlu perubahan.
+
+**Commit:** `c2561ec` (slice1) `e15f71f` (slice2) `3d83510` (slice3) `8e70846` (slice4) `f4c222a` (5a) `54e8456` (5b) `31902a3` (5c) `d9c902d` (format bulan) `a559291` (5d).
+
+**Lanjutan / catatan:**
+- Migrasi prod TiDB belum dijalankan (role enum + spp tables) — jalan saat deploy backend & panel berikutnya.
+- Kasir input tanpa overpay di sisi server (amount min:1; jika lebih dari sisa tetap `lunas`) — acceptable, note `ponytail:`.
+- Nominal per-tingkat/kelas belum ada (data kelas belum dimodelkan) — `spp:generate` pakai nominal flat.
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi 2026-08-23)
 
 ### Sesi Web Vitals Optimization — LCP/CLS/INP (2026-08-23)
@@ -1182,3 +1223,24 @@ FIXED. Root cause: tidak ada global box-sizing, .drawer content-box (height:100%
 - SpmbBanner.vue .visual-card (kartu "Kuota Terbatas"): blur 12px -> blur(20px) saturate(160%) + -webkit prefix, border 0.14 -> 0.2, tambah inset highlight shadow. Deploy smkbu-sby.vercel.app.
 - Doodle login/pendaftar broken di produksi: root cause vercel.json backend pakai route catch-all `/(.*) -> api/index.php` sehingga /images/*.png masuk ke Laravel -> 404 (logo.png di root public ikut di-serve, tapi subfolder images tidak).
 - Fix: backend/vercel.json tambah route static sebelum catch-all: `/images/(.*) -> /public/images/$1` dan `/doodles/(.*) -> /public/doodles/$1`. Deploy pendaftaranspmb.vercel.app. Verifikasi: /images/doodle-selfie.png HTTP 200.
+
+
+---
+## Sesi - Perbaikan Chatbot BISA (2026-08-30)
+
+User lapor error saat chat. Investigasi + fix:
+
+1. **Model Groq deprecated -> error(crash)** (ROOT CAUSE utama)
+   - `api/chat.js` pakai model `llama-3.3-70b-versatile`. Groq mematikan model itu 16/08/2026 (developer tier) -> Groq balas 404 `model_not_found`. Kode lama `data.choices[0].message.content` crash (choices undefined) -> response "Groq Error"/500.
+   - Fix: ganti model ke **`openai/gpt-oss-120b`** (pengganti resmi dari docs Groq) + error handling: cek `!response.ok` dan `data.choices?.[0]?.message?.content` sebelum pakai, balas pesan ramah (bukan 500) saat Groq error/kosong. API key prod masih valid (hanya modelnya yang off).
+
+2. **`import ... with { type:"json" }` vs readFileSync**
+   - Sempat diganti ke `readFileSync` tapi di Vercel file .json tidak ikut ter-trace bundler -> ENOENT `/var/task/api/knowledge/data/school.json`, `FUNCTION_INVOCATION_FAILED`. Kembalikan ke `import ... with { type:"json" }` (esbuild Vercel inline JSON ke bundle). Jadi JANGAN ganti ke readFileSync.
+
+3. **`typing` tidak didefinisikan** di `src/views/ChatView.vue` (v-if="typing" -> warning Vue, indicator tidak muncul). Fix: `const typing = ref(false)`, set true saat kirim, false di finally; scroll dipindah ke finally juga.
+
+4. **History tidak terkirim** - `src/services/chat.js` hanya kirim pesan terakhir. Fix: kirim seluruh array `messages` (ChatView panggil `sendMessage(messages.value)` sehingga bot punya konteks percakapan).
+
+Debug notes: pull env Vercel hasilnya di-mask `[SENSITIVE]` (tak bisa baca key). Loging: `vercel logs https://smkbu-sby.vercel.app/api/chat`. Tes 400/kosong via curl itu artefak escaping JSON di PowerShell - pakai body file + `--data-binary "@file"`.
+
+Verifikasi produksi: POST /api/chat -> 200, balasan real ~1.3s, knowledge matching OK (biaya -> ppdb). Deploy smkbu-sby.vercel.app.

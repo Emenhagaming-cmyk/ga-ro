@@ -90,7 +90,7 @@ Ringkasan teknis seluruh implementasi proyek.
 
 ### Tabel `users`
 - id, name, username, email, password (hashed)
-- role: enum('admin','siswa','pendaftar') default 'pendaftar'
+- role: enum('admin','siswa','pendaftar','guru','kasir') default 'pendaftar'
 - timestamps
 
 ### Tabel `pendaftarans` (~45 kolom)
@@ -273,6 +273,20 @@ Web admin dipisah ke domain sendiri `https://spmb-admin.vercel.app` (project Ver
 - **Debug 500 "AuthenticationException Unauthenticated" (guest GET /admin)**: sebenarnya redirect login BEKERJA — debug `withExceptions()->render()` sementara di `bootstrap/app.php` menangkap SEMUA exception termasuk AuthenticationException → selalu render 500. Hapus render debug → redirect `/login` normal. Pelajaran: debug render di `withExceptions` mengalahkan `unauthenticated()` handler.
 - **Verifikasi production**: GET / → 302 /login 200; login admin → dashboard 200 (statTotal + "Pantau Data Pendaftar"); logout → /login; login siswa → ditolak ("Hanya akun admin"); `/pendaftaran` 200, export CSV 200 (text/csv), snapshot 200, show 200, `/up` 200.
 - `.env` lokal panel = sqlite + APP_KEY lokal (`base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=`) — hanya artisan lokal, JANGAN dipakai production.
+
+---
+
+## Fitur SPP — bukti bayar satu arah (Sesi 2026-08-30)
+
+Siswa bayar SPP sekali di kasir → status langsung terlihat siswa (login), guru/admin (rekap), ortu (link tanpa akun). Tanpa payment gateway, input manual (tunai/transfer).
+
+- **Data**: `spp_bills` (user_id, periode "Y-m", nominal, status belum/lunas, jatuh_tempo) + `spp_payments` (bill_id, metode tunai/transfer, amount, paid_at, input_by). Bill `lunas` saat sum payments ≥ nominal.
+- **Role baru**: `guru`, `kasir` (enum users). Web utama tolak admin; guru→rekap, kasir→input.
+- **Routes (web utama)**: `GET /spp` (siswa), `GET /spp/kasir` + `POST /spp/pay` (kasir,admin; terima JSON & form blade), `GET /admin/spp` (JSON) + `GET /admin/spp/rekap` (guru,admin), `GET /spp/ortu/{user}` publik **signed URL** (Laravel signedRoute, tanpa akun).
+- **Arsitektur akses**: web utama (blade) = kasir input + guru rekap + siswa status; panel backend-admin = rekap admin read-only (`/admin/spp`); frontend Vue = halaman siswa `/spp` (`requiresSiswa`) + navbar Layanan.
+- **Auto-tagihan**: `php artisan spp:generate {--periode=Y-m} {--nominal=}` — idempotent per siswa+periode.
+- **Helper**: `formatPeriode()`/`formatPeriodeShort()` — bulan Indonesia locale-independen (shared `frontendAuthUrl` pattern).
+- **Test**: 19 passed (55 assertions) — model, command, controller (guard role, ortu signed/un-signed, JSON & form path). Migrasi role driver-safe (skip sqlite, jalan MySQL/TiDB).
 
 ---
 
