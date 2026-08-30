@@ -217,4 +217,24 @@ class SppControllerTest extends TestCase
         $this->actingAs($siswa)->get('/spp/kasir')->assertRedirect(route('login'));
         $this->actingAs($siswa)->get('/admin/spp/rekap')->assertRedirect(route('login'));
     }
+
+    public function test_ortu_lihat_status_lewat_link_tanpa_akun(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $this->makeBill($siswa, 150000);
+
+        $url = \Illuminate\Support\Facades\URL::signedRoute('spp.ortu', ['user' => $siswa->id]);
+
+        $this->get($url)
+            ->assertStatus(200)
+            ->assertSee('Status SPP')
+            ->assertSee('Siswa Satu');
+    }
+
+    public function test_ortu_link_tanpa_signature_ditolak(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+
+        $this->get('/spp/ortu/' . $siswa->id)->assertStatus(403);
+    }
 }

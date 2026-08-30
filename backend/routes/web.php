@@ -84,3 +84,6 @@ Route::middleware(['auth', 'role:guru,admin'])->group(function () {
     Route::get('/admin/spp', [SppController::class, 'adminIndex'])->name('admin.spp.index');
     Route::get('/admin/spp/rekap', [SppController::class, 'rekapIndex'])->name('spp.rekap');
 });
+
+// SPP (publik) link orang tua — tanpa akun, via signed URL
+Route::get('/spp/ortu/{user}', [SppController::class, 'ortuIndex'])->name('spp.ortu');

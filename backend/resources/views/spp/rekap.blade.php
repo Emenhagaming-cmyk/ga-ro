@@ -69,7 +69,9 @@
                 <tr>
                     <td>
                         <strong style="color:#1c2a23;">{{ $s->name }}</strong>
-                        <div style="font-size:12px;color:#8a9890;">{{ $s->username }}</div>
+                        <div style="font-size:12px;color:#8a9890;">{{ $s->username }} ·
+                            <a href="#" class="rk-link" data-link="{{ URL::signedRoute('spp.ortu', ['user' => $s->id]) }}" onclick="copyOrtuLink(this); return false;">Link ortu</a>
+                        </div>
                     </td>
                     @foreach ($periodeBulan as $p)
                     @php
@@ -119,9 +121,25 @@
 .rk-badge.lunas { background: #dcfce7; color: #166534; }
 .rk-badge.belum { background: #fff1df; color: #b06a1f; }
 .rk-dash { color: #c3ccc5; }
+.rk-link { color: #1d4ed8; font-weight: 600; text-decoration: none; }
+.rk-link:hover { text-decoration: underline; }
+.rk-link.copied { color: #166534; }
 @media (max-width: 768px) {
     .rk-head { flex-direction: column; }
     .rk-table th, .rk-table td { padding: 8px 8px; }
     .rk-period { min-width: 84px; }
 }
 </style>
+<script>
+function copyOrtuLink(el) {
+    var old = el.textContent;
+    navigator.clipboard.writeText(el.getAttribute('data-link')).then(function () {
+        el.textContent = 'Tersalin!';
+        el.classList.add('copied');
+        setTimeout(function () {
+            el.textContent = old;
+            el.classList.remove('copied');
+        }, 1600);
+    });
+}
+</script>

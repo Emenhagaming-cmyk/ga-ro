@@ -111,6 +111,23 @@ class SppController extends Controller
         return view('spp.rekap', ['siswa' => $siswa]);
     }
 
+    public function ortuIndex(Request $request, User $user)
+    {
+        abort_unless($request->hasValidSignature(), 403, 'Link orang tua tidak valid atau kedaluwarsa.');
+
+        abort_if($user->role !== 'siswa', 404);
+
+        $bills = SppBill::with('payments')
+            ->where('user_id', $user->id)
+            ->orderBy('periode')
+            ->get();
+
+        return view('spp.ortu', [
+            'siswa' => $user,
+            'bills' => $bills,
+        ]);
+    }
+
     public function adminIndex()
     {
         $siswa = User::where('role', 'siswa')
