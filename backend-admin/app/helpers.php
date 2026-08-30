@@ -29,3 +29,25 @@ function frontendAuthUrl(): string
 
     return $frontend . '/?auth=' . rawurlencode(base64_encode(json_encode($payload)));
 }
+
+/**
+ * Format periode SPP "Y-m" → "Agustus 2026" (locale independen).
+ */
+function formatPeriode(string $periode): string
+{
+    $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    [$y, $m] = array_pad(explode('-', $periode), 2, '01');
+
+    return ($bulan[((int) $m) - 1] ?? '') . ' ' . $y;
+}
+
+/**
+ * Format periode SPP "Y-m" → "Agu 26" (locale independen, utk header tabel).
+ */
+function formatPeriodeShort(string $periode): string
+{
+    $pendek = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    [$y, $m] = array_pad(explode('-', $periode), 2, '01');
+
+    return ($pendek[((int) $m) - 1] ?? '') . ' ' . substr((string) $y, 2, 2);
+}

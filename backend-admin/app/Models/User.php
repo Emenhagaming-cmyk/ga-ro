@@ -49,4 +49,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function sppBills(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SppBill::class);
+    }
 }

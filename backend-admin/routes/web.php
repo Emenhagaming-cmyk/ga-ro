@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PendaftaranController;
+use App\Http\Controllers\SppController;
 
 // Panel admin terpisah dari web utama (spmb-backend-self.vercel.app)
 // Database sama (TiDB) — data yang dimonitor = data dari web utama.
@@ -31,4 +32,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/pendaftaran/{pendaftaran}/status', [PendaftaranController::class, 'updateStatus'])->name('pendaftaran.status');
     Route::delete('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'destroy'])->name('pendaftaran.destroy');
     Route::post('/admin/akun/{user}/reset-password', [PendaftaranController::class, 'resetUserPassword'])->name('admin.resetPassword');
+
+    // SPP (rekap read-only untuk admin)
+    Route::get('/admin/spp', [SppController::class, 'rekapIndex'])->name('admin.spp.index');
 });
