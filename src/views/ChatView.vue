@@ -8,6 +8,8 @@ import { sendMessage } from "@/services/chat.js"
 
 const messageBox = ref(null)
 
+const typing = ref(false)
+
 const messages = ref([
   {
     role: "assistant",
@@ -22,32 +24,30 @@ async function handleSend(text){
     role:"user",
     content:text
   })
+
+  typing.value = true
   try{
 
-    const data = await sendMessage(text)
+    const data = await sendMessage(messages.value)
 
     messages.value.push({
       role:"assistant",
       content:data.reply
     })
-  await nextTick()
-
-messageBox.value?.$el.scrollTo({
-  top: messageBox.value.$el.scrollHeight,
-  behavior: "smooth"
-})
   }catch(e){
 
     messages.value.push({
       role:"assistant",
       content:"Maaf, BISA sedang mengalami gangguan."
     })
-      await nextTick()
+  }finally{
+    typing.value = false
+    await nextTick()
 
-messageBox.value?.$el.scrollTo({
-  top: messageBox.value.$el.scrollHeight,
-  behavior: "smooth"
-})
+    messageBox.value?.$el.scrollTo({
+      top: messageBox.value.$el.scrollHeight,
+      behavior: "smooth"
+    })
   }
 
 }

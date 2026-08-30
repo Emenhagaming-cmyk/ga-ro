@@ -106,9 +106,23 @@ public function index(RegistrationInsightService $insightService)
         $data['status'] = 'baru';
         $data = $this->handleFileUploads($request, $data);
 
-        $request->session()->forget('pending_pendaftaran');
+        // Race condition guard: cek + create atomic (unique 1 pendaftaran/user).
+        $created = \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $exists = Pendaftaran::where('user_id', $data['user_id'])->lockForUpdate()->exists();
 
-        Pendaftaran::create($data);
+            if ($exists) {
+                return null;
+            }
+
+            return Pendaftaran::create($data);
+        });
+
+        if ($created === null) {
+            $request->session()->forget('pending_pendaftaran');
+
+            return redirect()->route('dashboard.siswa')
+                ->with('error', 'Kamu udah mengirim pendaftaran. Pantau status kamu di dashboard ya.');
+        }
 
         return redirect()->route('dashboard.siswa')->with('success', 'Yey! Pendaftaran berhasil dikirim. Pantau status kamu di dashboard ya.');
     }
@@ -164,10 +178,10 @@ public function index(RegistrationInsightService $insightService)
             'email_orang_tua' => 'nullable|email|max:255',
             'jenis_pembayaran' => 'nullable|in:Transfer,Tunai',
             'berkas_tambahan' => 'nullable|string',
-            'foto_3x4' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'kk_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'ijazah_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'sktm_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'foto_3x4' => 'nullable|image|mimes:jpg,jpeg,png|mimetypes:image/jpeg,image/png|max:2048',
+            'kk_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|mimetypes:image/jpeg,image/png,application/pdf|max:2048',
+            'ijazah_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|mimetypes:image/jpeg,image/png,application/pdf|max:2048',
+            'sktm_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|mimetypes:image/jpeg,image/png,application/pdf|max:2048',
             'nama_orang_tua' => 'nullable|string|max:255',
             'no_hp_orang_tua' => 'nullable|string|max:20',
             'status' => 'sometimes|in:baru,diproses,diterima,ditolak'

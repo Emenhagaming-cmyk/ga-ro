@@ -149,6 +149,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useAuthSession } from '@/composable/useAuthSession'
+import { getCsrfToken } from '@/services/csrf'
 
 const props = defineProps({
   job: { type: Object, required: true }
@@ -223,6 +224,7 @@ async function submitApplication() {
     const res = await fetch(`${BACKEND}/lamaran`, {
       method: 'POST',
       credentials: 'include',
+      headers: { 'X-CSRF-TOKEN': await getCsrfToken() },
       body: fd
     })
 

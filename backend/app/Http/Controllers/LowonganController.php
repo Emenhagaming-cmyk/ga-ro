@@ -41,4 +41,9 @@ class LowonganController extends Controller
     {
         return response()->json($lowongan);
     }
+
+    public function count()
+    {
+        return response()->json(['total' => Lowongan::where('is_active', true)->count()]);
+    }
 }

@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Career Center API
+Route::get('/lowongan/count', [LowonganController::class, 'count']);
 Route::get('/lowongan', [LowonganController::class, 'index']);
 Route::get('/lowongan/{lowongan}', [LowonganController::class, 'show']);
 

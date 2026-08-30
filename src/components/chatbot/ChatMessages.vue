@@ -1,5 +1,6 @@
 <script setup>
 import { marked } from "marked"
+import DOMPurify from "dompurify"
 import school from "@/config/school"
 
 defineProps({
@@ -26,7 +27,12 @@ function renderMessage(text){
     `[${school.phone}](tel:${school.phone.replace(/\D/g,"")})`
   )
 
-  return marked(text)
+  // XSS guard: output LLM tidak dipercaya — DOMPurify setelah marked
+  return DOMPurify.sanitize(marked(text), {
+    ALLOWED_TAGS: ["p","br","strong","em","ul","ol","li","h1","h2","h3","code","pre","blockquote","a","span"],
+    ALLOWED_ATTR: ["href","title","target","rel","class"],
+    ALLOW_DATA_ATTR: false,
+  })
 
 }
 </script>

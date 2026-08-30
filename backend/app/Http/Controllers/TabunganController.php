@@ -13,12 +13,8 @@ class TabunganController extends Controller
         $user = $request->user();
         $tabungans = Tabungan::where('user_id', $user->id)->latest()->get();
 
-        $saldo = $tabungans->reduce(function ($carry, $t) {
-            return $carry + ($t->type === 'setor' ? $t->amount : -$t->amount);
-        }, 0);
-
         return response()->json([
-            'saldo' => $saldo,
+            'saldo' => self::saldoFor($user->id),
             'transaksi' => $tabungans->map(fn ($t) => [
                 'id' => $t->id,
                 'type' => $t->type,
@@ -29,6 +25,15 @@ class TabunganController extends Controller
         ]);
     }
 
+    // ponytail: saldo via 1 aggregate query, bukan load semua transaksi ke PHP
+    // lalu reduce (over-fetch). Berhenti jika index datanya membesar.
+    private static function saldoFor(int $userId): int
+    {
+        return (int) Tabungan::where('user_id', $userId)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'setor' THEN amount ELSE -amount END), 0) as saldo")
+            ->value('saldo');
+    }
+
     public function store(Request $request)
     {
         $isAdmin = $request->user()->role === 'admin';
@@ -37,19 +42,19 @@ class TabunganController extends Controller
             'type' => 'required|in:setor,tarik',
             'amount' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
-            'user_id' => $isAdmin ? 'required|exists:users,id' : 'nullable|exists:users,id',
+            'user_id' => $isAdmin ? 'required|exists:users,id' : 'prohibited',
         ]);
 
-        $user = $data['user_id'] ?? $request->user()->id;
+        // IDOR fix: user non-admin tidak boleh menentukan user_id (selalu diri sendiri)
+        $user = $isAdmin ? $data['user_id'] : $request->user()->id;
         $targetUser = User::findOrFail($user);
 
         if ($targetUser->role !== 'siswa') {
             return response()->json(['message' => 'Tabungan hanya untuk akun siswa.'], 422);
         }
 
-        $saldoSaatIni = Tabungan::where('user_id', $user)->get()->reduce(function ($carry, $t) {
-            return $carry + ($t->type === 'setor' ? $t->amount : -$t->amount);
-        }, 0);
+        $saldoSaatIni = self::saldoFor($user);
+        $saldoBaru = $saldoSaatIni + ($data['type'] === 'setor' ? $data['amount'] : -$data['amount']);
 
         if ($data['type'] === 'tarik' && $data['amount'] > $saldoSaatIni) {
             return response()->json(['message' => 'Saldo tidak cukup untuk penarikan.'], 422);
@@ -61,8 +66,6 @@ class TabunganController extends Controller
             'amount' => $data['amount'],
             'description' => $data['description'] ?? null,
         ]);
-
-        $saldoBaru = $saldoSaatIni + ($data['type'] === 'setor' ? $data['amount'] : -$data['amount']);
 
         return response()->json([
             'message' => $data['type'] === 'setor' ? 'Setoran berhasil.' : 'Penarikan berhasil.',

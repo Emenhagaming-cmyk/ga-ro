@@ -6,6 +6,7 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\PreventBrowserCache;
 use App\Http\Middleware\HandleTokenMismatch;
 use App\Http\Middleware\Cors;
+use App\Http\Middleware\SecurityHeaders;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             PreventBrowserCache::class,
+            SecurityHeaders::class,
         ]);
 
         $middleware->prepend(Cors::class);
@@ -27,9 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'lamaran*',
-            'tabungan*',
-            'spp*',
+            // CLOSED: lamaran/tabungan/spp pakai X-CSRF-TOKEN header (same-site *.vercel.app → wajib)
         ]);
 
         $middleware->alias([

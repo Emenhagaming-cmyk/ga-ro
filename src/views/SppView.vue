@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { ChevronLeft, RefreshCw, Wallet, CheckCircle2, Clock, Receipt } from "lucide-vue-next";
 import { useAuthSession } from "@/composable/useAuthSession";
+import { fetchJson } from "@/services/fetchJson";
 
 const { session, BACKEND } = useAuthSession();
 
@@ -27,7 +28,7 @@ async function loadData() {
   loading.value = true;
   error.value = "";
   try {
-    const res = await fetch(`${BACKEND}/spp`, { credentials: "include" });
+    const res = await fetchJson(`${BACKEND}/spp`);
     if (!res.ok) throw new Error("Gagal memuat tagihan SPP.");
     bills.value = (await res.json()).bills || [];
   } catch (e) {

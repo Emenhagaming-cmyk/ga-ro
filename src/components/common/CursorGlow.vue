@@ -1,36 +1,40 @@
 <template>
   <div
     v-if="desktop"
+    ref="el"
     class="cursor"
-    :style="{
-      left: x + 'px',
-      top: y + 'px'
-    }"
   />
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 
-const x = ref(0);
-const y = ref(0);
+const el = ref(null);
 const desktop = ref(false);
+let raf = 0;
 
+// ponytail: tulis langsung ke el.style di requestAnimationFrame — tanpa Vue
+// reactivity (ref tiap mousemove memicu re-render) & tanpa CSS transition pada
+// left/top. INP: biaya mousemove ~1 gaya/tempat layout bukan patch DOM.
 function move(e) {
-  x.value = e.clientX;
-  y.value = e.clientY;
+  if (raf) return;
+  raf = requestAnimationFrame(() => {
+    raf = 0;
+    if (el.value) {
+      el.value.style.left = e.clientX + "px";
+      el.value.style.top = e.clientY + "px";
+    }
+  });
 }
 
 onMounted(() => {
   desktop.value = window.innerWidth > 900;
-
-  if (desktop.value) {
-    window.addEventListener("mousemove", move);
-  }
+  if (desktop.value) window.addEventListener("mousemove", move, { passive: true });
 });
 
 onUnmounted(() => {
   window.removeEventListener("mousemove", move);
+  if (raf) cancelAnimationFrame(raf);
 });
 </script>
 
@@ -59,10 +63,6 @@ transparent 70%
 filter:blur(20px);
 
 z-index:0;
-
-transition:
-left .08s linear,
-top .08s linear;
 
 }
 

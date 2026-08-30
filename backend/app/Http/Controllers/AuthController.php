@@ -90,6 +90,11 @@ class AuthController extends Controller
         return redirect(frontendAuthUrl());
     }
 
+    public function csrfToken()
+    {
+        return response()->json(['csrf_token' => csrf_token()]);
+    }
+
     public function authStatus(Request $request)
     {
         if (!$request->user()) {

@@ -4,6 +4,30 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi debug produksi — 2026-08-30 malam)
+
+### Investigasi 500 produksi (backend + admin) — BELUM SOLVED
+
+**Gejala:** Semua route backend & admin 500 body-kosong di Vercel (bahkan `/up` health Laravel), tanpa error output walau `APP_DEBUG=true`. Local `php artisan serve` (PHP 8.2) BOOTS BERSIH dengan SEMUA kode terbaru. Kedua project (`spmb-backend` & `backend-admin`) patah bersamaan; user deploy 22m sebelum pun sudah broken.
+
+**Yang sudah dilakukan / diverifikasi:**
+- **Env vars project OK** (permintaan user): APP_KEY, DB_CONNECTION/HOST/PORT/DATABASE/USERNAME/PASSWORD, MYSQL_ATTR_SSL_CA, APP_URL, FRONTEND_URL, SESSION_SAME_SITE semua ada.
+- **SSO/Deployment Protection `spmb-backend` sempat ON** → dimatikan via API PATCH `{"ssoProtection":null}` (per trap AGENTS.md). Belum solusi 500.
+- **dompdf DISPROVEN** (test decisif): `composer remove barryvdh/laravel-dompdf` di `backend-admin` → deploy preview `spmb-admin-qg31bzytd-...` → masih 500 di `/login`,`/up`,`/admin`. → Komposer/lock/vendor admin direstore penuh ke semula (git bersih untuk composer.json/lock). Dompdf DIPAKAI di `backend/PendaftaranController.php:345` & `admin/PendaftaranController.php:409` → tidak boleh dihapus permanen.
+- **Fresh build = broken, old build = OK**: deployment lama `spmb-backend-60pba8i8d-...` & `5bbtoh1cc-...` masih 200 (di-uji ulang). Hanya *fresh* `composer build` yg 500. `composer.lock` sama dgn HEAD (tidak drift). → Break kemungkinan di **environment build Vercel (PHP 8.3 via vercel-php@0.7.4; lokal 8.2)** / vendor fresh, bukan kode app.
+- Ruled out: missing env, SSO, stale `bootstrap/cache` (sudah di `.vercelignore`, masih 500), syntax `php -l` bersih (index.php, bootstrap/app.php, providers.php), dompdf.
+- **BLOCKER:** Vercel API log runtime/build semua 404 (`/v3/deployments/{id}/runtime-logs`, `/v1/deployments/{id}/build-log`, `/v2/deployments/{id}/buildlog`). Tidak bisa lihat fatal PHP asli; CLI `vercel logs` hanya line access PHP built-in-server.
+
+**Tindakan permanen kini di working tree:** `backend/vercel.json` APP_DEBUG dikembalikan **false**; `backend/.vercelignore` menyertakan `bootstrap/cache` (pertahankan). Prod alias saat ini masih menunjuk ke deploy broken.
+
+**RECOVERY DIEKSEKUSI ✓ (selesai 2026-08-30):** repoint production alias ke deployment lama yg dikenal-baik:
+- `pendaftaranspmb.vercel.app` → `spmb-backend-60pba8i8d-...` (`vercel alias set`) → `/login` 200, `/up` 200.
+- `paneladminsmkbu.vercel.app` → `spmb-admin-px9we7k0z-...` (08-23, terakhir brom sebelum break) → `/login` 200, `/up` 200.
+- Situs produksi **NORMAL kembali**. Note: deploy admin terakhir `acddcb7sj` (08-30 06:25) SUDAH broken → break terjadi antara 08-23 (good) dan 06:25 hari ini.
+- **Belum solved: fresh `composer build` tetap 500** → optimasi baru (Tabungan count SQL, spp/guru-kasir, chartData/laporan) BELUM hidup di produksi (alias lama tdk memuatnya). Staging berikutnya bedah `vercel-php`/PHP 8.3 vs vendor (mis. `thecodingmachine/safe` yg tampil "could not scan" saat composer op) atau minimal-repro PHP polos di Vercel, lalu fresh deploy + alias lagi.
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi deploy — 2026-08-30)
 
 ### Deploy SPP + Optimasi ke Produksi
@@ -1329,3 +1353,22 @@ Code review (skill `code-review-and-quality`) atas diff security hardening. 2 fi
 3. **`PendaftaranController` double exists-check — TIDAK diubah (false positive)**: cek line 97 (fast-path UX, sebelum validasi) + guard `lockForUpdate` di transaksi (authoritative) adalah pola yang benar. `pendaftarans.user_id` cuma FK (bukan UNIQUE index) sehingga guard transaksi memang dibutuhkan; menghapus cek awal cuma menurunkan UX (yang double-submit kena validasi dulu).
 
 Verifikasi: `php -l` OK, `vite build` OK, backend redeploy (aliased `pendaftaranspmb.vercel.app`), frontend redeploy (aliased `smkbu-sby.vercel.app`). Solusi tetap: no `php artisan test` baru diperlukan (perubahan tidak menyentuh logic SPP/Pendaftaran validasi).
+
+### Sesi - Optimasi Panel Admin (2026-08-30)
+
+Optimasi `backend-admin` (deployed ke **paneladminsmkbu.vercel.app** — domain production sesuai APP_URL, bukan spmb-admin). Skill `performance-optimization`: user pilih langsung fix, hasil terukur.
+
+**Ukur:** query TiDB = 34–38ms/query (BUKAN bottleneck), TLS handshake ~208ms, cold start serverless `GET /admin` ~4.4s, warm ~530ms.
+
+**Fix di-keep (deployed + verified):**
+1. **Migration index `pendaftarans`** (`2026_08_30_120000_...`): status, user_id, created_at, nisn, nik, composite(status,jurusan_pilihan). Di-backup ke `backend/` juga (sinkron). Jalan di TiDB + backend local mysql. `SHOW INDEX` verified. **Override** PERF B4 (yang revert) — bentuk index cocok query admin, tax tulis rendah; nilai nyata saat data besar.
+2. **exportCsv** `->get()` → `select(18 kolom)+cursor()` — anti OOM; CSV verified 200.
+3. **Spp rekap** `->take(200)`; **laporan** `->limit(100)` — bounded.
+4. Hapus `Cache-Control: max-age=30` dead di dashboard (middleware `PreventBrowserCache` yang menang).
+5. **vercel.json `CACHE_STORE` array→database** (sama seperti backend web — future `Cache::` jalan).
+6. **Bug fix**: hapus `plain_password` dari `User::$fillable` & `resetUserPassword()` (kolom sudah di-drop TiDB → reset password di prod tadinya SQL error).
+7. **Bug data**: akun `admin` (id=1) di TiDB ber-role `pendaftar` → **tidak bisa login panel**. Diperbaiki `role='admin'` (user setujui). Login admin verified 200 → `/admin` ter-render, export jalan.
+
+**Bukan masalah:** cold start ~4.4s pertama melekat di Vercel PHP serverless; polling 20s dashboard menjaga instance hangat. Keep-warm cron dipertimbangkan → skip.
+
+**TRAP:** (a) domain admin = `paneladminsmkbu.vercel.app` (vercel.json APP_URL); AGENTS.md lama tulis spmb-admin.vercel.app — sudah usang. (b) Backend-admin local sqlite gagal migrate di migration lama `fix_role_column` (SQL `MODIFY` MySQL-only) — pre-existing, bukan dari perubahan ini. (c) LSP error SppController/createToken = noise false-positive (file exist).

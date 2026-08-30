@@ -4,17 +4,21 @@ import Navbar from "@/components/layout/Navbar.vue";
 import Footer from "@/components/layout/Footer.vue";
 import Hero from "@/components/sections/Hero.vue";
 import AboutSchool from "@/components/sections/AboutSchool.vue";
-import SpmbBanner from "@/components/sections/SpmbBanner.vue";
-import BeritaPreview from "@/components/sections/BeritaPreview.vue";
-import CareerPreview from "@/components/sections/CareerPreview.vue";
-import KoperasiPreview from "@/components/sections/KoperasiPreview.vue";
-import ProdukPreview from "@/components/sections/ProdukPreview.vue";
-import TabunganBanner from "@/components/sections/TabunganBanner.vue";
 import BackgroundFX from "@/components/common/BackgroundFX.vue";
 import FloatingAi from "@/components/chatbot/FloatingAi.vue";
 import ContactModal from "@/components/common/ContactModal.vue";
-import { ref } from "vue";
+import LazyMount from "@/components/common/LazyMount.vue";
+import { ref, defineAsyncComponent } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
+
+// ponytail: section di bawah fold pakai async component + lazy mount → chunk
+// terpisah & baru dirender/di-fetch saat mendekati viewport, bukan di awal.
+const SpmbBanner = defineAsyncComponent(() => import("@/components/sections/SpmbBanner.vue"));
+const BeritaPreview = defineAsyncComponent(() => import("@/components/sections/BeritaPreview.vue"));
+const CareerPreview = defineAsyncComponent(() => import("@/components/sections/CareerPreview.vue"));
+const KoperasiPreview = defineAsyncComponent(() => import("@/components/sections/KoperasiPreview.vue"));
+const ProdukPreview = defineAsyncComponent(() => import("@/components/sections/ProdukPreview.vue"));
+const TabunganBanner = defineAsyncComponent(() => import("@/components/sections/TabunganBanner.vue"));
 
 const { session, BACKEND } = useAuthSession();
 const showContact = ref(false);
@@ -96,12 +100,12 @@ const scLabel = () => {
       </div>
       <Hero />
       <AboutSchool />
-      <SpmbBanner />
-      <BeritaPreview />
-      <CareerPreview />
-      <KoperasiPreview />
-      <ProdukPreview />
-      <TabunganBanner />
+      <LazyMount><SpmbBanner /></LazyMount>
+      <LazyMount><BeritaPreview /></LazyMount>
+      <LazyMount><CareerPreview /></LazyMount>
+      <LazyMount><KoperasiPreview /></LazyMount>
+      <LazyMount><ProdukPreview /></LazyMount>
+      <LazyMount><TabunganBanner /></LazyMount>
       <Footer @open-contact="showContact = true" />
       <ContactModal v-model="showContact" />
     </div>

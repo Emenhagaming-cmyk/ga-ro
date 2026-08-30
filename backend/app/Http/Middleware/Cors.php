@@ -22,7 +22,11 @@ $allowedOrigins = [
         ];
 
         $origin = $request->header('Origin');
-        $allowOrigin = in_array($origin, $allowedOrigins) ? $origin : reset($allowedOrigins);
+        // Hanya kirim CORS header untuk origin yang dikenal; selain itu biarkan kosong.
+        if (!in_array($origin, $allowedOrigins)) {
+            return $next($request);
+        }
+        $allowOrigin = $origin;
 
         if ($request->isMethod('OPTIONS')) {
             return response('', 204)

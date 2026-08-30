@@ -90,10 +90,9 @@ class SppController extends Controller
                 ->when($q !== '', fn ($u) => $u->where(function ($w) use ($q) {
                     $w->where('name', 'like', "%{$q}%")->orWhere('username', 'like', "%{$q}%");
                 })))
+            ->whereRaw('(SELECT COALESCE(SUM(spp_payments.amount),0) FROM spp_payments WHERE spp_payments.bill_id = spp_bills.id) < nominal')
             ->orderByDesc('periode')
             ->get();
-
-        $bills = $bills->filter(fn (SppBill $b) => $b->payments->sum('amount') < $b->nominal);
 
         return view('spp.kasir', [
             'bills' => $bills,

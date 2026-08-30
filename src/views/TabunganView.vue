@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { ChevronLeft, ArrowDownToLine, ArrowUpFromLine, X, RefreshCw, Wallet, Sparkles } from "lucide-vue-next";
 import { useAuthSession } from "@/composable/useAuthSession";
+import { getCsrfToken } from "@/services/csrf";
+import { fetchJson } from "@/services/fetchJson";
 
 const { session, BACKEND } = useAuthSession();
 
@@ -27,7 +29,7 @@ async function loadData() {
   loading.value = true;
   error.value = "";
   try {
-    const res = await fetch(`${BACKEND}/tabungan`, { credentials: "include" });
+    const res = await fetchJson(`${BACKEND}/tabungan`);
     if (!res.ok) throw new Error("Gagal memuat data tabungan.");
     const data = await res.json();
     saldo.value = data.saldo || 0;
@@ -66,10 +68,9 @@ async function submitModal() {
 
   modalBusy.value = true;
   try {
-    const res = await fetch(`${BACKEND}/tabungan`, {
+    const res = await fetchJson(`${BACKEND}/tabungan`, {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": await getCsrfToken() },
       body: JSON.stringify({
         type: modalMode.value,
         amount,

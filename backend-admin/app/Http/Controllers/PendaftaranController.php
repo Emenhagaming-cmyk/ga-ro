@@ -56,8 +56,7 @@ public function dashboard(RegistrationInsightService $insightService)
         $akunSiswa = User::where('role', '!=', 'admin')->latest()->take(5)->get();
         $insight = $insightService->generateSummary($stats);
 
-        return response()->view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa'))
-            ->header('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+        return response()->view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa'));
     }
 
     public function index(Request $request)
@@ -92,46 +91,42 @@ public function dashboard(RegistrationInsightService $insightService)
         $start = now()->startOfWeek();
         $end = now()->endOfWeek();
 
-        $stats = [
-            'baru' => Pendaftaran::where('status', 'baru')->count(),
-            'diproses' => Pendaftaran::where('status', 'diproses')->count(),
-            'diterima' => Pendaftaran::where('status', 'diterima')->count(),
-            'ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
-            'jurusan' => [
-                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
-                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
-                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
-            ],
-        ];
+        $stats = self::freshStats();
 
-        $mingguIni = Pendaftaran::whereBetween('created_at', [$start, $end])->latest()->get();
+        $mingguIni = Pendaftaran::whereBetween('created_at', [$start, $end])->latest()->limit(100)->get();
 
         return view('pendaftaran.laporan', compact('stats', 'mingguIni', 'start', 'end'));
     }
 
     private function chartData(): array
     {
-        $daily = collect(range(29, 0))->map(function ($i) {
+        $start = now()->subDays(29)->startOfDay();
+
+        // ponytail: 1 query GROUP BY hari (30 hari) — bukan 30 COUNT WHERE per hari
+        $byDay = Pendaftaran::where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as d, COUNT(*) as cnt')
+            ->groupBy('d')
+            ->pluck('cnt', 'd');
+
+        $daily = collect(range(29, 0))->map(function ($i) use ($byDay) {
             $date = now()->subDays($i)->format('Y-m-d');
             return [
                 'label' => now()->subDays($i)->format('d/m'),
-                'count' => Pendaftaran::whereDate('created_at', $date)->count(),
+                'count' => (int) $byDay->get($date, 0),
             ];
         });
+
+        $stats = self::freshStats();
 
         return [
             'daily' => $daily->pluck('count')->values(),
             'daily_labels' => $daily->pluck('label')->values(),
-            'jurusan' => [
-                'RPL' => Pendaftaran::where('jurusan_pilihan', 'RPL')->count(),
-                'TKJ' => Pendaftaran::where('jurusan_pilihan', 'TKJ')->count(),
-                'AKL' => Pendaftaran::where('jurusan_pilihan', 'AKL')->count(),
-            ],
+            'jurusan' => $stats['jurusan'],
             'status' => [
-                'Baru' => Pendaftaran::where('status', 'baru')->count(),
-                'Diproses' => Pendaftaran::where('status', 'diproses')->count(),
-                'Diterima' => Pendaftaran::where('status', 'diterima')->count(),
-                'Ditolak' => Pendaftaran::where('status', 'ditolak')->count(),
+                'Baru' => $stats['baru'],
+                'Diproses' => $stats['diproses'],
+                'Diterima' => $stats['diterima'],
+                'Ditolak' => $stats['ditolak'],
             ],
         ];
     }
@@ -362,13 +357,17 @@ public function dashboard(RegistrationInsightService $insightService)
             'created_at' => 'Tanggal Daftar',
         ];
 
-        $pendaftarans = Pendaftaran::orderBy('id')->get();
+        // ponytail: cursor() streaming — model dibangun satu per satu, bukan ALL rows di RAM.
+        // select() hanya kolom yang dipakai (18 kolom, bukan ~45).
+        $pendaftarans = Pendaftaran::select(array_keys($fields))->orderBy('id')->cursor();
 
         $handle = fopen('php://temp', 'r+');
         fputcsv($handle, array_merge(['No'], array_values($fields)), ';');
 
-        foreach ($pendaftarans as $i => $p) {
-            $row = [$i + 1];
+        $i = 0;
+        foreach ($pendaftarans as $p) {
+            $i++;
+            $row = [$i];
             foreach (array_keys($fields) as $field) {
                 $row[] = $field === 'created_at'
                     ? optional($p->created_at)->format('Y-m-d H:i')
@@ -422,7 +421,7 @@ public function dashboard(RegistrationInsightService $insightService)
         abort_if($user->role === 'admin', 403);
 
         $plain = strtoupper(substr(uniqid(), -8));
-        $user->update(['password' => bcrypt($plain), 'plain_password' => $plain]);
+        $user->update(['password' => bcrypt($plain)]);
 
         return back()->with('reset_password', [
             'name' => $user->name,

@@ -1,4 +1,9 @@
-export async function sendMessage(message){
+export async function sendMessage(history){
+
+  // Client-side guard mirip backend: batasi panjang & jumlah pesan
+  const trimmed = (history || [])
+    .slice(-20)
+    .map(m => ({ ...m, content: String(m.content || "").slice(0, 2000) }))
 
   const res = await fetch("/api/chat",{
 
@@ -10,14 +15,7 @@ export async function sendMessage(message){
 
     body:JSON.stringify({
 
-      history:[
-        {
-          role:"user",
-          content:message
-        }
-      ],
-
-      user:"guest"
+      history: trimmed
 
     })
 

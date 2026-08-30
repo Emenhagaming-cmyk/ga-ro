@@ -41,6 +41,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthSession } from '@/composable/useAuthSession'
+import { getCsrfToken } from '@/services/csrf'
+import { fetchJson } from '@/services/fetchJson'
 
 const { BACKEND } = useAuthSession()
 const lamarans = ref([])
@@ -49,7 +51,7 @@ const loading = ref(true)
 async function fetchLamarans() {
   loading.value = true
   try {
-    const res = await fetch(`${BACKEND}/lamaran/saya`, { credentials: 'include' })
+    const res = await fetchJson(`${BACKEND}/lamaran/saya`)
     lamarans.value = await res.json()
   } catch (e) {
     lamarans.value = []
@@ -72,9 +74,9 @@ function statusLabel(s) {
 async function cancelLamaran(lamaran) {
   if (!confirm('Batalkan lamaran ini?')) return
   try {
-    const res = await fetch(`${BACKEND}/lamaran/${lamaran.id}`, {
+    const res = await fetchJson(`${BACKEND}/lamaran/${lamaran.id}`, {
       method: 'DELETE',
-      credentials: 'include',
+      headers: { 'X-CSRF-TOKEN': await getCsrfToken() },
     })
     if (res.ok) fetchLamarans()
   } catch (e) {}

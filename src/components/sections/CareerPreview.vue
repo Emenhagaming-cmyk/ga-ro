@@ -29,9 +29,9 @@ const lowonganCount = ref(0);
 
 onMounted(async () => {
   try {
-    const res = await fetch(`${BACKEND}/lowongan`, { credentials: "include" });
+    const res = await fetch(`${BACKEND}/lowongan/count`, { credentials: "include" });
     const data = await res.json();
-    lowonganCount.value = Array.isArray(data) ? data.length : data.total || 0;
+    lowonganCount.value = data.total || 0;
   } catch (e) {
     lowonganCount.value = 0;
   }

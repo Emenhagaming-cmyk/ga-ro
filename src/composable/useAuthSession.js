@@ -51,37 +51,47 @@ function sessionFromStorage() {
 const session = ref(sessionFromStorage() || { ...GUEST });
 const loaded = ref(true); // ponytail: start loaded, update async — jangan block render
 let bfcacheBound = false;
-let intervalBound = false;
 
 function persist(s) {
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
 }
 
-export function useAuthSession() {
-  async function fetchStatus() {
-    try {
-      const res = await fetch(`${BACKEND}/auth-status`, {
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json();
-        // ponytail: mobile memblokir cookie third-party → server menjawab
-        // "guest" walau user login; jangan downgrade cache yang sudah login
-        if (data.logged_in || !session.value.logged_in) {
-          session.value = norm(data);
-          persist(session.value);
-        }
-      }
-    } catch (e) {
-      // backend off / cors blocked — anggap guest, tapi jangan downgrade login cache
-      if (!session.value.logged_in) {
-        session.value = { ...GUEST };
+async function fetchStatus() {
+  try {
+    const res = await fetch(`${BACKEND}/auth-status`, {
+      credentials: "include",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // ponytail: mobile memblokir cookie third-party → server menjawab
+      // "guest" walau user login; jangan downgrade cache yang sudah login
+      if (data.logged_in || !session.value.logged_in) {
+        session.value = norm(data);
         persist(session.value);
       }
     }
-    loaded.value = true;
+  } catch (e) {
+    // backend off / cors blocked — anggap guest, tapi jangan downgrade login cache
+    if (!session.value.logged_in) {
+      session.value = { ...GUEST };
+      persist(session.value);
+    }
   }
+  loaded.value = true;
+}
 
+// ponytail: SATU interval global (banyak komponen memanggil composable ini),
+// dan HANYA fetch saat login — guest di landing publik hemat jaringan/baterai.
+// Intervalnya sendiri tetap jalan (timer JS murah); yang di-skip adalah fetch.
+let intervalBound = false;
+if (!intervalBound) {
+  intervalBound = true;
+  setInterval(() => {
+    if (session.value.logged_in) fetchStatus();
+  }, 30000);
+}
+
+export function useAuthSession() {
   const isSiswaLoggedIn = () =>
     session.value.logged_in && session.value.role === "siswa";
 
@@ -94,11 +104,6 @@ export function useAuthSession() {
 
   // Refresh di background + sesekali revalidate; render pakai cache instan.
   fetchStatus();
-  // ponytail: satu interval global — 7 komponen memanggil composable ini
-  if (!intervalBound) {
-    setInterval(fetchStatus, 30000);
-    intervalBound = true;
-  }
 
   // bfcache: back dari halaman backend (login/form) → state basi, revalidate
   if (!bfcacheBound) {
