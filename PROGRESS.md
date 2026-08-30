@@ -4,6 +4,27 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## 📌 STATUS TERAKHIR (sesi 2026-08-30 sore — deploy fitur Tabungan, Koperasi, & Berita ke panel admin)
+
+### Deploy Fitur Tabungan, Koperasi, dan Berita ke Panel Admin (2026-08-30)
+
+**Yang dilakukan:**
+- Commit semua perubahan `backend-admin` (termasuk file baru): controller, model, migration, view, routes, dan update sidebar `layouts/app.blade.php`.
+- Fitur yang di-deploy:
+  - **Kelola Tabungan** — sidebar menu + halaman index/show + controller `adminIndex`/`adminShow`/`adminStore`.
+  - **Kelola Koperasi** — sidebar menu + halaman index/show + controller `adminIndex`/`adminShow`.
+  - **Kelola Berita** — sidebar menu + CRUD lengkap (index/create/edit/store/update/destroy).
+- Deploy Vercel production dari folder `backend-admin` berhasil (`Ready in 34s`).
+- Alias production di-set:
+  - `paneladminsmkbu.vercel.app` → deployment baru
+  - `spmb-admin.vercel.app` → deployment baru
+
+**Catatan penting:**
+- Migrasi baru (`tabungans`, `koperasi_orders`, `beritas`, `add_input_by_to_tabungans_table`) BELUM dijalankan ke TiDB production. Jalankan `php artisan migrate --force` di environment production agar halaman Tabungan/Koperasi/Berita tidak error.
+- File `.env.local` yang dibuat `vercel link` sudah dihapus sesuai trap AGENTS.md.
+
+---
+
 ## 📌 STATUS TERAKHIR (sesi 2026-08-30 — perbaikan UI profil siswa)
 
 ### Perbaikan UI Halaman Profil & Dashboard Siswa (2026-08-30)
