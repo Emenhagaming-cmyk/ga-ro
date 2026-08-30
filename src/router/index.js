@@ -59,6 +59,11 @@ const routes = [
     meta: { requiresSiswa: true }
   },
   {
+    path: "/spp",
+    component: () => import("../views/SppView.vue"),
+    meta: { requiresSiswa: true }
+  },
+  {
     path: "/produk-siswa",
     component: () => import("../views/ProdukSiswaView.vue"),
     meta: { requiresSiswa: true }
