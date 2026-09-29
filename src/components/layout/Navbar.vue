@@ -227,7 +227,7 @@ const closeTentangDropdown = () => {
 };
 
 const goSPMB = () => {
-  window.location.href = `${BACKEND}/login`;
+  window.location.href = `http://smkbu-sby.my.id/login`;
   closeMenu();
 };
 

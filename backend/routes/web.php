@@ -30,7 +30,9 @@ Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])-
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware('guest');
 
 // Publik: form pendaftaran + submit (guest ditangani di store via draft session)
+Route::get("/pendaftaran", [PendaftaranController::class, "create"])->name("pendaftaran.root");
 Route::get('/pendaftaran/create', [PendaftaranController::class, 'create'])->name('pendaftaran.create');
+Route::get('/create', [PendaftaranController::class, 'create'])->name('pendaftaran.create.alias');
 Route::post('/pendaftaran', [PendaftaranController::class, 'store'])->name('pendaftaran.store')->middleware('throttle:10,1');
 
 // Login siswa & admin: dashboard siswa + update form sendiri

@@ -34,7 +34,7 @@ const goTabungan = () => {
   if (isSiswaLoggedIn()) {
     router.push("/tabungan");
   } else {
-    window.location.href = `${BACKEND}/login`;
+    window.location.href = `http://smkbu-sby.my.id/login`;
   }
 };
 </script>

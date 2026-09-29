@@ -99,7 +99,7 @@ export function useAuthSession() {
     if (isSiswaLoggedIn() && session.value.has_pendaftaran) {
       return `${BACKEND}/dashboard-siswa`;
     }
-    return `${BACKEND}/pendaftaran/create`;
+    return `http://smkbu-sby.my.id/pendaftaran`;
   };
 
   // Refresh di background + sesekali revalidate; render pakai cache instan.

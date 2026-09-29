@@ -9,7 +9,7 @@ const routes = [
   {
     path: "/login",
     beforeEnter: () => {
-      window.location.href = `${BACKEND}/login`;
+      window.location.href = `http://smkbu-sby.my.id/login`;
     },
   },
   {

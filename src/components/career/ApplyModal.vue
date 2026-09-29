@@ -40,7 +40,7 @@
           <div class="login-required">
             <i class="fas fa-lock"></i>
             <p>Anda harus login sebagai siswa untuk melamar.</p>
-            <a :href="`${BACKEND}/login`" class="btn-login">
+            <a :href="`http://smkbu-sby.my.id/login`" class="btn-login">
               <i class="fas fa-right-to-bracket"></i> Login Sekarang
             </a>
           </div>

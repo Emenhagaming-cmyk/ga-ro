@@ -27,9 +27,9 @@ const showStudentCard = () =>
 const statusLabel = () => (session.value.status || "").toUpperCase();
 const isAccepted = () => session.value.status === "diterima";
 const scTarget = () => {
-  if (isAccepted()) return BACKEND + "/pendaftaran/bukti";
+  if (isAccepted()) return "http://smkbu-sby.my.id/pendaftaran/bukti";
   if (session.value.has_pendaftaran) return BACKEND + "/dashboard-siswa";
-  return BACKEND + "/pendaftaran/create";
+  return "http://smkbu-sby.my.id/pendaftaran";
 };
 const scLabel = () => {
   if (isAccepted()) return "Unduh Bukti Diterima";

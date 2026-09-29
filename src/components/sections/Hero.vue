@@ -46,8 +46,8 @@ const toggleLogin = () => {
             Login
           </button>
           <div class="sub-buttons" :class="{ open: loginExpanded }">
-            <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
-            <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+            <a :href="`http://smkbu-sby.my.id/login`" class="sub-btn">Login Siswa</a>
+            <a :href="`http://smkbu-sby.my.id/login`" class="sub-btn">Login Pendaftar</a>
           </div>
         </div>
       </div>
