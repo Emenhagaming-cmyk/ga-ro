@@ -40,7 +40,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard-siswa', [PendaftaranController::class, 'myDashboard'])->name('dashboard.siswa');
     Route::get('/dashboard-siswa/snapshot', [PendaftaranController::class, 'myDashboardSnapshot'])->name('dashboard.siswa.snapshot');
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
-    Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa');
+    // "pendaftar" (belum dinyatakan diterima) juga boleh buka profil agar link dari topbar tidak error
+    Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa,pendaftar');
+    Route::post('/profil/avatar', [AuthController::class, 'updateAvatar'])->name('profil.avatar.update')->middleware('role:siswa,pendaftar');
+    Route::delete('/profil/avatar', [AuthController::class, 'destroyAvatar'])->name('profil.avatar.destroy')->middleware('role:siswa,pendaftar');
 
 // Surat keterangan diterima (bukti kelulusan) untuk pemilik pendaftaran
     Route::get('/pendaftaran/bukti', [PendaftaranController::class, 'downloadBukti'])

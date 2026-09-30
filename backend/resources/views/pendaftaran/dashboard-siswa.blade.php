@@ -50,6 +50,27 @@
     <div class="alert alert-error" role="alert" aria-live="assertive">{{ session('error') }}</div>
     @endif
 
+    @php
+        $badge = [
+            'baru' => ['text' => 'Baru', 'color' => '#b45309', 'bg' => '#fef3c7'],
+            'diproses' => ['text' => 'Diproses', 'color' => '#1d4ed8', 'bg' => '#dbeafe'],
+            'diterima' => ['text' => 'Diterima', 'color' => '#166534', 'bg' => '#dcfce7'],
+            'ditolak' => ['text' => 'Ditolak', 'color' => '#b91c1c', 'bg' => '#fee2e2'],
+        ][$pendaftaran->status] ?? ['text' => $pendaftaran->status, 'color' => '#666', 'bg' => '#eee'];
+        $announceIcons = [
+            'baru' => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            'diproses' => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+            'diterima' => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+            'ditolak' => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        ];
+        $announceEyebrow = [
+            'baru' => 'Informasi Penting',
+            'diproses' => 'Status Pendaftaran',
+            'diterima' => 'Pengumuman Hasil Seleksi',
+            'ditolak' => 'Pengumuman Hasil Seleksi',
+        ][$pendaftaran->status] ?? 'Status Pendaftaran';
+    @endphp
+
     <div class="ds-banner">
         <div class="ds-banner-text">
             <p class="ds-banner-greeting">Selamat datang, {{ $pendaftaran->nama_lengkap }}! 👋</p>
@@ -61,15 +82,33 @@
         </div>
     </div>
 
+    @if (!$canEdit)
+    <div class="ds-announce ds-announce--{{ $pendaftaran->status }}" role="status" aria-live="polite">
+        <div class="ds-announce-icon">{!! $announceIcons[$pendaftaran->status] ?? '' !!}</div>
+        <div class="ds-announce-body">
+            <p class="ds-announce-eyebrow">{{ $announceEyebrow }}</p>
+            <p class="ds-announce-text">
+                @if ($pendaftaran->status === 'baru')
+                    Batas waktu edit telah berakhir. Hubungi admin bila ingin mengubah data.
+                @elseif ($pendaftaran->status === 'diterima')
+                    Selamat kamu resmi jadi bagian dari SMK Bahrul Ulum dan Kamu diterima di jurusan <strong>{{ $pendaftaran->jurusan_pilihan }} !</strong>
+                @elseif ($pendaftaran->status === 'ditolak')
+                    Maaf, pendaftaran Anda tidak diterima. Hubungi admin untuk info lebih lanjut.
+                @else
+                    Formulir kamu sedang diproses admin. Pantau status secara berkala.
+                @endif
+            </p>
+            @if ($pendaftaran->status === 'diterima')
+            <a href="{{ route('pendaftaran.bukti', $pendaftaran) }}" class="btn-ds btn-ds-primary ds-announce-cta">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Unduh Bukti Diterima
+            </a>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <div class="ds-stats">
-        @php
-            $badge = [
-                'baru' => ['text' => 'Baru', 'color' => '#b45309', 'bg' => '#fef3c7'],
-                'diproses' => ['text' => 'Diproses', 'color' => '#1d4ed8', 'bg' => '#dbeafe'],
-                'diterima' => ['text' => 'Diterima', 'color' => '#166534', 'bg' => '#dcfce7'],
-                'ditolak' => ['text' => 'Ditolak', 'color' => '#b91c1c', 'bg' => '#fee2e2'],
-            ][$pendaftaran->status] ?? ['text' => $pendaftaran->status, 'color' => '#666', 'bg' => '#eee'];
-        @endphp
         <div class="ds-stat-card">
             <div class="ds-stat-icon ds-stat-icon--{{ $pendaftaran->status }}" style="background:{{ $badge['bg'] }};color:{{ $badge['color'] }};">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -134,36 +173,14 @@
         </div>
     </div>
 
-    @if (!$canEdit)
-    <div class="ds-card ds-card--status-message" style="border-left:4px solid #3a6450;">
-        <p class="ds-status-text">
-            @if ($pendaftaran->status === 'baru')
-                Batas waktu edit telah berakhir. Hubungi admin bila ingin mengubah data.
-            @elseif ($pendaftaran->status === 'diterima')
-                🎉 Selamat! Kamu diterima di jurusan <strong style="color:#166534;">{{ $pendaftaran->jurusan_pilihan }}</strong>.
-            @elseif ($pendaftaran->status === 'ditolak')
-                Maaf, pendaftaran Anda tidak diterima. Hubungi admin untuk info lebih lanjut.
-            @else
-                Formulir kamu sedang diproses admin. Pantau status secara berkala.
-            @endif
-        </p>
-    </div>
-    @endif
-
+    @if ($canEdit)
     <div class="ds-actions">
-        @if ($canEdit)
         <a href="#edit-section" class="btn-ds btn-ds-outline">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit Formulir
         </a>
-        @endif
-        @if ($pendaftaran->status === 'diterima')
-        <a href="{{ route('pendaftaran.bukti', $pendaftaran) }}" class="btn-ds btn-ds-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Unduh Bukti Diterima
-        </a>
-        @endif
     </div>
+    @endif
 
     @if ($canEdit)
     <div class="ds-card ds-card--edit" id="edit-section">
@@ -329,10 +346,40 @@
     padding: 28px 32px; margin-bottom: 16px; transition: var(--ds-transition);
 }
 .ds-card--edit { margin-top: 24px; }
-.ds-card--status-message { border-left-width: 4px; }
 .ds-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
 .ds-card-title { font-size: 17px; font-weight: 800; color: var(--ds-color-text); margin: 0; letter-spacing: -0.01em; }
 .ds-badge { padding: 6px 14px; border-radius: 999px; font-weight: 800; font-size: 12px; letter-spacing: 0.02em; }
+
+.ds-announce {
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0;
+    border-radius: var(--ds-radius-lg); border: 1px solid; border-left-width: 6px;
+    padding: 28px 28px; margin-bottom: 24px;
+}
+.ds-announce--diterima { background: #f0fdf4; border-color: #d1ecd6; border-left-color: #166534; }
+.ds-announce--ditolak { background: #fef2f2; border-color: #f5d6d6; border-left-color: #b91c1c; }
+.ds-announce--diproses { background: #eff6ff; border-color: #d3e2fb; border-left-color: #1d4ed8; }
+.ds-announce--baru { background: #fffbeb; border-color: #f3e4bd; border-left-color: #b45309; }
+.ds-announce-icon {
+    width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+}
+.ds-announce--diterima .ds-announce-icon { background: #dcfce7; color: #166534; }
+.ds-announce--ditolak .ds-announce-icon { background: #fee2e2; color: #b91c1c; }
+.ds-announce--diproses .ds-announce-icon { background: #dbeafe; color: #1d4ed8; }
+.ds-announce--baru .ds-announce-icon { background: #fef3c7; color: #b45309; }
+.ds-announce-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.ds-announce-eyebrow {
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    margin: 0 0 6px;
+}
+.ds-announce--diterima .ds-announce-eyebrow { color: #166534; }
+.ds-announce--ditolak .ds-announce-eyebrow { color: #b91c1c; }
+.ds-announce--diproses .ds-announce-eyebrow { color: #1d4ed8; }
+.ds-announce--baru .ds-announce-eyebrow { color: #b45309; }
+.ds-announce-text { font-size: 14px; line-height: 1.7; color: var(--ds-color-text); margin: 0; }
+.ds-announce-text strong { font-weight: 800; }
+.ds-announce-cta { margin-top: 16px; }
 
 .ds-detail-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 12px; }
 .ds-detail-item {
@@ -342,8 +389,6 @@
 .ds-detail-item:hover { border-color: #dde4da; box-shadow: 0 2px 8px rgba(35,55,42,0.04); }
 .ds-detail-label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ds-color-text-secondary); margin-bottom: 5px; }
 .ds-detail-value { font-size: 14px; font-weight: 700; color: var(--ds-color-text); word-break: break-word; }
-
-.ds-status-text { font-size: 14px; color: var(--ds-color-text-secondary); margin: 0; line-height: 1.7; }
 
 .ds-actions { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 .btn-ds {

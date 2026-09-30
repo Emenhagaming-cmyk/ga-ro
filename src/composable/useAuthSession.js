@@ -7,6 +7,7 @@ const GUEST = {
   logged_in: false,
   role: null,
   name: null,
+  avatar: null,
   has_pendaftaran: false,
   status: null,
 };

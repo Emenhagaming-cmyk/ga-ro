@@ -2,15 +2,14 @@
   <section id="spmb" class="spmb">
     <div class="spmb-shell">
       <div class="spmb-text" v-reveal>
-        <span class="spmb-kicker">Penerimaan Peserta Didik Baru</span>
+        <!-- <span class="spmb-kicker">Penerimaan Peserta Didik Baru</span> -->
         <h2>
           Satu Langkah Menuju<br />
           <em>Masa Depan Digitalmu</em>
         </h2>
         <p>
-          Daftar sebagai siswa SMK Bahrul Ulum — jurusan RPL
-          dengan kurikulum link &amp; match bersama industri. Gratis biaya
-          pendaftaran.
+          Daftar sebagai siswa SMK Bahrul Ulum dengan jurusan RPL
+          dan kurikulum link &amp; match bersama industri. Ayo, wujudkan masa depanmu dengan keterampilan digital yang siap pakai!
         </p>
         <div class="spmb-stats">
           <div class="stat-block">
@@ -42,7 +41,7 @@
           </router-link>
         </div>
         <p v-if="isSiswaLoggedIn()" class="spmb-hint">
-          Anda sudah memiliki akun siswa — daftarkan melalui dashboard.
+          Kamu sudah memiliki akun siswa silakan masuk ke dashboard untuk mengelola pendaftaran ya!
         </p>
       </div>
 
@@ -50,8 +49,8 @@
         <div class="visual-wrap">
           <img src="/spmb.jpeg" alt="SPMB SMK Bahrul Ulum" loading="lazy" width="560" height="420" class="visual-img" />
           <div class="visual-card">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            <span>Kuota Terbatas<br /><strong>60 siswa / jurusan</strong></span>
+            <!-- <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> -->
+            <!-- <span>Kuota Terbatas<br /><strong>60 siswa / jurusan</strong></span> -->
           </div>
         </div>
       </div>
@@ -271,7 +270,7 @@ function handleDaftarClick() {
   object-fit: cover;
 }
 
-.visual-card {
+/* .visual-card {
   position: absolute;
   left: 16px;
   bottom: 16px;
@@ -289,12 +288,12 @@ function handleDaftarClick() {
   color: #eaf3ee;
   font-size: 12.5px;
   line-height: 1.45;
-}
+} */
 
-.visual-card svg {
+/* .visual-card svg {
   flex-shrink: 0;
   color: #a9d3b4;
-}
+} */
 
 .visual-card strong {
   color: #fff;

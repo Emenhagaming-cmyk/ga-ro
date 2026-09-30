@@ -4,6 +4,105 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-09-30) — Hierarki Dashboard Siswa: Pengumuman Kelulusan Naik ke Posisi Paling Atas
+
+**Permintaan user:** card pengumuman lulus/tidak di dashboard siswa ("hierarki ke siswa lebih kena") — semula tersembunyi di tengah halaman.
+
+**Keputusan (konfirmasi user):** posisi **tepat setelah banner sambutan** (awalnya "paling atas sebelum banner", lalu user meminta **"dibawah banner aja deh"** → diubah), **semua status naik** (diterima, ditolak, diproses, edit berakhir), dan **gaya dibedakan** jadi banner berwarna + tombol Unduh Bukti ikut di dalamnya.
+
+**Perubahan di `backend/resources/views/pendaftaran/dashboard-siswa.blade.php`:**
+- `@php $badge` di-hoist dari dalam `.ds-stats` ke atas (dipakai announce + stats + badge sama).
+- Blok pengumuman (`ds-card--status-message`) dipindah ke posisi **4** → Kembali → alert → **banner sambutan** → **pengumuman** → statistik → detail → aksi → edit — di-rename jadi `.ds-announce` + modifier `ds-announce--{status}`:
+  - `diterima` hijau, `ditolak` merah, `diproses` biru, `baru` (lewat deadline) amber → tinted bg + border kiri 6px + ikon SVG + eyebrow uppercase + teks (wording lama tetap).
+  - `role="status"` untuk aksesibilitas.
+  - Wrapper tetap `@if (!$canEdit)` — cakupan 4 kondisi sama persis; status `baru` yang masih bisa edit memang tanpa pesan (tidak dibuat baru).
+- Tombol **Unduh Bukti Diterima** kini di dalam card pengumuman (hanya `diterima`); `.ds-actions` dibungkus `@if ($canEdit)` (sisa isinya cuma tombol Edit — div kosong tak lagi muncul saat diproses/ditolak).
+- CSS lama `.ds-card--status-message` & `.ds-status-text` dihapus; tambah blok `.ds-announce` + modifier + ikon.
+
+**Test baru `tests/Feature/DashboardSiswaHierarchyTest.php` (5 kasus):** assert posisi string di HTML — `ds-announce` muncul **setelah** `ds-banner` (urutan: banner → pengumuman) untuk diterima/ditolak/diproses/baru-lewat-deadline; tombol Unduh ada saat diterima & hilang saat ditolak; status `baru` yang masih bisa edit **tidak** menampilkan pengumuman tapi tetap ada Edit + form.
+
+**Verifikasi:** `php artisan view:cache` OK (error LSP = false positive parser Blade di dalam HTML/CSS). `php artisan test` → **39 passed (144 assertions)** (34 lama + 5 baru). Belum di-commit/deploy.
+
+---
+
+## STATUS TERAKHIR (2026-09-30) — Ikon Instagram Footer Diperbaiki (Kenapa Tampil Jelek)
+
+**Masalah:** ikon Instagram di footer (`Footer.vue`) tampil jelek/bolong, padahal TikTok tampil normal.
+
+**Akar masalah:** IG memakai `<i class="fa-brands fa-instagram">` (Font Awesome) yang butuh font **"Font Awesome 7 Brands"** — font itu **tidak pernah di-load** di seluruh proyek Vue (grep `fa-brands|font-awesome|@fortawesome` → cuma 1 kemunculan, di Footer itu sendiri). Tanpa font tersebut browser merender placeholder glyph. Sementara TikTok memakai **inline SVG** — itu sebabnya TikTok bagus, IG jelek.
+
+**Perbaikan:**
+- `src/components/layout/Footer.vue` — ganti `<i class="fa-brands fa-instagram">` dengan **inline SVG** path resmi Instagram (diambil dari `cdn.simpleicons.org` — garis besar Instagram Simple Icons, viewBox `0 0 24 24`, `fill="currentColor"`, ukuran 18×18) sehingga mengikuti pola TikTok dan otomatis mengikuti warna hover (hijau brand ⇄ putih).
+- Hapus aturan CSS `.social-icon i { font-family: "Font Awesome 7 Brands" }` yang tak terpakai.
+
+**Verifikasi:** `npm run build` sukses (dist/ ter-ignore git). Belum di-commit/deploy.
+
+---
+
+## STATUS TERAKHIR (2026-09-30) — Foto Profil Tidak Muncul di Navbar Landing Page (Vue)
+
+**Laporan user:** foto profil tampil di dashboard siswa & halaman profil, tetapi **tidak tampil di navbar/topbar landing page** (Vue). Padahal sidebar/topbar backend (`layouts/app.blade.php`) sudah menampilkan fotonya.
+
+**Analisis (explore menyeluruh, 3 akar masalah):**
+1. Backend `/auth-status` (`AuthController::authStatus()`) **tidak mengirim `avatar`** — padahal frontend menyimpan seluruh response apa adanya di `session` ref + `sessionStorage` (`useAuthSession.js`).
+2. Payload login `?auth=` dari `frontendAuthUrl()` (`helpers.php`) hanya membawa 5 field — avatar tidak ikut, padahal itu jalur yang dipakai saat cookie third-party diblokir.
+3. `Navbar.vue` hanya merender **inisial** (`<span class="nav-avatar">{{ initial }}</span>`) — tidak pernah ada `<img>` sama sekali.
+
+**Perubahan:**
+- `backend/app/Http/Controllers/AuthController.php` — `authStatus()` menambahkan `'avatar' => $request->user()->avatar` pada response login, dan `'avatar' => null` pada response guest (bentuk konsisten).
+- `backend/app/helpers.php` — `frontendAuthUrl()` menambahkan `'avatar' => $user->avatar` ke payload `?auth=` (logged-in) dan `null` (guest).
+- `src/composable/useAuthSession.js` — `GUEST` mendapat `avatar: null`.
+- `src/components/layout/Navbar.vue` — avatar **desktop** (`nav-avatar`) dan **mobile** (`mobile-avatar`) kini menampilkan `<img>` foto profil bila `session.avatar` ada (pola overlay sama seperti topbar backend: inisial tetap di bawah, gambar di atas; `@error` → gambar disembunyikan, inisial tetap tampil). Tambah state `avatarBroken` / `avatarBrokenMobile`, CSS `position: relative + img{position:absolute;inset:0;object-fit:cover}` + `overflow:hidden`.
+
+**Verifikasi:**
+- `backend`: 3 test baru di `ProfileAvatarTest` → `/auth-status` mengirim avatar (login + guest), dan payload `frontendAuthUrl()` menyertakan avatar. `php artisan test` → **34 passed (113 assertions)** (31 lama + 3 baru).
+- `frontend`: `npm run build` sukses (dist/ regenerated, tapi ter-ignore git — tidak menodai repo).
+- Cek visual: setelah login di landing page (`npm run dev` + backend `php artisan serve --port=8000`), navbar desktop & drawer mobile harus menampilkan foto profil; polling 30 detik / `?auth=` juga sudah membawa avatar.
+- **Belum di-commit / di-deploy** (user handle git sendiri).
+
+**Catatan scope:** widget profil di `src/views/ELearningView.vue` (panel berbentuk inisial di side panel) ikut memakai `session.name`/`email` tapi **belum** otomatis menampilkan foto — di luar keluhan navbar; kalau mau disamakan, tinggal bilang.
+
+---
+
+## STATUS TERAKHIR (2026-09-30) — Redesign Halaman Profil Siswa + Foto Profil (base64)
+
+**Permintaan user:** redesign halaman profil siswa (`/profil`) mengikuti gambar referensi yang dikirim, dengan tab **Profil | Pendaftaran | Keluarga**, warna hijau brand, plus **siswa bisa upload foto profil** sendiri dan avatar di topbar ikut memakai foto tersebut.
+
+**Keputusan user:** tab 3 tersebut; palet hijau; foto disimpan **base64 di kolom DB** (bukan file storage) karena `public/storage` tidak ada symlink, `backend/.env.deploy` memakai `PUBLIC_DISK_ROOT=/tmp`, dan `vercel.json` tidak merutekan `/storage/*` → file-based tidak persisten di production. Link topbar menuju `/profil`; middleware `/profil` **dilonggarkan** dari `role:siswa` → `role:siswa,pendaftar` (pendaftar yang belum dinyatakan diterima tetap boleh buka, konsisten dengan `dashboard-siswa` yang middleware-nya hanya `auth`).
+
+**Perubahan (7 file):**
+1. **BARU** `backend/database/migrations/2026_09_30_090000_add_avatar_to_users_table.php` — `$table->mediumText('avatar')->nullable()->after('password')` (mediumText, bukan text: base64 ≈ 4/3 ukuran file, `text` cuma 64KB). Dijalankan di MySQL lokal.
+2. `backend/app/Models/User.php` — `'avatar'` masuk `$fillable`, dan juga masuk `$hidden` supaya data URI tidak ikut bocor saat `toArray()`/JSON.
+3. `backend/app/Http/Controllers/AuthController.php`:
+   - `showProfile()` → tambah variabel `$canEdit` (status `baru` **dan** belum lewat 3 hari, aturan bisnis yang sama dengan `PendaftaranController::update()`), juga pakai import `Pendaftaran` (sebelumnya FQCN).
+   - **BARU** `updateAvatar()` — validasi `required|image|mimes:jpg,jpeg,png,webp|max:512` dengan pesan error Bahasa Indonesia.
+   - **BARU** `destroyAvatar()` — kosongkan kolom.
+   - **BARU** `avatarToDataUri()` (private) — resize pakai GD (sisi terpanjang → 256px, aspect ratio dijaga) → JPEG quality 82, latar putih dulu supaya PNG transparan tidak jadi hitam; bila hasil masih > 350KB, ukuran diturunkan bertahap 256→192→160→128. Fallback ke base64 file asli **hanya** bila ekstensi GD tidak tersedia. **File rusak / bukan gambar → `null`** (tidak pernah disimpan). `detectMimeFromBytes()` private helper.
+4. `backend/routes/web.php` — `POST /profil/avatar` (`profil.avatar.update`) + `DELETE /profil/avatar` (`profil.avatar.destroy`), keduanya `role:siswa,pendaftar`; middleware `/profil` dilonggarkan.
+5. `backend/resources/views/auth/profile.blade.php` — **rewrite total** mengikuti referensi: header bar (chevron kembali · judul "Profil Siswa" · ikon gear → dashboard), kartu profil (avatar + badge kamera sebagai `<label>` file picker + nama + meta NISN/Jurusan/Status pill + ikon pensil → `dashboard-siswa#edit-section` hanya saat `$canEdit`), tab bar 3 tab dengan `role="tablist"` + arrow-key navigation, 4 kartu statistik gradasi hijau (Jurusan · Nilai Rata-rata · Status · Gelombang, tiap kartu ada tombol "Lihat detail" → pindah tab), tabel "Informasi Pribadi", panel Pendaftaran (Data Sekolah & Seleksi · Status Pendaftaran · Berkas Upload — berkas **dibiarkan teks** "Terunggah/Belum diunggah", tidak ditautkan karena URL storage memang rusak), panel Keluarga (Data Keluarga + dua kartu Ayah/Ibu + Wali), empty state "Isi Formulir Pendaftaran" bila belum daftar, footer berisi tombol Logout + Kembali ke Dashboard. Format tanggal Bahasa Indonesia ditulis lokal di view (helper `formatPeriode` hanya untuk periode SPP "Y-m").
+6. `backend/resources/views/layouts/app.blade.php` — `.app-topbar-user` jadi elemen `<a>` (link `/profil` hanya bila role `siswa`/`pendaftar`, selain itu tanpa `href` agar kasir/guru tidak kena error), avatar topbar menampilkan foto bila ada (fallback inisial via CSS overlay + `onerror` hide img), `mb_substr` untuk inisial, CSS hover untuk `a.app-topbar-user`.
+7. `backend/tests/Feature/ProfileAvatarTest.php` — **BARU**, 12 test (lihat bagian Verifikasi).
+
+**Penyesuaian setelah review user:** tombol **pengaturan (gear)** dihapus, dan tombol **back (chevron)** di bawah navbar juga dihapus karena navbar sudah punya tombol kembali di sebelah logo sekolah (branch navbar di `layouts/app` — tombol itu hanya muncul saat `@auth`, dan halaman profil selalu butuh auth). Header halaman kini hanya berisi judul terpusat **"Profil Siswa"**. Selector CSS `.pf-header` (grid 3 kolom) dan `.pf-icon-btn` ikut dihapus karena sudah tidak dipakai. `frontendAuthUrl()` tidak lagi dipanggil di view profil. Ikon **pensil (edit data)** dan **kamera (upload foto)** tetap ada karena bukan tombol navigasi.
+
+**Dua bug yang ketahuan saat verifikasi (dan sudah diperbaiki):**
+- Gambar **rusak** sempat lolos: versi pertama `avatarToDataUri()` jatuh ke fallback base64 mentah dan menyimpan sampah. Diperbaiki: fallback mentah hanya bila GD tidak ada; bila GD ada tapi `imagecreatefromstring()` gagal → `null` + pesan error.
+- View memakai `$errors` yang **hanya di-share middleware web** → view crash saat dirender di luar HTTP (mis. testing/CLI). Diperbaiki: `$errorBag = $errors ?? new \Illuminate\Support\ViewErrorBag`.
+
+**Verifikasi (lokal, tanpa deploy):**
+- `php artisan migrate --force` → `users.avatar` ada (dicek via `Schema::hasColumn`).
+- `php artisan route:list --path=profil` → 3 route terdaftar.
+- `php artisan view:cache` + `view:clear` → blade compiles bersih.
+- `php artisan test` → **31 passed (106 assertions)** (19 test lama tetap hijau + 12 test baru). Test baru mencakup: siswa & pendaftar boleh akses profil, role lain (guru) kena middleware, halaman profil + semua elemen utama, empty state tanpa pendaftaran, upload → base64 + resize terverifikasi (`getimagesizefromstring` menghasilkan 256×192 dari 1600×1200), foto tampil di halaman, file >512KB ditolak, file non-gambar ditolak, gambar rusak tidak disimpan, hapus foto, avatar tidak bocor di serialisasi, dan link profil di topbar hanya untuk siswa.
+- Render nyata (script PHP yang boot Laravel, dihapus setelah dipakai): akun dengan data lengkap → 4 kartu statistik, 3 tab, 46 baris data, seluruh section Pendaftaran & Keluarga ada; akun tanpa pendaftaran → empty state + 0 ikon pensil + inisial fallback; pipeline resize 3000×2000 → 256×171 dengan data-URI 1883 byte.
+- **Belum di-commit / di-deploy** (user ingin melakukan commit & push sendiri).
+
+**Catatan production (VPS/Vercel):** migrasi `2026_09_30_090000_add_avatar_to_users_table` **wajib dijalankan** di DB production (TiDB / MySQL VPS) saat deploy berikutnya, kalau tidak kolom `users.avatar` tidak ada dan upload foto akan error. Tidak ada perubahan `.env`, `vercel.json`, atau frontend Vue.
+
+**Catatan:** diagnostic LSP di file blade (`at-rule or selector expected`, `Property assignment expected`) tetap **false positive** — LSP memparse `<style>`/`<script>` inline sebagai CSS/JS murni sehingga `{{ }}` Blade dianggap selector tidak valid. Acuan validasi tetap `php artisan view:cache` + `php artisan test`.
+
+---
+
 ## STATUS TERAKHIR (2026-09-30) — Alas Stiker Bulat untuk Doodle Banner Dashboard Siswa
 
 **Permintaan user:** doodle di banner dashboard siswa `nyatu sama warna hijau` sehingga tidak kelihatan jelas → minta diberi "apa gitu" di belakangnya agar kontras.

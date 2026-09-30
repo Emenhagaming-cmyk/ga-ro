@@ -15,7 +15,7 @@
       </div>
 
       <div class="pp-text" v-reveal="0.15">
-        <span class="pp-kicker">Karya Siswa</span>
+        <!-- <span class="pp-kicker">Karya Siswa</span> -->
         <h2>
           Kreasi &amp; Produk<br />
           <em>Buatan Siswa</em>

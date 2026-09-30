@@ -31,7 +31,7 @@ function formatPeriodeShort(string $periode): string
 function frontendAuthUrl(): string
 {
     $frontend = env('FRONTEND_URL', 'http://localhost:5174');
-    $payload = ['logged_in' => false, 'role' => null, 'name' => null, 'has_pendaftaran' => false, 'status' => null];
+    $payload = ['logged_in' => false, 'role' => null, 'name' => null, 'avatar' => null, 'has_pendaftaran' => false, 'status' => null];
 
     if (auth()->check()) {
         $user = auth()->user();
@@ -44,6 +44,7 @@ function frontendAuthUrl(): string
             'logged_in' => true,
             'role' => $role,
             'name' => $user->name,
+            'avatar' => $user->avatar,
             'has_pendaftaran' => (bool) $pendaftaran,
             'status' => $pendaftaran?->status,
         ];

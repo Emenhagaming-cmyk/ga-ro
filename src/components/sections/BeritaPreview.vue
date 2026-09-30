@@ -73,7 +73,7 @@ onMounted(async () => {
     const news = await res.json();
     previewNews.value = (news || []).slice(0, 3);
   } catch (e) {
-    console.error("Gagal memuat preview berita", e);
+    console.error("Aduh maaf ya gagal memuat preview berita nih, coba refresh halaman ya!", e);
   }
 });
 </script>

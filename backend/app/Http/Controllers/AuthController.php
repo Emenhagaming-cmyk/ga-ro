@@ -102,6 +102,7 @@ class AuthController extends Controller
                 'logged_in' => false,
                 'role' => null,
                 'name' => null,
+                'avatar' => null,
                 'has_pendaftaran' => false,
                 'status' => null,
                 'csrf_token' => csrf_token(),
@@ -121,6 +122,7 @@ class AuthController extends Controller
             'role' => $role,
             'name' => $request->user()->name,
             'email' => $request->user()->email,
+            'avatar' => $request->user()->avatar,
             'nisn' => $pendaftaran?->nisn,
             'jurusan' => $pendaftaran?->jurusan_pilihan,
             'has_pendaftaran' => (bool) $pendaftaran,
@@ -192,9 +194,115 @@ class AuthController extends Controller
     public function showProfile()
     {
         $user = Auth::user();
-        $pendaftaran = \App\Models\Pendaftaran::where('user_id', $user->id)->first();
+        $pendaftaran = Pendaftaran::where('user_id', $user->id)->first();
 
-        return view('auth.profile', compact('user', 'pendaftaran'));
+        // Aturan bisnis: siswa hanya bisa edit form bila status "baru" dan belum lewat 3 hari
+        $canEdit = (bool) $pendaftaran
+            && $pendaftaran->status === 'baru'
+            && now()->lt($pendaftaran->created_at->copy()->addDays(3));
+
+        return view('auth.profile', compact('user', 'pendaftaran', 'canEdit'));
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpg,jpeg,png,webp|max:512',
+        ], [
+            'avatar.required' => 'Pilih foto terlebih dahulu.',
+            'avatar.image' => 'File harus berupa gambar.',
+            'avatar.mimes' => 'Format foto harus JPG, PNG, atau WebP.',
+            'avatar.max' => 'Ukuran foto maksimal 512 KB.',
+        ]);
+
+        $file = $request->file('avatar');
+        $avatar = $this->avatarToDataUri($file->get());
+
+        if ($avatar === null) {
+            return back()->with('error', 'Foto gagal diproses. Coba gunakan foto lain.');
+        }
+
+        $request->user()->forceFill(['avatar' => $avatar])->save();
+
+        return redirect()->route('profil')->with('success', 'Foto profil berhasil diperbarui.');
+    }
+
+    public function destroyAvatar(Request $request)
+    {
+        $request->user()->forceFill(['avatar' => null])->save();
+
+        return redirect()->route('profil')->with('success', 'Foto profil telah dihapus.');
+    }
+
+    /**
+     * Ubah gambar menjadi data URI base64: resize maksimal 256px + kompres JPEG.
+     * Return null bila file bukan gambar valid atau hasilnya tetap terlalu besar.
+     * Fallback ke file asli (base64) hanya dipakai bila ekstensi GD tidak tersedia.
+     */
+    private function avatarToDataUri(string $bytes): ?string
+    {
+        $maxBase64Length = 350000;
+
+        if (function_exists('imagecreatefromstring') && function_exists('imagejpeg')) {
+            $image = @imagecreatefromstring($bytes);
+
+            // File rusak / bukan gambar → jangan pernah disimpan
+            if ($image === false) {
+                return null;
+            }
+
+            $width = imagesx($image);
+            $height = imagesy($image);
+            $result = null;
+
+            // Turunkan ukuran bertahap bila hasil kompresi masih terlalu besar
+            foreach ([256, 192, 160, 128] as $maxSide) {
+                $scale = min(1, $maxSide / max($width, $height));
+                $newWidth = max(1, (int) round($width * $scale));
+                $newHeight = max(1, (int) round($height * $scale));
+
+                $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+                // Latar putih supaya PNG transparan tidak jadi hitam setelah disimpan sebagai JPEG
+                imagefill($canvas, 0, 0, imagecolorallocate($canvas, 255, 255, 255));
+                imagecopyresampled($canvas, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+                ob_start();
+                imagejpeg($canvas, null, 82);
+                $encoded = ob_get_clean();
+
+                imagedestroy($canvas);
+
+                $candidate = 'data:image/jpeg;base64,' . base64_encode($encoded);
+
+                if (strlen($candidate) <= $maxBase64Length) {
+                    $result = $candidate;
+                    break;
+                }
+            }
+
+            imagedestroy($image);
+
+            return $result;
+        }
+
+        // Tanpa GD: simpan file asli apa adanya (masih divalidasi max 512 KB di atas)
+        $mime = $this->detectMimeFromBytes($bytes);
+
+        if ($mime === null) {
+            return null;
+        }
+
+        $fallback = 'data:' . $mime . ';base64,' . base64_encode($bytes);
+
+        return strlen($fallback) <= $maxBase64Length ? $fallback : null;
+    }
+
+    private function detectMimeFromBytes(string $bytes): ?string
+    {
+        $info = @getimagesizefromstring($bytes);
+
+        return $info['mime'] ?? null;
     }
 
     public function resetPassword(Request $request)

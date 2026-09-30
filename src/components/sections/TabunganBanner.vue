@@ -43,7 +43,7 @@ const goTabungan = () => {
   <section id="tabungan" class="tabungan">
     <div class="tabungan-shell">
       <div class="tabungan-text" v-reveal>
-        <span class="tabungan-kicker">✨ Menabung Jadi Seru</span>
+        <!-- <span class="tabungan-kicker">✨ Menabung Jadi Seru</span> -->
         <h2>
           Kelola Tabunganmu,<br />
           <em>Tanam Kebaikan Setiap Hari</em>

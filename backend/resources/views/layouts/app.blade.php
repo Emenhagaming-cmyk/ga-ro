@@ -413,13 +413,18 @@
             display: flex; align-items: center; gap: 10px;
             padding: 6px 14px 6px 8px; border-radius: 999px;
             background: #f0f4ee; font-size: 13px; font-weight: 700; color: #1c2a23;
+            text-decoration: none; border: none;
         }
+        a.app-topbar-user:hover { background: #e2eade; color: #1c2a23; }
         .app-topbar-avatar {
+            position: relative;
             width: 32px; height: 32px; border-radius: 50%;
             background: #3a6450; color: #fff;
             display: flex; align-items: center; justify-content: center;
-            font-size: 13px; font-weight: 800;
+            font-size: 13px; font-weight: 800; overflow: hidden;
+            flex-shrink: 0;
         }
+        .app-topbar-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
         .sb-hamburger {
             display: none; width: 40px; height: 40px; border-radius: 10px;
             border: 1px solid #dfe4dd; background: #fff;
@@ -557,10 +562,19 @@
             </a>
         </div>
         <div class="app-topbar-right">
-            <div class="app-topbar-user">
-                <div class="app-topbar-avatar">{{ strtoupper(substr(Auth::user()->name ?? 'S', 0, 1)) }}</div>
+            @php
+                $topbarRole = Auth::user()->role ?? '';
+                $topbarInitial = strtoupper(mb_substr(Auth::user()->name ?? 'S', 0, 1));
+            @endphp
+            <a class="app-topbar-user" @if (in_array($topbarRole, ['siswa', 'pendaftar'], true)) href="{{ route('profil') }}" title="Lihat profil saya" @endif>
+                <span class="app-topbar-avatar">
+                    <span class="app-topbar-initial">{{ $topbarInitial }}</span>
+                    @if (Auth::user()->avatar)
+                        <img src="{{ Auth::user()->avatar }}" alt="" onerror="this.style.display='none'">
+                    @endif
+                </span>
                 {{ Auth::user()->name ?? 'Siswa' }}
-            </div>
+            </a>
         </div>
     </div>
     <div style="padding:28px 32px 48px;">
