@@ -121,6 +121,23 @@
         document.getElementById('sidebar').classList.toggle('open', open);
         document.getElementById('sidebarBackdrop').classList.toggle('open', open);
     }
+
+    function togglePw(btn) {
+        var wrap = btn.closest('.pw-wrap') || btn.closest('.pw-field');
+        if (!wrap) return;
+        var input = wrap.querySelector('input');
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', show);
+        btn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+        btn.title = show ? 'Sembunyikan password' : 'Tampilkan password';
+        var open = btn.querySelector('.eye-open');
+        var off = btn.querySelector('.eye-off');
+        if (open) open.style.display = show ? 'none' : '';
+        if (off) off.style.display = show ? '' : 'none';
+        input.focus();
+    }
 </script>
 </body>
 </html>

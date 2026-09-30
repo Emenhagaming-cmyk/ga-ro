@@ -188,7 +188,7 @@
             position: relative;
         }
 
-        .input-wrap svg {
+        .input-wrap > svg {
             position: absolute;
             left: 14px;
             top: 50%;
@@ -216,6 +216,36 @@
             outline: none;
             border-color: #3a6450;
             box-shadow: 0 0 0 3px rgba(58, 100, 80, 0.1);
+        }
+
+        .pw-field input {
+            padding-right: 44px;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            color: #7d8a80;
+            cursor: pointer;
+            transition: color 0.25s ease;
+        }
+
+        .pw-toggle:hover {
+            color: #3a6450;
+        }
+
+        .pw-toggle:focus-visible {
+            outline: 2px solid #3a6450;
+            outline-offset: 2px;
         }
 
         .btn {
@@ -400,5 +430,24 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePw(btn) {
+        var wrap = btn.closest('.pw-field') || btn.closest('.pw-wrap');
+        if (!wrap) return;
+        var input = wrap.querySelector('input');
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', show);
+        btn.setAttribute('aria-label', show ? 'Sembunyikan password' : 'Tampilkan password');
+        btn.title = show ? 'Sembunyikan password' : 'Tampilkan password';
+        var open = btn.querySelector('.eye-open');
+        var off = btn.querySelector('.eye-off');
+        if (open) open.style.display = show ? 'none' : '';
+        if (off) off.style.display = show ? '' : 'none';
+        input.focus();
+    }
+</script>
 </body>
 </html>

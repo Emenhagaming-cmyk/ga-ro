@@ -4,6 +4,31 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-09-30) — Tombol Mata (Lihat/Sembunyikan Password) di Halaman Login & Daftar
+
+**Permintaan user:** tambah ikon mata di input password — halaman login (siswa + panel admin), lalu dilanjutkan ke form daftar.
+Frontend Vue tidak diubah karena route `/login` & `/register` di Vue memang redirect ke backend.
+
+**Perubahan (5 file view/CSS/JS — tanpa controller, route, atau DB):**
+- `backend/resources/views/auth/login.blade.php` — `<div class="input-wrap">` password diberi modifier `pw-field`; tombol `<button type="button" class="pw-toggle" onclick="togglePw(this)">` setelah input, berisi 2 SVG inline (`.eye-open` tampil, `.eye-off` `display:none`) — path SVG sama dengan yang sudah dipakai di `backend-admin/.../pendaftaran/dashboard.blade.php`.
+- `backend/resources/views/auth/register.blade.php` — tombol mata yang sama pada **dua** field: `password` dan `password_confirmation` (masing-masing wrap `.input-wrap pw-field` sendiri, jadi toggle satu tidak memengaruhi yang lain).
+- `backend/resources/views/layouts/auth.blade.php` — CSS `.pw-field input{padding-right:44px}` + `.pw-toggle` (absolut `right:10px`, tengah vertikal, transparan, `color:#7d8a80`, hover `#3a6450`); **selector lama `.input-wrap svg` diubah jadi `.input-wrap > svg`** supaya ikon di dalam tombol tidak ikut rule `left:14px` milik ikon kunci; fungsi JS `togglePw(btn)` ditambahkan sebelum `</body>` (ditempatkan di layout agar dipakai bersama oleh login + register tanpa duplikasi).
+- `backend-admin/resources/views/auth/login.blade.php` — input password dibungkus `.pw-wrap` + tombol mata; CSS page-scoped di dalam `<style>` (pola yang sama dipakai `berita/create.blade.php`, tidak menyentuh `admin.css`/layout bersama). Panel admin tidak punya halaman daftar.
+- `backend-admin/resources/views/layouts/app.blade.php` — `togglePw(btn)` ditambahkan di blok `<script>` yang sudah ada, sebelah `toggleSidebar`.
+
+**Perilaku toggle:** `input.type` `password`↔`text`, tukar visibilitas `.eye-open`/`.eye-off`, update `aria-pressed` + `aria-label` + `title`, fokus dikembalikan ke input. Tombol `type="button"` → tidak ikut submit form.
+
+**Verifikasi (lokal, tanpa deploy):**
+- `php artisan view:cache` + `view:clear` di `backend` **dan** `backend-admin` → semua blade ter-compile tanpa error.
+- `php artisan serve` + cek HTML hasil render: `GET /register` → 200 dengan 2 tombol `.pw-toggle` / 2 `.pw-field` / 2 `.eye-open` / 2 `.eye-off`; `GET /login` → 200 dengan 1 tombol (tetap aman); port 8001 (panel admin `/login`) → 200 dengan tombol + CSS `.pw-wrap`/`.pw-toggle` + fungsi `togglePw`.
+- `php artisan test` (backend) → **19 passed (55 assertions)**.
+- Server dev dimatikan setelah verifikasi. **Belum di-deploy** (sesuai instruksi user; user ingin melakukan commit/push sendiri).
+- Verifikasi visual klik ikon (tampilan mata) belum dilakukan — silakan cek langsung di browser.
+
+**Catatan lanjutan:** `togglePw` di kedua layout sudah siap dipakai, jadi penambahan tombol mata di halaman `forgot-password`/`reset-password` cukup menyalin markup tombolnya (belum dikerjakan — belum diminta).
+
+---
+
 ## STATUS TERAKHIR (2026-09-09) — Fix Reset Password Panel Admin
 
 **Bug:** Tombol "Reset" di dashboard admin (`/admin`) tidak menghasilkan password yang bisa dipakai login siswa.
