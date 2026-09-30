@@ -56,7 +56,9 @@
             <h1 class="ds-banner-title">Semangat mengejar prestasi!</h1>
             <p class="ds-banner-subtitle">Pantau status pendaftaran dan kelola formulir kamu di sini.</p>
         </div>
-        <img src="{{ asset('images/doodle-studying.png') }}" alt="" class="ds-banner-doodle" aria-hidden="true" />
+        <div class="ds-banner-doodle-wrap">
+            <img src="{{ asset('images/doodle-studying.png') }}" alt="" class="ds-banner-doodle" aria-hidden="true" />
+        </div>
     </div>
 
     <div class="ds-stats">
@@ -286,11 +288,17 @@
 .ds-banner-greeting { font-size: 14px; font-weight: 600; opacity: 0.85; margin: 0 0 6px; }
 .ds-banner-title { font-size: 26px; font-weight: 800; margin: 0; letter-spacing: -0.02em; line-height: 1.2; }
 .ds-banner-subtitle { font-size: 14px; font-weight: 500; opacity: 0.8; margin: 8px 0 0; line-height: 1.5; }
-.ds-banner-doodle {
-    height: 150px; width: auto; object-fit: contain;
-    animation: ds-float 4s ease-in-out infinite;
-    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15));
+.ds-banner-doodle-wrap {
     position: relative; z-index: 1; flex-shrink: 0; margin-left: 24px;
+    width: 176px; height: 176px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f1f7f0 72%);
+    box-shadow: 0 14px 30px rgba(11, 30, 20, 0.30), 0 0 0 8px rgba(255, 255, 255, 0.14);
+    animation: ds-float 4s ease-in-out infinite;
+}
+.ds-banner-doodle {
+    height: 132px; width: auto; object-fit: contain;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.12));
 }
 @keyframes ds-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 
@@ -367,7 +375,8 @@
 
 @media (max-width: 768px) {
     .ds-banner { flex-direction: column; text-align: center; padding: 28px 24px; }
-    .ds-banner-doodle { height: 120px; margin-top: 20px; margin-left: 0; }
+    .ds-banner-doodle-wrap { width: 140px; height: 140px; margin-top: 20px; margin-left: 0; }
+    .ds-banner-doodle { height: 104px; }
     .ds-banner-title { font-size: 22px; }
     .ds-stats { grid-template-columns: 1fr; }
     .ds-form-row { grid-template-columns: 1fr; }

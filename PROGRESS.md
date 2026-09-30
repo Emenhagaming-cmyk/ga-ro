@@ -4,6 +4,31 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-09-30) — Alas Stiker Bulat untuk Doodle Banner Dashboard Siswa
+
+**Permintaan user:** doodle di banner dashboard siswa `nyatu sama warna hijau` sehingga tidak kelihatan jelas → minta diberi "apa gitu" di belakangnya agar kontras.
+
+**Analisis:** `images/doodle-studying.png` adalah line art **hitam** (buku pink) dengan background transparan, langsung menempel di banner gradasi hijau tua `#2f5b45 → #4a7a62` → kontrasnya rendah. Panel admin tidak punya doodle banner, jadi cakupannya hanya 1 file.
+
+**Pilihan user:** gaya **badge bulat putih (stiker)**, dashboard siswa saja.
+
+**Perubahan (1 file — `backend/resources/views/pendaftaran/dashboard-siswa.blade.php`):**
+- HTML: `<img class="ds-banner-doodle">` dibungkus `<div class="ds-banner-doodle-wrap">` (sekarang img jadi anak dari wrapper, bukan flex child langsung).
+- CSS: blok `.ds-banner-doodle` diganti jadi 2 rule baru — wrapperlingkaran 176×176px `border-radius:50%` dengan `background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f1f7f0 72%)` + `box-shadow: 0 14px 30px rgba(11,30,20,.30), 0 0 0 8px rgba(255,255,255,.14)`; img di dalamnya `height:132px` + `filter: drop-shadow(...)` halus.
+- Animasi `ds-float` **dipindah dari img ke wrapper** → stiker utuh yang mengambang; `@keyframes ds-float` tidak diubah.
+- Media query `max-width:768px`: aturan lama `.ds-banner-doodle{height:120px;margin-top:20px;margin-left:0}` diganti jadi wrapper 140×140px + img 104px (proporsional saat banner berubah jadi kolom).
+
+**Verifikasi (lokal, tanpa deploy):**
+- `php artisan view:cache` + `view:clear` → blade ter-compile tanpa error.
+- Render nyata dicek via `php artisan tinker` (view `pendaftaran.dashboard-siswa` dengan `Pendaftaran` pertama dari DB + `Auth::login`, read-only): `wrapper=3` (1 HTML + 2 CSS), `cssBadge=1`, `anim=1`, `img132=1`, `mobile=1`, `doodleImg=1`; markup ban terpotong sesuai harapan (wrapper membungkus img).
+- `php artisan test` → **19 passed (55 assertions)**.
+- Catatan: login HTTP via akun demo `siswa` **tidak bisa** dipakai untuk cek banner karena akun demo tidak punya data pendaftaran (halaman render empty-state, banner tidak ikut muncul) — makanya verifikasi dilakukan lewat render view langsung. Cek visual akhir tetap di sisi user (server dev port 8000 sudah jalan, cukup refresh).
+- **Belum di-commit / di-deploy** (user ingin melakukan commit & push sendiri untuk belajar git).
+
+**Catatan:** diagnostic LSP yang muncul di file blade ini (error "at-rule or selector expected" di baris `class="ds-stat-icon ds-stat-icon--{{ ... }}"`, dll.) adalah **false positive** — LSP memarse `<style>`/`<script>` inline sebagai CSS/JS murni sehingga `{{ }}` Blade dianggap selector tidak valid. Tidak related dengan perubahan ini; acuan validasi tetap `php artisan view:cache`.
+
+---
+
 ## STATUS TERAKHIR (2026-09-30) — Tombol Mata (Lihat/Sembunyikan Password) di Halaman Login & Daftar
 
 **Permintaan user:** tambah ikon mata di input password — halaman login (siswa + panel admin), lalu dilanjutkan ke form daftar.
