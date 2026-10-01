@@ -11,7 +11,7 @@
           Daftar sebagai siswa SMK Bahrul Ulum dengan jurusan RPL
           dan kurikulum link &amp; match bersama industri. Ayo, wujudkan masa depanmu dengan keterampilan digital yang siap pakai!
         </p>
-        <div class="spmb-stats">
+        <!-- <div class="spmb-stats">
           <div class="stat-block">
             <span class="stat-num">{{ spmbStats.totalRegistered.toLocaleString('id-ID') }}</span>
             <span class="stat-label">Siswa Mendaftar</span>
@@ -24,12 +24,12 @@
             <span class="stat-num">1<small> jam</small></span>
             <span class="stat-label">Proses Biaya</span>
           </div>
-        </div>
-        <div class="spmb-chips">
+        </div> -->
+        <!-- <div class="spmb-chips">
           <span class="chip">Gelombang 1 · 2027</span>
           <span class="chip">Online &amp; Offline</span>
           <span class="chip chip-accent">Gratis Daftar</span>
-        </div>
+        </div> -->
         <div class="spmb-actions">
           <a :href="spmbTarget()" class="btn-primary" @click.prevent="handleDaftarClick">
             Daftar Sekarang

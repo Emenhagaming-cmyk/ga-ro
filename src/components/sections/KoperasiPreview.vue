@@ -3,14 +3,14 @@
     <div class="kp-shell">
       <div class="kp-text" v-reveal>
         <h2>
-          Kebutuhan Sekolah,<br />
+          Kebutuhan Sekolah<br />
           <em>Tanpa Ribet</em>
         </h2>
         <p>
-          Seragam, alat tulis, dan kebutuhan siswa bisa dipesan langsung dari
-          koperasi online sekolah. Ambil di sekolah — atau diantarkan.
+          Seragam, alat tulis dan kebutuhan siswa bisa dipesan langsung dari
+          koperasi online sekolah dengan cepat dan praktis.
         </p>
-        <ul class="kp-points">
+        <!-- <ul class="kp-points">
           <li>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Stok lengkap seragam &amp; perlengkapan
@@ -23,7 +23,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Pemesanan mudah dari HP
           </li>
-        </ul>
+        </ul> -->
         <button class="kp-btn" @click="goKoperasi">
           Buka Koperasi
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>

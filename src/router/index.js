@@ -66,7 +66,6 @@ const routes = [
   {
     path: "/produk-siswa",
     component: () => import("../views/ProdukSiswaView.vue"),
-    meta: { requiresSiswa: true }
   },
   {
     path: "/e-learning",

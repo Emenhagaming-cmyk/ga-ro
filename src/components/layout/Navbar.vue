@@ -27,9 +27,9 @@
               <span class="di-title">Koperasi</span>
             </span>
           </a>
-          <a href="/produk-siswa" class="dropdown-item" @click="guardSiswa">
+          <a href="/produk-siswa" class="dropdown-item">
             <span class="di-text">
-              <span class="di-title">Produk Siswa</span>
+              <span class="di-title">Karya Siswa</span>
             </span>
           </a>
           <a href="/spp" class="dropdown-item" @click="guardSiswa">
@@ -146,7 +146,7 @@
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
             <a v-if="!isSiswa" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
             <a href="/koperasi" @click="guardSiswa(); closeMenu()">Koperasi</a>
-            <a href="/produk-siswa" @click="guardSiswa(); closeMenu()">Produk Siswa</a>
+            <a href="/produk-siswa" @click="closeMenu()">Karya Siswa</a>
             <a href="/spp" @click="guardSiswa(); closeMenu()">SPP</a>
             <a href="/career-center" @click="guardSiswa(); closeMenu()">Career Center</a>
           </div>

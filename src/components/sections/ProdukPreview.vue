@@ -21,8 +21,7 @@
           <em>Buatan Siswa</em>
         </h2>
         <p>
-          Galeri produk digital dan kerajinan karya siswa SMK Bahrul Ulum —
-          hasil dari pembelajaran berbasis proyek di lab dan bengkel sekolah.
+          Galeri produk digital dan kerajinan karya siswa SMK Bahrul Ulum yang bisa dipesan langsung secara online. Temukan berbagai inovasi kreatif dari siswa SMK Bahrul Ulum.
         </p>
         <button class="pp-btn" @click="goProduk">
           Lihat Karya
@@ -36,18 +35,10 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { Monitor, Hammer } from "lucide-vue-next";
-import { useAuthSession } from "@/composable/useAuthSession";
-import { useToast } from "@/composable/useToast";
 
 const router = useRouter();
-const { session } = useAuthSession();
-const { showToast } = useToast();
 
 function goProduk() {
-  if (session.value.role !== "siswa") {
-    showToast("Khusus siswa, silakan login terlebih dahulu");
-    return;
-  }
   router.push("/produk-siswa");
 }
 </script>

@@ -8,14 +8,14 @@
 
     <div class="page-header">
       <div>
-        <span class="page-label">Produk Siswa</span>
+        <span class="page-label">Karya Siswa</span>
         <h1>Galeri Karya Siswa SMK Bahrul Ulum</h1>
         <p>Karya dan produk unggulan buatan siswa langsung dari laboratorium dan bengkel sekolah.</p>
       </div>
       <div class="header-actions">
         <div class="action-panel">
           <div class="summary-pill">
-            <strong>18</strong>
+            <strong>{{ products.length }}</strong>
             <span>Karya terpajang</span>
           </div>
         </div>

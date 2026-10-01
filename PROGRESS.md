@@ -4,6 +4,25 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-09-30) — Showcase Karya Siswa Dibuka untuk Umum (Feedback Juri)
+
+**Feedback juri:** karya siswa tidak bisa dilihat sebelum login — minta showcase dibuka supaya orang lain bisa yakin dengan sekolah & melihat project.
+
+**Akar masalah — 3 gerbang akses, semua frontend** (data karya hardcoded di Vue, tanpa backend):
+1. `src/router/index.js` — route `/produk-siswa` pakai `meta: { requiresSiswa: true }` → tamu di-redirect ke `/`.
+2. `src/components/sections/ProdukPreview.vue` — `goProduk()` cek role → toast "Khusus siswa, silakan login terlebih dahulu".
+3. `src/components/layout/Navbar.vue` — link "Produk Siswa" dropdown Layanan + menu mobile pakai `@click="guardSiswa"` → `preventDefault` + toast.
+
+**Perubahan (4 file):**
+- `router/index.js` — hapus `meta: { requiresSiswa: true }` dari `/produk-siswa` (jadi publik seperti `/berita`, `/spmb-info`, `/e-learning`). `beforeEach` & guard `/koperasi`, `/tabungan`, `/spp` tetap utuh.
+- `ProdukPreview.vue` — `goProduk()` jadi cukup `router.push("/produk-siswa")`; import `useAuthSession` & `useToast` yang tak terpakai dihapus.
+- `Navbar.vue` — lepas `@click="guardSiswa"` dari link Karya Siswa (baris 30 & 149; mobile tetap `closeMenu()`); label "Produk Siswa" → **"Karya Siswa"**. `guardSiswa` tetap menjaga Koperasi/SPP/Career (6 referensi tersisa).
+- `ProdukSiswaView.vue` — pill hardcode "18 Karya terpajang" → dinamis `{{ products.length }}` (sekarang 9); `page-label` → "Karya Siswa" (konsisten dengan h1 "Galeri Karya Siswa").
+
+**Verifikasi:** `npm run build` sukses. Frontend tanpa test framework (scripts: dev/build/preview) → cek manual: tamu buka "Lihat Karya", navbar "Karya Siswa", atau `/produk-siswa` langsung → tampil tanpa redirect; tamu buka `/spp` tetap di-redirect. PROGRESS.md terupdate; belum di-commit/deploy.
+
+---
+
 ## STATUS TERAKHIR (2026-09-30) — Hierarki Dashboard Siswa: Pengumuman Kelulusan Naik ke Posisi Paling Atas
 
 **Permintaan user:** card pengumuman lulus/tidak di dashboard siswa ("hierarki ke siswa lebih kena") — semula tersembunyi di tengah halaman.
