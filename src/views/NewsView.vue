@@ -1,15 +1,7 @@
 <template>
   <section class="berita-page">
     <!-- Topbar — sama dengan Tabungan -->
-    <header class="news-topbar">
-      <div class="topbar-left">
-        <button class="topbar-back" @click="goBack" aria-label="Kembali">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        </button>
-        <img src="/logo.png" alt="Logo" class="topbar-logo" />
-        <span class="topbar-brand">Berita &amp; Pengumuman</span>
-      </div>
-    </header>
+    <PageTopbar brand="Berita &amp; Pengumuman" bg="#f2f4f1" />
 
     <div class="berita-body">
     <!-- Search -->
@@ -129,6 +121,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, reactive } from "vue";
 import { useRouter } from "vue-router";
+import PageTopbar from "@/components/layout/PageTopbar.vue";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const router  = useRouter();
@@ -215,9 +208,6 @@ function gradientFor(cat) {
 function openDetail(item) {
   router.push(`/berita/${item.slug}`);
 }
-function goBack() {
-  router.back();
-}
 function resetFilter() {
   activeCategory.value = "Semua";
   searchQuery.value = "";
@@ -229,58 +219,6 @@ function resetFilter() {
 .berita-page {
   min-height: 100dvh;
   background: #f2f4f1;
-  color: #1c2a23;
-}
-
-/* ===== TOPBAR (sama dengan Tabungan) ===== */
-.news-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px max(5%, 32px);
-  background: rgba(242, 244, 239, 0.92);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid #e3e8e3;
-}
-
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.topbar-back {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #e3e8e3;
-  border-radius: 50%;
-  background: #fff;
-  color: #1c2a23;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-}
-.topbar-back:hover { background: #eef3ee; }
-
-.topbar-logo {
-  height: 34px;
-  width: auto;
-  border-radius: 9px;
-  background: #fff;
-  border: 1px solid #e3e8e3;
-  padding: 3px;
-}
-
-.topbar-brand {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
   color: #1c2a23;
 }
 
@@ -638,6 +576,5 @@ function resetFilter() {
   .featured-body { padding: 18px; }
   .news-grid { grid-template-columns: 1fr; }
   .skeleton-grid { grid-template-columns: 1fr; }
-  .topbar-brand { font-size: 14px; }
 }
 </style>

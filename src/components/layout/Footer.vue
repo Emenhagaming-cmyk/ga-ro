@@ -186,7 +186,7 @@ defineEmits(['openContact'])
 .contact-btn {
   display: inline-flex; align-items: center; gap: 8px;
   margin-top: 16px; padding: 10px 20px;
-  background: rgba(58, 100, 80, 0.08); border: 1.5px solid rgba(58, 100, 80, 0.2);
+  background:#ffffff;
   border-radius: 12px; color: #3a6450;
   font-size: 13px; font-weight: 700; font-family: inherit;
   cursor: pointer; transition: all 0.2s ease;

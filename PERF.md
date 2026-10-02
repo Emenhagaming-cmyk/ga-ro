@@ -3,6 +3,18 @@
 Log setiap percobaan optimasi (treap & yang di-revert) supaya tidak di-ulang dua kali.
 Rujukan kode: langkah `measure → identify → fix → verify → guard`.
 
+### Sesi 2026-10-01 — Aset gambar hero (PNG → WebP)
+
+| # | Ide | Baseline → Hasil | Verdict | Catatan |
+|---|-----|------------------|---------|---------|
+| F5 | Hero ilustrasi 3D convert **PNG → WebP** (alpha) | **338 KB → 41.7 KB** (−88%) | kept | `public/hero-siswa.webp`. Pillow lokal (Python 12.1.0 sudah ada di mesin) — **tanpa dependency baru**, sesuai guard "tanpa dependency baru". Alpha terverifikasi (4 sudut `(0,0,0,0)`). Konsisten dengan `sklh.webp`/`pmb_smkbu.webp` |
+| F6 | `width`/`height` + `decoding="async"` di `<img>` hero, **tanpa** `loading="lazy"` | — | kept | hero = above fold & elemen LCP → `lazy` justru memperlambat LCP. Atribut dimensi reserve aspect ratio → cegah CLS |
+
+### Guard (aset gambar baru)
+- Gambar **di atas fold / LCP**: sertakan `width`+`height` (anti-CLS), **jangan** `loading="lazy"`, pertimbangkan WebP.
+- Gambar **di bawah fold**: pakai `loading="lazy"` (seperti `AboutSchool.vue` `/sklh.webp`).
+- Konversi alpha PNG→WebP: pakai Pillow lokal, **jangan** tambah dependency npm untuk ini.
+
 ## Sesi 2026-08-30 — Audit & optimasi menyeluruh (3 bagian)
 
 Gejala user: halaman lambat load, interaksi berat (klik/geser/scroll), API/backend lambat.
