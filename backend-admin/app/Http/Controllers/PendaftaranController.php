@@ -423,7 +423,7 @@ public function dashboard(RegistrationInsightService $insightService)
         $plain = strtoupper(substr(uniqid(), -8));
         $user->update(['password' => bcrypt($plain)]);
 
-        return back()->with('reset_password', [
+        return redirect()->route('admin.dashboard')->with('reset_password', [
             'name' => $user->name,
             'password' => $plain,
         ]);

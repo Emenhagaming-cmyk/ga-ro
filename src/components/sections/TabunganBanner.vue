@@ -43,17 +43,17 @@ const goTabungan = () => {
   <section id="tabungan" class="tabungan">
     <div class="tabungan-shell">
       <div class="tabungan-text" v-reveal>
-        <span class="tabungan-kicker">✨ Menabung Jadi Seru</span>
+        <!-- <span class="tabungan-kicker">✨ Menabung Jadi Seru</span> -->
         <h2>
           Kelola Tabunganmu,<br />
           <em>Tanam Kebaikan Setiap Hari</em>
         </h2>
         <p>
-          Fitur tabungan siswa membantu kamu menyimpan uang jajan dengan mudah.
-          Lacak saldo, riwayat setoran, dan tarik tabunganmu kapan saja — semua
+         Tabungan siswa membantu kamu menyimpan uang jajan dengan mudah.
+          Lacak saldo, riwayat setoran dan tarik tabunganmu kapan saja semua
           dalam satu genggaman.
         </p>
-        <ul class="tabungan-points">
+        <!-- <ul class="tabungan-points">
           <li>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Setor & tarik mudah tanpa biaya
@@ -66,13 +66,13 @@ const goTabungan = () => {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             Amankan dari diri sendiri maupun teman
           </li>
-        </ul>
+        </ul> -->
         <button class="tabungan-btn" @click="goTabungan">
           Buka Tabungan Siswa
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
         <p v-if="!isSiswaLoggedIn()" class="tabungan-hint">
-          Masuk sebagai siswa untuk mulai menabung
+          * Khusus siswa SMK Bahrul Ulum ya
         </p>
       </div>
 

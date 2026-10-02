@@ -1,6 +1,6 @@
 # IMPLEMENTATION_SUMMARY.md — SPMB SMK Bahrul Ulum
 
-Ringkasan teknis seluruh implementasi proyek.
+Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `backend/` dan `backend-admin/` punya salinan yang disinkronkan.
 
 ---
 
@@ -8,24 +8,42 @@ Ringkasan teknis seluruh implementasi proyek.
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                  Frontend (Vue 3)                │
-│  Port 5174 — Vite dev server                    │
-│  Landing page + 12 halaman view                 │
-│  AI Chatbot BISA (Groq-powered)                 │
+│              Frontend (Vue 3 + Vite)             │
+│  smkbu-sby.vercel.app — port dev 5174           │
+│  Landing page + 12 halaman view                  │
+│  AI Chatbot BISA (Groq-powered)                  │
 └────────────────────┬────────────────────────────┘
                      │ HTTP (CORS)
 ┌────────────────────▼────────────────────────────┐
-│                 Backend (Laravel 12)             │
-│  Port 8000 — php artisan serve                  │
-│  Session-based auth (bukan Sanctum)             │
-│  Blade views + API endpoints                    │
+│             Backend (Laravel 12)                 │
+│  pendaftaranspmb.vercel.app — port dev 8000     │
+│  Session-based auth (bukan Sanctum)              │
+│  Blade views + API endpoints                     │
 └────────────────────┬────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────┐
-│              Database (MySQL Laragon)            │
-│  pendaftaran_db — 3 tabel utama                 │
+│          Database (MySQL — TiDB production)      │
+│  pendaftaran_db — 8 tabel utama                  │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│         Panel Admin (Laravel 12 — terpisah)      │
+│  paneladminsmkbu.vercel.app                     │
+│  DB sama (TiDB), login admin-only               │
+│  Sidebar layout + Chart.js + CRUD               │
 └─────────────────────────────────────────────────┘
 ```
+
+---
+
+## Domain Production
+
+| Service | Domain | Project Vercel |
+|---------|--------|----------------|
+| Landing page (Vue) | `smkbu-sby.vercel.app` | `lomba` |
+| Backend (Laravel) | `pendaftaranspmb.vercel.app` | `spmb-backend` |
+| Panel Admin | `paneladminsmkbu.vercel.app` | `spmb-admin` |
+| Legacy | `bhapppp.vercel.app` | (307 → smkbu-sby) |
 
 ---
 
@@ -33,18 +51,18 @@ Ringkasan teknis seluruh implementasi proyek.
 
 | # | Halaman | Route | Akses | Keterangan |
 |---|---------|-------|-------|------------|
-| 1 | Homepage | `/` | Public | Loading screen, Hero, AboutSchool, Features, News, Footer, FloatingAi |
-| 2 | Berita | `/berita` | Public | 6 artikel, search, filter kategori, modal detail |
-| 3 | E-Learning | `/e-learning` | Public | 6 materi (video+PDF), 3 kuis, filter kategori |
-| 4 | E-Tracer Study | `/e-tracer` | Public | Form tracer alumni, statistik, success banner |
-| 5 | Career Center | `/career-center` | Login Siswa | 4 listing magang/lowongan |
-| 6 | Koperasi | `/koperasi` | Login Siswa | 16 produk, tab kategori |
-| 7 | Produk Siswa | `/produk-siswa` | Login Siswa | 9 karya, tech tags, modal detail |
+| 1 | Homepage | `/` | Public | Hero, AboutSchool, SpmbBanner, BeritaPreview, CareerPreview, KoperasiPreview, ProdukPreview, TabunganBanner |
+| 2 | Berita | `/berita` | Public | List + detail dari backend API |
+| 3 | E-Learning | `/e-learning` | Public | 6 materi (video+PDF), 3 kuis |
+| 4 | E-Tracer Study | `/e-tracer` | Public | Form tracer alumni, statistik |
+| 5 | Career Center | `/career-center` | Login Siswa | Lowongan + lamaran |
+| 6 | Koperasi | `/koperasi` | Login Siswa | Produk + keranjang + checkout |
+| 7 | Produk Siswa | `/produk-siswa` | Login Siswa | Galeri karya |
 | 8 | Chat (BISA) | `/chat` | Public | AI chatbot Groq-powered |
-| 9 | Login | `/login` | Guest | Form login |
-| 10 | Register | `/register` | Guest | Form register |
-| 11 | Dashboard Siswa | `/dashboard-siswa` | Login Siswa | Status pendaftaran |
-| 12 | Dashboard Admin | `/dashboard-admin` | Login Admin | Live polling, AI insight |
+| 9 | Login | `/login` | Guest | Redirect ke backend |
+| 10 | Register | `/register` | Guest | Redirect ke backend |
+| 11 | Dashboard Siswa | `/dashboard-siswa` | Login Siswa | Blade backend |
+| 12 | Dashboard Admin | `/dashboard-admin` | Login Admin | Blade panel admin |
 
 ---
 
@@ -64,6 +82,14 @@ Ringkasan teknis seluruh implementasi proyek.
 | POST | `/reset-password` | Process reset |
 | GET | `/pendaftaran/create` | Registration form |
 | POST | `/pendaftaran` | Submit registration |
+| GET | `/berita` | Berita list (JSON) |
+| GET | `/berita/{slug}` | Berita detail (JSON) |
+| GET | `/lowongan` | Lowongan list (JSON) |
+| GET | `/lowongan/count` | Lowongan count (JSON) |
+| GET | `/lowongan/{lowongan}` | Lowongan detail |
+| GET | `/auth-status` | Auth status (JSON) |
+| GET | `/csrf-token` | CSRF token (JSON) |
+| GET | `/school-stats` | School stats (JSON) |
 
 ### Auth (siswa)
 | Method | URI | Description |
@@ -72,107 +98,145 @@ Ringkasan teknis seluruh implementasi proyek.
 | GET | `/dashboard-siswa` | Student dashboard |
 | PUT | `/pendaftaran/{id}` | Edit own pendaftaran |
 | GET | `/profil` | Student profile |
+| GET | `/spp` | SPP bills siswa |
+| GET | `/tabungan` | Tabungan siswa |
+| POST | `/tabungan` | Setor/tarik tabungan |
+| POST | `/lamaran` | Apply lamaran |
+| GET | `/lamaran/saya` | List lamaran saya |
+| DELETE | `/lamaran/{lamaran}` | Cancel lamaran |
+| GET | `/dashboard-siswa/snapshot` | Status snapshot (JSON) |
+| GET | `/pendaftaran/bukti` | Download bukti diterima (PDF) |
 
-### Admin
+### Auth (kasir/guru/admin)
 | Method | URI | Description |
 |--------|-----|-------------|
-| GET | `/admin` | Admin dashboard |
-| GET | `/pendaftaran` | Data table |
-| GET | `/pendaftaran/export` | CSV export |
-| GET | `/pendaftaran-snapshot` | Live stats JSON |
-| GET | `/pendaftaran/{id}` | Detail view |
-| PUT | `/pendaftaran/{id}/status` | Quick status update |
-| DELETE | `/pendaftaran/{id}` | Delete pendaftaran |
+| GET | `/spp/kasir` | SPP kasir view |
+| POST | `/spp/pay` | Input pembayaran SPP |
+| GET | `/admin/spp` | SPP rekap (JSON) |
+| GET | `/admin/spp/rekap` | SPP rekap view |
+| GET | `/spp/ortu/{user}` | SPP ortu (signed URL) |
+
+### Admin (web utama — DITOLAK, arahkan ke panel)
+| Method | URI | Description |
+|--------|-----|-------------|
+| GET | `/admin` | 404 (dihapus) |
 
 ---
 
-## Database (pendaftaran_db)
+## Database (pendaftarans — 8 tabel)
 
-### Tabel `users`
+### `users`
 - id, name, username, email, password (hashed)
-- role: enum('admin','siswa','pendaftar','guru','kasir') default 'pendaftar'
+- role: enum('admin','siswa','pendaftar','guru','kasir') default 'siswa'
 - timestamps
 
-### Tabel `pendaftarans` (~45 kolom)
+### `pendaftarans` (~45 kolom)
 - **Identitas**: nama_lengkap, nama_panggilan, nisn, nik, tempat_lahir, tanggal_lahir, umur, agama, kewarnegaraan, kategori_pendaftar, jenis_kelamin, alamat, rt_rw, kode_pos, no_hp, email
-- **Sekolah**: asal_sekolah, gelombang, tahun_lulus, rata_rata_nilai, jurusan_pilihan
+- **Sekolah**: asal_sekolah, gelombang, tahun_lulus, rata_rata_nilai, jurusan_pilihan (RPL/TKJ/AKL)
 - **Keluarga**: jumlah_saudara, anak_ke, status_keluarga, nama_ayah, pendidikan_ayah, pekerjaan_ayah, penghasilan_ayah, alamat_ayah, hp_ayah, nama_ibu, pendidikan_ibu, pekerjaan_ibu, penghasilan_ibu, alamat_ibu, hp_ibu, nama_wali, hubungan_wali, email_orang_tua
 - **Lain**: jenis_pembayaran, berkas_tambahan, foto_3x4, kk_file, ijazah_file, sktm_file
 - **Status**: status (baru/diproses/diterima/ditolak), data_confirmed, confirmed_at, status_updated_at, user_id (FK)
-- **Legacy**: nama_orang_tua, no_hp_orang_tua (nullable)
+- Legacy: nama_orang_tua, no_hp_orang_tua (nullable)
+- Indexes: status, user_id, created_at, nisn, nik, composite(status,jurusan_pilihan)
 
-### Tabel `pendaftaran_drafts`
+### `pendaftaran_drafts`
 - key (string), payload (json), timestamps
+
+### `spp_bills`
+- user_id (FK), periode (Y-m), nominal, status (belum/lunas), jatuh_tempo, timestamps
+
+### `spp_payments`
+- bill_id (FK), metode (tunai/transfer), amount, paid_at, input_by (FK users), timestamps
+
+### `tabungans`
+- user_id (FK cascade), type enum('setor','tarik'), amount (unsignedBigInteger), description (nullable), timestamps
+
+### `koperasi_orders`
+- user_id (FK), items (json), total, metode, status, timestamps
+
+### `beritas`
+- title, slug (unique), category, category_color, excerpt, content, image_path, author, published_at, featured, read_time, is_published, user_id (FK), timestamps
 
 ---
 
 ## Komponen Utama
 
-### Vue Components (19)
+### Vue Components
 - **Layout**: Navbar.vue, Footer.vue
-- **Sections**: Hero.vue, AboutSchool.vue, About.vue, feature.vue, News.vue, Portal.vue, Services.vue, FloatingCards.vue
+- **Sections**: Hero.vue, AboutSchool.vue, SpmbBanner.vue, BeritaPreview.vue, CareerPreview.vue, KoperasiPreview.vue, ProdukPreview.vue, TabunganBanner.vue
 - **Chatbot**: ChatHeader.vue, ChatInput.vue, ChatMessages.vue, FloatingAi.vue, TypingIndicator.vue
-- **Common**: CursorGlow.vue, BackgroundFX.vue, FadeSection.vue
+- **Common**: CursorGlow.vue, BackgroundFX.vue, LazyMount.vue, ContactModal.vue
 - **Loading**: LoadingScreen.vue
 
-### Vue Composables (5)
-- `useAuth.js` — token-based auth (legacy)
-- `useAuthSession.js` — session-based via /auth-status polling
+### Vue Composables
+- `useAuthSession.js` — session-based via /auth-status polling + ?auth= URL payload
 - `useToast.js` — toast notifications
-- `useTheme.js` — empty
-- `useScroll.js` — empty
 
-### Laravel Controllers (3)
-- `AuthController.php` — 8 methods (register, login, logout, authStatus, forgotPassword, resetPassword, profile)
-- `PendaftaranController.php` — 9 methods (index, myDashboard, create, store, show, update, updateStatus, destroy, snapshot, exportCsv)
-- `Controller.php` — base
+### Laravel Controllers (Backend)
+- `AuthController.php` — register, login, logout, authStatus, forgotPassword, resetPassword, profile
+- `PendaftaranController.php` — CRUD, myDashboard, myDashboardSnapshot, rules, handleFileUploads, snapshot, exportCsv, downloadBukti
+- `SppController.php` — index, store, adminIndex, kasirIndex, rekapIndex, ortuIndex
+- `TabunganController.php` — index (saldo aggregate), store, adminIndex, adminShow
+- `LowonganController.php` — index (search/filter/sort), show
+- `LamaranController.php` — store (CV upload), myApplications, show, cancel
+- `BeritaApiController.php` — index (JSON), show (JSON)
 
-### Laravel Middleware (4)
+### Laravel Controllers (Panel Admin)
+- `PendaftaranController.php` — dashboard, index, show, exportCsv, snapshot, updateStatus, destroy, chartData, laporan, resetUserPassword
+- `TabunganController.php` — adminIndex, adminShow
+- `BeritaController.php` — CRUD (index, create, store, edit, update, destroy)
+
+### Laravel Middleware
 - `CheckRole.php` — role guard
-- `Cors.php` — allow localhost:5174
+- `Cors.php` — allow origins (smkbu-sby.vercel.app, localhost:5174)
 - `HandleTokenMismatch.php` — 419 recovery with draft save
 - `PreventBrowserCache.php` — no-cache headers
+- `SecurityHeaders.php` — X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy, Permissions-Policy
 
 ---
 
 ## Fitur Kunci
 
 ### Multi-step Registration Form (5 langkah)
-1. Data Diri (nama, NISN, TTL, umur, agama, jenis kelamin, alamat, no HP, email)
-2. Data Sekolah (asal sekolah, gelombang, tahun lulus, rata-rata nilai, jurusan)
-3. Data Orang Tua (ayah & ibu: nama, pendidikan, pekerjaan, penghasilan, alamat, HP)
-4. Upload Berkas (foto 3x4, KK, ijazah, SKTM) + data wali + jenis pembayaran
-5. Konfirmasi (review semua data + centang persetujuan)
+1. Data Diri → 2. Data Sekolah → 3. Data Orang Tua → 4. Upload Berkas → 5. Konfirmasi
+- Draft persistence: session + DB `pendaftaran_drafts` + cookie
 
-### Draft Persistence
-- Guest submit → data disimpan ke session + `pendaftaran_drafts` table
-- Login/register → redirect ke form, data terisi ulang otomatis
-- Submit sukses → draft dihapus; validasi gagal → draft tetap
+### SPP (Sumbangan Pendidikan)
+- Kasir input pembayaran → status langsung terlihat siswa/guru/admin/ortu
+- Link ortu tanpa akun = Laravel signed URL
+- Auto-tagihan: `php artisan spp:generate`
 
-### Admin Dashboard
-- Stats cards (total, baru, diproses, diterima)
-- Live polling 5 detik via `/pendaftaran-snapshot`
-- AI insight (RegistrationInsightService)
-- Quick status change (dropdown auto-submit)
-- CSV export (semicolon, UTF-8 BOM, label Indonesia)
+### Tabungan Siswa
+- Setor/tarik dengan saldo validation
+- Saldo via aggregate SQL (SUM CASE WHEN)
+- Banner landing menampilkan saldo aktif
 
-### AI Chatbot BISA
-- Powered by Groq API
-- Knowledge base dari `api/knowledge/**`
-- Vite middleware `/api/chat`
-- Fallback reply jika API error
+### Security Hardening
+- Rate limiting, CSRF aktif, security headers
+- XSS chatbot (DOMPurify), upload hardening (mimetypes)
+- Race condition fix (DB::transaction + lockForUpdate)
+- IDOR prevention
 
-### E-Learning
-- 6 materi (HTML, MySQL, JavaScript, Jaringan, PHP, Relasi Tabel)
-- Video YouTube + PDF download
-- 3 kuis interaktif (Google Forms)
-- Filter kategori: Pemrograman, Jaringan, Basis Data, Multimedia
+---
 
-### E-Tracer Study
-- Form lengkap: data diri, status kerja/kuliah, data perusahaan/universitas
-- Dropdown 48 nama alumni
-- Statistik: 42% bekerja, 38% kuliah, 5% PKL, 3% wirausaha
-- Success banner + info banner
+## Commands
+
+```powershell
+# Backend
+cd C:\Users\LENOVO\lomba\ga-ro\backend
+php artisan serve --port=8000
+php artisan migrate
+php artisan db:seed --class=AdminSeeder
+php artisan view:cache
+
+# Frontend
+cd C:\Users\LENOVO\lomba\ga-ro
+npm run dev
+npm run build
+
+# Panel Admin (same backend commands, different folder)
+cd C:\Users\LENOVO\lomba\ga-ro\backend-admin
+```
 
 ---
 
@@ -188,115 +252,33 @@ Ringkasan teknis seluruh implementasi proyek.
 
 ---
 
-## Command Penting
+## Deployment
 
+### Vercel Deploy Pattern
 ```powershell
 # Backend
 cd C:\Users\LENOVO\lomba\ga-ro\backend
-php artisan serve --port=8000
-php artisan migrate
-php artisan db:seed --class=AdminSeeder
-php artisan view:cache
+& "C:\nvm4w\nodejs\vercel.cmd" deploy --prod --yes
+& "C:\nvm4w\nodejs\vercel.cmd" alias set <deployment-url> pendaftaranspmb.vercel.app
+
+# Panel Admin
+cd C:\Users\LENOVO\lomba\ga-ro\backend-admin
+& "C:\nvm4w\nodejs\vercel.cmd" deploy --prod --yes
+& "C:\nvm4w\nodejs\vercel.cmd" alias set <deployment-url> paneladminsmkbu.vercel.app
 
 # Frontend
 cd C:\Users\LENOVO\lomba\ga-ro
-npm run dev
-npm run build
-
-# Test
-npx playwright test
+& "C:\nvm4w\nodejs\vercel.cmd" deploy --prod --yes
 ```
 
----
-
-## File Penting
-
-| File | Keterangan |
-|------|------------|
-| `AGENTS.md` | Konteks permanen proyek |
-| `PROGRESS.md` | Log pekerjaan per sesi |
-| `IMPLEMENTATION_SUMMARY.md` | Dokumen ini |
-| `src/router/index.js` | 12 routes Vue |
-| `src/components/layout/Navbar.vue` | Navbar dengan 3 dropdown |
-| `backend/routes/web.php` | 19 routes Laravel |
-| `backend/app/Http/Controllers/PendaftaranController.php` | CRUD + export |
-| `backend/app/Http/Controllers/AuthController.php` | Auth + reset |
-| `src/views/ELearningView.vue` | Halaman E-Learning |
-| `src/views/ETracerView.vue` | Halaman E-Tracer Study |
+### Trap Vercel
+- `vercel link` bikin `.env.local` → hapus (MissingAppKeyException)
+- Deploy kadang `fetch failed` → retry
+- `/api/*` prefix bentrok Vercel PHP runtime → route tanpa prefix
+- `config/database.php` harus `PDO::MYSQL_ATTR_SSL_CA` (bukan `Mysql::ATTR_SSL_CA`) untuk PHP 8.3
+- `CACHE_STORE` harus `database` (bukan `array`) agar throttle jalan
+- `vercel alias set` tidak otomatis — dijalankan SETIAP deploy
 
 ---
 
-## Deployment Production (Vercel) — Sesi 12p
-
-- **Frontend**: project `lomba` → `https://bhapppp.vercel.app` (akun zakkyilhamf-7419, team zakkys-projects-99c4bf23). SPA rewrite di root `vercel.json` (`/((?!api/).*)` → `/index.html`); `.vercelignore` root (backend/vendor dll); `VITE_BACKEND_URL=https://spmb-backend-self.vercel.app` (env project). Button SPMB navbar → `${BACKEND}/login`.
-- **Backend**: project `spmb-backend` → `https://spmb-backend-self.vercel.app` (vercel-php 0.7.4, `backend/api/index.php`). `spmb-backend.vercel.app` dipegang akun lain — jangan dipakai.
-- **Env backend (Vercel project)**: APP_KEY, APP_URL, FRONTEND_URL, DB_* (TiDB gateway ap-southeast-1:4000, DB pendaftaran_db), `MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem`.
-- **Trap vercel-php**: JANGAN upload `vendor` (builder jalankan `composer install` → dev deps dihapus → ENOENT). Path runtime = `/var/task/user/...`. Form action http → butuh `trustProxies(at: '*')` di `bootstrap/app.php`.
-- **Deploy ulang**: di root → `vercel.cmd deploy --prod --yes`; di backend → sama dengan workdir backend (CLI 58.9.0, auth tersimpan di `AppData\Roaming\xdg.data\com.vercel.cli\auth.json`).
-
----
-
-## Optimasi Performa — Sesi 12r
-
-- **Lazy-load route**: semua view di `src/router/index.js` → `import()` per halaman. Bundle awal 253KB JS + 198KB CSS + 252KB font (4×woff2) = 703KB → **index ±105KB** (103KB JS gzip 41KB + 2.3KB CSS, 0 font).
-- **Font Awesome dihapus total**: `main.js` tidak import `all.min.css`; 4 ikon dipakai (`angle-left`, `envelope`, `instagram`, `tiktok`) diganti SVG inline (path FA6) di `ChatHeader.vue` & `Footer.vue`. CSS `.back-btn svg` tetap `stroke: currentColor`.
-- **Polling singleton**: `useAuthSession.js` guard `intervalBound` → 1 interval `/auth-status` per 30s (dulu 7).
-- **Guard non-blocking**: `router.beforeEach` pakai cache `sessionStorage`; `fetchStatus()` background; `await` hanya saat cache ≠ siswa.
-- **Font**: Google Fonts dari `@import` → `<link>` + preconnect (`index.html`, `create.blade.php`); `%VITE_BACKEND_URL%` di index.html di-substitusi Vite.
-- **Gambar WebP** (GD, q82): `sklh.jpg 146→115KB`, `pmb_smkbu.jpg 100→91KB`; hapus `ber.png` (138KB, unused). Backend logo 720×720/350KB → 240×240/59KB.
-- **Backend deps**: hapus `laravel/pail` (build `--no-dev` → `PailServiceProvider not found` saat packages cache menyebutnya; root cause build 500). `composer.json`/lock valid.
-- **Config-cache build dilewati**: cold-start Laravel di Vercel Hobby tak banyak bisa dihemat (region fixed); `route:cache` tak mungkin (2 route closure di `routes/web.php:10-11`). `vercel.json` backend kembalikan `APP_CONFIG_CACHE=/tmp/config.php`.
-- **Verifikasi**: `npm run build` OK; frontend & backend deployed (Ready); smoke `/login`, `/auth-status`, `/logo.png` 200. Frontend dari IP dev kena WAF 429 (IP-bound, bukan deploy).
-
----
-
-## Autentikasi Lintas-Domain (mobile) — Sesi 12u
-
-Browser mobile memblokir cookie third-party → fetch `/auth-status` lintas-domain selalu balas guest → navbar landing salah tampil "SPMB" padahal user login. Solusi: **status auth dikirim lewat URL** (`?auth=`), bukan cookie.
-
-- `backend/app/helpers.php` (baru): `frontendAuthUrl()` → `FRONTEND_URL . '/?auth=' . base64_encode(JSON)`; payload `{logged_in, role, name, has_pendaftaran, status}` konsisten dengan `authStatus()`; dipakai oleh semua link ke landing di blade (9 link, 2 file), `AuthController::logout()`, dan branch `logout` di `HandleTokenMismatch` (419/token basi → payload siswa karena belum logout).
-- Autoload composer: `"files": ["app/helpers.php"]`.
-- `useAuthSession.js`: IIFE `applyAuthQuery()` parse `?auth=` (atob → JSON → sessionStorage `spmb_session_status` → `history.replaceState` strip param) + **guard anti-downgrade** `fetchStatus` (update hanya jika `data.logged_in || !session.value.logged_in`; catch juga pertahankan cache login).
-- Verifikasi production (curl UA iPhone): dashboard siswa → 6 link landing payload siswa; logout normal → payload guest; logout token basi (419) → payload siswa.
-
----
-
-## Panel Admin Terpisah — Sesi 12y/12z
-
-Web admin dipisah ke domain sendiri `https://spmb-admin.vercel.app` (project Vercel `spmb-admin`), kode di `backend-admin\` (salinan backend). DB sama (TiDB). Login admin tidak lagi di form utama.
-
-- **Web utama (backend)**: route admin DIHAPUS (GET /admin → 404); `AuthController::login` menolak role admin + pesan arahkan ke panel; view admin (`pendaftaran/index.blade.php`, `show.blade.php`) pindah ke panel.
-- **Panel (backend-admin)**: `routes/web.php` admin-only (`/`→`/admin`; `/login` guest; `/logout`; forgot/reset-password; group `auth+role:admin`: dashboard, list, export CSV, snapshot, show, PUT status, DELETE). `AuthController::login` hanya role admin ("Hanya akun admin..."), logout → `/login`. View siswa dihapus. UI polish: navbar brand + badge "Panel Admin" + "Buka Web Utama ↗", login page 480px.
-- **Vercel**: project direname `backend-admin` → `spmb-admin`; env production = APP_KEY prod (`base64:gtKJvpBuztMINYQwxnKgMFIHQaYvy3WnzBS0+ItkX5g=`), APP_URL, FRONTEND_URL, DB_* TiDB, `MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem`, `SESSION_SAME_SITE=lax` + `SESSION_SECURE_COOKIE=true` (web utama: `none`). Alias: `vercel alias set <deployment-url> spmb-admin.vercel.app` SETIAP deploy (tidak otomatis).
-- **Trap project Vercel baru**: deployment protection default (`ssoProtection`) → matikan via API `PATCH https://api.vercel.com/v9/projects/spmb-admin?teamId=zakkys-projects-99c4bf23` body `{"ssoProtection":null}`. `vercel link` membuat `.env.local` → hapus (MissingAppKeyException).
-- **Trap env**: env Vercel project + `vercel.json` env masuk PHP runtime; `.env`/`.env.*` exclude via `.vercelignore` (tapi `!.env.example` di-upload). `DB_CONNECTION` WAJIB di vercel.json/env (fallback Laravel 12 = sqlite → `QueryException: Database file at path [pendaftaran_db] does not exist`).
-- **Debug 500 "AuthenticationException Unauthenticated" (guest GET /admin)**: sebenarnya redirect login BEKERJA — debug `withExceptions()->render()` sementara di `bootstrap/app.php` menangkap SEMUA exception termasuk AuthenticationException → selalu render 500. Hapus render debug → redirect `/login` normal. Pelajaran: debug render di `withExceptions` mengalahkan `unauthenticated()` handler.
-- **Verifikasi production**: GET / → 302 /login 200; login admin → dashboard 200 (statTotal + "Pantau Data Pendaftar"); logout → /login; login siswa → ditolak ("Hanya akun admin"); `/pendaftaran` 200, export CSV 200 (text/csv), snapshot 200, show 200, `/up` 200.
-- `.env` lokal panel = sqlite + APP_KEY lokal (`base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=`) — hanya artisan lokal, JANGAN dipakai production.
-
----
-
-## Fitur SPP — bukti bayar satu arah (Sesi 2026-08-30)
-
-Siswa bayar SPP sekali di kasir → status langsung terlihat siswa (login), guru/admin (rekap), ortu (link tanpa akun). Tanpa payment gateway, input manual (tunai/transfer).
-
-- **Data**: `spp_bills` (user_id, periode "Y-m", nominal, status belum/lunas, jatuh_tempo) + `spp_payments` (bill_id, metode tunai/transfer, amount, paid_at, input_by). Bill `lunas` saat sum payments ≥ nominal.
-- **Role baru**: `guru`, `kasir` (enum users). Web utama tolak admin; guru→rekap, kasir→input.
-- **Routes (web utama)**: `GET /spp` (siswa), `GET /spp/kasir` + `POST /spp/pay` (kasir,admin; terima JSON & form blade), `GET /admin/spp` (JSON) + `GET /admin/spp/rekap` (guru,admin), `GET /spp/ortu/{user}` publik **signed URL** (Laravel signedRoute, tanpa akun).
-- **Arsitektur akses**: web utama (blade) = kasir input + guru rekap + siswa status; panel backend-admin = rekap admin read-only (`/admin/spp`); frontend Vue = halaman siswa `/spp` (`requiresSiswa`) + navbar Layanan.
-- **Auto-tagihan**: `php artisan spp:generate {--periode=Y-m} {--nominal=}` — idempotent per siswa+periode.
-- **Helper**: `formatPeriode()`/`formatPeriodeShort()` — bulan Indonesia locale-independen (shared `frontendAuthUrl` pattern).
-- **Test**: 19 passed (55 assertions) — model, command, controller (guard role, ortu signed/un-signed, JSON & form path). Migrasi role driver-safe (skip sqlite, jalan MySQL/TiDB).
-
----
-
-## TODO
-
-- [ ] Dynamic School Statistics (admin-managed) — disetujui user
-- [ ] Universal Search — disetujui user
-- [ ] Info SPMB Center (syarat/biaya/beasiswa/timeline)
-- [ ] Profil Sekolah (Visi Misi)
-- [ ] Fasilitas Sekolah
-- [ ] Hubungi Kami
-- [ ] Galeri Kegiatan
-- [ ] Deployment (Vercel + TiDB)
+## Last Updated: 2026-08-30

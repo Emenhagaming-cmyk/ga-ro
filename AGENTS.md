@@ -14,7 +14,7 @@ Baca juga `PROGRESS.md` untuk status terakhir & TODO lanjutan.
   - Routes: `routes/web.php` (web), `routes/api.php` (API Lama — tidak dipakai frontend baru)
   - **Web utama = SISWA/PENDAFTAR only** — login admin DITOLAK (pesan arahkan ke panel). Route admin dihapus (GET /admin → 404).
 
-- **Panel Admin terpisah** → `C:\Users\LENOVO\lomba\ga-ro\backend-admin` (salinan backend, domain `spmb-admin.vercel.app`, project Vercel `spmb-admin`)
+- **Panel Admin terpisah** → `C:\Users\LENOVO\lomba\ga-ro\backend-admin` (salinan backend, domain `paneladminsmkbu.vercel.app`, project Vercel `spmb-admin`)
   - Login hanya role admin ("Hanya akun admin..."); logout → `/login`. Route: `/`, `/login`, `/logout`, forgot/reset-password, group admin (`/admin`, `/pendaftaran`, export, snapshot, show, PUT status, DELETE).
   - DB SAMA: TiDB production. Env production: DB_CONNECTION=mysql + DB_* + MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem + APP_KEY=`base64:gtKJvpBuztMINYQwxnKgMFIHQaYvy3WnzBS0+ItkX5g=` + SESSION_SAME_SITE=lax + SESSION_SECURE_COOKIE=true (via vercel.json env & project env).
   - `.env` lokal panel hanya untuk artisan (DB_CONNECTION=sqlite + APP_KEY lokal `base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=` — JANGAN dipakai production). Vendor di-copy lokal (tidak ter-upload).
@@ -67,7 +67,12 @@ npm run dev
 
 ## Tabel Database (pendaftaran_db)
 
-- `users`: id, name, email, password (hashed), role enum('admin','siswa') default 'siswa', timestamps
+- `users`: id, name, email, password (hashed), role enum('admin','siswa','pendaftar','guru','kasir') default 'siswa', timestamps
+- `spp_bills`: user_id, periode, nominal, status (belum/lunas), jatuh_tempo, timestamps
+- `spp_payments`: bill_id, metode (tunai/transfer), amount, paid_at, input_by, timestamps
+- `tabungans`: user_id, type (setor/tarik), amount, description, timestamps
+- `koperasi_orders`: user_id, items (json), total, metode, status, timestamps
+- `beritas`: title, slug, category, content, image_path, author, published_at, featured, is_published, user_id, timestamps
 - `pendaftarans`: ~45 kolom termasuk field form baru:
   - Identitas: nama_lengkap, nama_panggilan, nisn, nik, tempat_lahir, tanggal_lahir, umur, agama, kewarnegaraan, kategori_pendaftar, jenis_kelamin, alamat, rt_rw, kode_pos, no_hp, email
   - Sekolah: asal_sekolah, gelombang, tahun_lulus, rata_rata_nilai, jurusan_pilihan (RPL/TKJ/AKL)
@@ -82,16 +87,25 @@ npm run dev
 - `app/Http/Controllers/PendaftaranController.php` — CRUD, myDashboard, rules validasi lengkap, handleFileUploads
 - `app/Http/Middleware/CheckRole.php` — guard role (admin/siswa)
 - `app/Http/Middleware/HandleTokenMismatch.php` — penanganan 419/CSRF (cek response, bukan catch exception; `session()->save()` manual)
-- `app/Http/Middleware/Cors.php` — allow http://localhost:5174
+- `app/Http/Middleware/Cors.php` — allow smkbu-sby.vercel.app + localhost:5174
+- `app/Http/Middleware/SecurityHeaders.php` — X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy
+- `app/helpers.php` — frontendAuthUrl(), formatPeriode()
 - `app/Models/Pendaftaran.php` — fillable semua field
+- `app/Models/SppBill.php` — bill + payments relasi
+- `app/Models/SppPayment.php` — bill + inputter relasi
+- `app/Models/Tabungan.php` — tabungan siswa
+- `app/Models/Berita.php` — berita + generateSlug()
 - `app/Models/Lowongan.php` — job listing model (title, company, location, jurusan, type, description, deadline, is_active)
 - `app/Models/Lamaran.php` — job application model (user_id, lowongan_id, cover_letter, cv_path, status)
 - `app/Http/Controllers/LowonganController.php` — index (search/filter/sort), show
 - `app/Http/Controllers/LamaranController.php` — store (CV upload), myApplications, show, cancel
 - `database/seeders/AdminSeeder.php` — admin account
-- `database/seeders/LowonganSeeder.php` — 10 sample job listings
+- `database/seeders/LowonganSeeder.php` — 25 sample job listings
 - Routes: `web.php` (publik: `/` `/login` `/register` `pendaftaran/create`+`store`; auth: dashboard-siswa, update; admin: `/admin`, index, export, show, edit, status, destroy) — `Route::resource` tidak dipakai
   - Career Center: `/lowongan` (GET, public), `/lowongan/{lowongan}` (GET, public), `/lamaran` (POST, auth), `/lamaran/saya` (GET, auth), `/lamaran/{lamaran}` (GET/DELETE, auth). **Tanpa prefix `/api/`** — Vercel PHP runtime intercept `/api/*` sebagai function path.
+  - SPP: `/spp` (siswa), `/spp/kasir` (kasir,admin), `/spp/pay` (POST), `/admin/spp` (JSON), `/admin/spp/rekap`, `/spp/ortu/{user}` (signed URL publik)
+  - Tabungan: `/tabungan` (GET/POST, auth), `/admin/tabungan` (GET/POST, admin)
+  - Berita API: `/berita` (GET, publik), `/berita/{slug}` (GET, publik)
 
 ## Style & Konvensi
 

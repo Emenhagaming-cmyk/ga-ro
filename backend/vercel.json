@@ -7,9 +7,13 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.4"
+    },
+    "api/phpinfo.php": {
+      "runtime": "vercel-php@0.7.4"
     }
   },
   "routes": [
+    { "src": "/phpinfo", "dest": "/api/phpinfo.php" },
     { "src": "/images/(.*)", "dest": "/public/images/$1" },
     { "src": "/doodles/(.*)", "dest": "/public/doodles/$1" },
     { "src": "/(.*)", "dest": "/api/index.php" }

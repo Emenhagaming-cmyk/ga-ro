@@ -1,489 +1,643 @@
 <template>
   <section class="berita-page">
-    <div class="top-bar">
-      <button type="button" class="back-button" @click="goBack">
-        <span class="back-icon"><</span>
-      </button>
-    </div>
-
-    <div class="page-header">
-      <div>
-        <span class="page-label">Berita & Pengumuman</span>
-        <h1>Semua Berita SMK Bahrul Ulum</h1>
-        <p>Informasi terbaru seputar kegiatan, prestasi, dan pengumuman penting sekolah.</p>
+    <!-- Topbar — sama dengan Tabungan -->
+    <header class="news-topbar">
+      <div class="topbar-left">
+        <button class="topbar-back" @click="goBack" aria-label="Kembali">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <img src="/logo.png" alt="Logo" class="topbar-logo" />
+        <span class="topbar-brand">Berita &amp; Pengumuman</span>
       </div>
-    </div>
+    </header>
 
+    <div class="berita-body">
+    <!-- Search -->
     <div class="search-row">
       <div class="search-wrapper">
-        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.3-4.3"/>
-        </svg>
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" v-model="searchQuery" placeholder="Cari berita..." />
-        <button @click="resetSearch" class="btn-reset" v-if="searchQuery">Reset</button>
+        <button v-if="searchQuery" @click="searchQuery = ''" class="btn-clear" aria-label="Hapus pencarian">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
     </div>
 
+    <!-- Category chips -->
     <div class="category-chips">
       <button
         v-for="cat in categories"
         :key="cat"
         :class="['chip', { active: activeCategory === cat }]"
         @click="activeCategory = cat"
-      >
-        {{ cat }}
-      </button>
+      >{{ cat }}</button>
     </div>
 
-    <!-- Featured News Card -->
-    <div v-if="featuredNews" class="featured-card" @click="openDetail(featuredNews)">
-      <div class="featured-image">
-        <img :src="featuredNews.image" :alt="featuredNews.title" loading="lazy" @error="handleImgError" />
-        <span class="featured-badge">{{ featuredNews.featured ? 'Unggulan' : '' }}</span>
-      </div>
-      <div class="featured-content">
-        <span class="featured-category" :style="{ backgroundColor: featuredNews.categoryColor }">
-          {{ featuredNews.category }}
-        </span>
-        <h2 class="featured-title">{{ featuredNews.title }}</h2>
-        <p class="featured-excerpt">{{ featuredNews.excerpt }}</p>
-        <span class="featured-meta">Oleh {{ featuredNews.author }} • {{ featuredNews.readTime }}</span>
+    <!-- Loading -->
+    <div v-if="loading" class="loading-state">
+      <div class="skeleton-featured"></div>
+      <div class="skeleton-grid">
+        <div v-for="i in 3" :key="i" class="skeleton-card"></div>
       </div>
     </div>
 
-    <!-- Berita List -->
-    <div v-if="listNews.length > 0" class="berita-list">
-      <article
-        v-for="item in listNews"
-        :key="item.id"
-        class="berita-item"
-        @click="openDetail(item)"
-      >
-        <div class="item-thumbnail">
-          <img :src="item.image" :alt="item.title" loading="lazy" @error="handleImgError" />
-          <span class="item-category" :style="{ backgroundColor: item.categoryColor }">
-            {{ item.category }}
+    <template v-else>
+      <!-- Featured card -->
+      <div v-if="featuredNews" class="featured-card" @click="openDetail(featuredNews)">
+        <!-- Gambar -->
+        <div class="featured-img-wrap">
+          <img
+            v-if="featuredNews.image && imgOk[featuredNews.id] !== false"
+            :src="featuredNews.image"
+            :alt="featuredNews.title"
+            loading="eager"
+            @error="imgOk[featuredNews.id] = false"
+            class="featured-img"
+          />
+          <div v-else class="featured-img-fallback" :style="{ background: featuredNews.categoryColor }">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
+          </div>
+          <!-- Gradient overlay bawah -->
+          <div class="featured-overlay"></div>
+          <!-- Kategori di atas gambar -->
+          <span class="featured-cat-chip" :style="{ background: featuredNews.categoryColor }">
+            {{ featuredNews.category }}
           </span>
         </div>
-        <div class="item-info">
-          <h3 class="item-title">{{ item.title }}</h3>
-          <span class="item-meta">{{ formatDate(item.publishedAt) }} • {{ item.readTime }}</span>
+        <!-- Konten teks -->
+        <div class="featured-body">
+          <h2 class="featured-title">{{ featuredNews.title }}</h2>
+          <p class="featured-excerpt">{{ featuredNews.excerpt }}</p>
+          <div class="featured-meta">
+            <span>{{ featuredNews.author }}</span>
+            <span class="meta-dot">·</span>
+            <span>{{ formatDate(featuredNews.publishedAt) }}</span>
+            <span class="meta-dot">·</span>
+            <span>{{ featuredNews.readTime }}</span>
+          </div>
         </div>
-      </article>
-    </div>
+      </div>
 
-    <div v-if="listNews.length === 0" class="empty-state">
-      <p>Tidak ada berita yang cocok dengan pencarian atau filter.</p>
-    </div>
+      <!-- Grid berita -->
+      <div v-if="listNews.length > 0" class="news-grid">
+        <article
+          v-for="item in listNews"
+          :key="item.id"
+          class="news-card"
+          @click="openDetail(item)"
+        >
+          <!-- Gambar card -->
+          <div class="card-img-wrap">
+            <img
+              v-if="item.image && imgOk[item.id] !== false"
+              :src="item.image"
+              :alt="item.title"
+              loading="lazy"
+              @error="imgOk[item.id] = false"
+              class="card-img"
+            />
+            <div v-else class="card-img-fallback" :style="{ background: gradientFor(item.category) }">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
+            </div>
+            <span class="card-cat-chip" :style="{ background: item.categoryColor }">{{ item.category }}</span>
+          </div>
+          <!-- Teks card -->
+          <div class="card-body">
+            <time class="card-date">{{ formatDate(item.publishedAt) }}</time>
+            <h3 class="card-title">{{ item.title }}</h3>
+            <p class="card-excerpt">{{ item.excerpt }}</p>
+            <div class="card-footer">
+              <span class="card-meta">{{ item.readTime }}</span>
+              <span class="read-more">Baca →</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Empty state -->
+      <div v-if="!featuredNews && listNews.length === 0" class="empty-state">
+        <div class="empty-icon">📰</div>
+        <p class="empty-title">Tidak ada berita ditemukan</p>
+        <p class="empty-sub">Coba ubah filter atau kata kunci pencarian.</p>
+        <button @click="resetFilter" class="btn-reset-all">Reset Filter</button>
+      </div>
+    </template>
+    </div><!-- /berita-body -->
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, reactive } from "vue";
 import { useRouter } from "vue-router";
 
-const router = useRouter();
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const router  = useRouter();
 
-const news = ref([]);
+const news         = ref([]);
+const loading      = ref(true);
 const activeCategory = ref("Semua");
-const searchQuery = ref("");
+const searchQuery  = ref("");
+const imgOk        = reactive({}); // track gambar yang 404
 
 const categories = ["Semua", "Pengumuman", "Prestasi", "Kerjasama", "Kegiatan", "Acara"];
 
-// --- REFS: featured & list (dideklarasi dulu baru dipakai) ---
-const featuredNews = ref(null);
-const listNews = ref([]);
-
-// --- HELPER: compute featured + list dari news + filters ---
-function computeFeaturedAndList() {
-  // Filter berdasarkan category + search
-  let result = news.value;
+// ---- Computed filtered list ----
+const filtered = computed(() => {
+  let r = news.value;
   if (activeCategory.value !== "Semua") {
-    result = result.filter((n) => n.category === activeCategory.value);
+    r = r.filter((n) => n.category === activeCategory.value);
   }
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
-    result = result.filter(
+    r = r.filter(
       (n) =>
         n.title.toLowerCase().includes(q) ||
         n.excerpt.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q)
+        (n.content || "").toLowerCase().includes(q)
     );
   }
+  return r;
+});
 
-  // Featured: first item with featured=true, or first item
-  const featured = result.find((n) => n.featured) || result[0] || null;
-  featuredNews.value = featured;
+const featuredNews = computed(() => {
+  return filtered.value.find((n) => n.featured) || filtered.value[0] || null;
+});
 
-  // List: all filtered items minus featured
-  if (featured) {
-    listNews.value = result.filter((n) => n.id !== featured.id);
-  } else {
-    listNews.value = [...result];
-  }
-}
+const listNews = computed(() => {
+  if (!featuredNews.value) return filtered.value;
+  return filtered.value.filter((n) => n.id !== featuredNews.value.id);
+});
 
-// --- WATCH: recalculate whenever category or search changes ---
-watch([activeCategory, searchQuery], computeFeaturedAndList);
-
-// --- DATA SOURCE ---
+// ---- Fetch: coba API backend dulu, fallback ke news.json ----
 async function fetchNews() {
+  loading.value = true;
+  try {
+    const res = await fetch(`${BACKEND}/berita`, { credentials: "include" });
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      news.value = data;
+      loading.value = false;
+      return;
+    }
+  } catch (_) { /* ignore, fallback ke json */ }
+
+  // Fallback: news.json lokal
   try {
     const res = await fetch("/data/news.json");
     news.value = await res.json();
-    computeFeaturedAndList();
-  } catch (e) {
+  } catch (_) {
     news.value = [];
-    featuredNews.value = null;
-    listNews.value = [];
   }
+  loading.value = false;
 }
 
-// --- onMounted ---
-onMounted(() => {
-  fetchNews();
-});
+onMounted(fetchNews);
 
-// --- FUNCTIONS: formatting & error handling ---
+// ---- Helpers ----
 function formatDate(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("id-ID", {
+    day: "numeric", month: "long", year: "numeric",
+  });
 }
 
-function handleImgError(e) {
-  e.target.style.display = "none";
+const categoryGradients = {
+  Pengumuman: "linear-gradient(135deg,#2f5b45,#5a9e6e)",
+  Prestasi:   "linear-gradient(135deg,#c0392b,#e67e22)",
+  Kerjasama:  "linear-gradient(135deg,#1a5276,#2980b9)",
+  Kegiatan:   "linear-gradient(135deg,#6c3483,#8e44ad)",
+  Acara:      "linear-gradient(135deg,#1a6030,#27ae60)",
+};
+function gradientFor(cat) {
+  return categoryGradients[cat] || "linear-gradient(135deg,#2f5b45,#3a6450)";
 }
 
-// --- ROUTE & FUNCTIONS ---
 function openDetail(item) {
   router.push(`/berita/${item.slug}`);
 }
-
-function resetSearch() {
-  searchQuery.value = "";
-}
-
 function goBack() {
-  router.push("/berita");
+  router.back();
+}
+function resetFilter() {
+  activeCategory.value = "Semua";
+  searchQuery.value = "";
 }
 </script>
 
 <style scoped>
-/* ============ PAGE LAYOUT ============ */
-
+/* ===== BASE ===== */
 .berita-page {
-  padding: 80px 7%;
-  min-height: 100vh;
   min-height: 100dvh;
-  background: #eef4ec;
+  background: #f2f4f1;
   color: #1c2a23;
 }
 
-.top-bar {
-  margin-bottom: 20px;
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
-  border: 1px solid rgba(47, 91, 58, 0.16);
-  background: #ffffff;
-  color: #2f5b45;
-  border-radius: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  background: rgba(58, 100, 80, 0.08);
-  transform: translateY(-1px);
-}
-
-.back-icon {
-  font-size: 18px;
-  line-height: 1;
-}
-
-/* Page header */
-.page-label {
-  display: inline-flex;
-  padding: 10px 16px;
-  border-radius: 999px;
-  background: rgba(58, 100, 80, 0.14);
-  color: #2f5b45;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.page-header h1 {
-  margin: 16px 0 10px;
-  font-size: clamp(32px, 4vw, 48px);
-  line-height: 1.05;
-  font-weight: 800;
-}
-
-.page-header p {
-  max-width: 640px;
-  color: #4e6456;
-  line-height: 1.8;
-}
-
-/* Search row */
-.search-row {
+/* ===== TOPBAR (sama dengan Tabungan) ===== */
+.news-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
-  gap: 12px;
-  margin: 28px 0 20px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px max(5%, 32px);
+  background: rgba(242, 244, 239, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e3e8e3;
 }
 
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-back {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e3e8e3;
+  border-radius: 50%;
+  background: #fff;
+  color: #1c2a23;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.topbar-back:hover { background: #eef3ee; }
+
+.topbar-logo {
+  height: 34px;
+  width: auto;
+  border-radius: 9px;
+  background: #fff;
+  border: 1px solid #e3e8e3;
+  padding: 3px;
+}
+
+.topbar-brand {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1c2a23;
+}
+
+/* ===== BODY CONTENT ===== */
+.berita-body {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px max(5%, 32px) 60px;
+}
+
+/* ===== SEARCH ===== */
 .search-wrapper {
-  flex: 1;
   position: relative;
+  max-width: 520px;
+  margin-bottom: 16px;
 }
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: #8a9a8f;
   pointer-events: none;
 }
 
-.search-row input {
+.search-wrapper input {
   width: 100%;
-  padding: 16px 20px 16px 40px;
-  border: 1px solid rgba(58, 100, 80, 0.18);
-  border-radius: 18px;
-  background: #ffffff;
+  padding: 12px 42px 12px 40px;
+  border: 1.5px solid rgba(58,100,80,.16);
+  border-radius: 14px;
+  background: #fff;
+  font-family: inherit;
   font-size: 14px;
   color: #1c2a23;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
 }
-
-.search-row input:focus {
+.search-wrapper input:focus {
   border-color: #3a6450;
+  box-shadow: 0 0 0 3px rgba(58,100,80,.1);
 }
 
-.btn-reset {
-  padding: 16px 20px;
+.btn-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   border: none;
-  border-radius: 18px;
   background: #e8f0e6;
   color: #3a6450;
-  font-weight: 700;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Category chips */
+/* ===== CHIPS ===== */
 .category-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 32px;
+  gap: 7px;
+  margin-bottom: 24px;
 }
 
 .chip {
-  padding: 10px 20px;
-  border: 1px solid rgba(58, 100, 80, 0.18);
+  padding: 8px 16px;
+  border: 1.5px solid rgba(58,100,80,.16);
   border-radius: 999px;
   background: #fff;
   color: #5d7666;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all .18s;
   white-space: nowrap;
 }
+.chip:hover { border-color: #3a6450; color: #3a6450; }
+.chip.active { background: #2f5b45; border-color: #2f5b45; color: #fff; }
 
-.chip:hover {
-  border-color: #3a6450;
-  color: #3a6450;
-}
-
-.chip.active {
-  background: #3a6450;
-  border-color: #3a6450;
-  color: #fff;
-}
-
-/* ============ FEATURED CARD ============ */
-
+/* ===== FEATURED CARD (compact) ===== */
 .featured-card {
-  margin-bottom: 40px;
-  border-radius: 24px;
+  margin-bottom: 28px;
+  border-radius: 18px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 20px 60px rgba(35, 55, 42, 0.15);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(28,42,35,.09);
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: 200px;
+  transition: transform .25s ease, box-shadow .25s ease;
 }
-
 .featured-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 30px 80px rgba(35, 55, 42, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(28,42,35,.14);
 }
 
-.featured-image {
+.featured-img-wrap {
   position: relative;
-  aspect-ratio: 16 / 9;
   overflow: hidden;
+  background: #d1e8d8;
 }
 
-.featured-image img {
+.featured-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  transition: transform .4s ease;
+}
+.featured-card:hover .featured-img { transform: scale(1.04); }
+
+.featured-img-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.featured-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,.2) 100%);
+  pointer-events: none;
 }
 
 .featured-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
   padding: 4px 10px;
   border-radius: 999px;
   background: #f39c12;
   color: #fff;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: .04em;
   text-transform: uppercase;
-  font-style: italic;
 }
 
-.featured-content {
-  padding: 24px 28px;
+.featured-cat-chip {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.featured-body {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
 }
 
 .featured-title {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0;
+  font-size: clamp(16px, 1.6vw, 20px);
   font-weight: 800;
-  color: #1a2620;
-  line-height: 1.25;
+  line-height: 1.3;
+  letter-spacing: -.02em;
+  color: #0f2a1a;
 }
 
 .featured-excerpt {
   margin: 0;
-  font-size: 14px;
-  color: #647067;
-  line-height: 1.6;
+  font-size: 13px;
+  color: #556658;
+  line-height: 1.65;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .featured-meta {
-  margin-top: 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  font-size: 12px;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
   color: #8a9a8f;
+  font-weight: 600;
+  margin-top: 4px;
 }
+.meta-dot { color: #c8d8cc; }
 
-/* ============ BERITA LIST ============ */
-
-.berita-list {
+/* ===== GRID CARDS ===== */
+.news-grid {
   display: grid;
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
-@media (min-width: 1024px) {
-  .berita-list {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .berita-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 767px) {
-  .berita-list {
-    grid-template-columns: 1fr;
-  }
-}
-
-.berita-item {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
+.news-card {
+  background: #fff;
   border-radius: 16px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(35, 55, 42, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(58,100,80,.07);
+  transition: transform .22s ease, box-shadow .22s ease;
 }
-
-.berita-item:hover {
+.news-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(35, 55, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(28,42,35,.1);
 }
 
-.item-thumbnail {
-  width: 120px;
-  height: 80px;
-  flex-shrink: 0;
+.card-img-wrap {
   position: relative;
-  background: #f8fafc;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #d1e8d8;
 }
 
-.item-thumbnail img {
+.card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 12px 0 0 12px;
+  display: block;
+  transition: transform .32s ease;
+}
+.news-card:hover .card-img { transform: scale(1.06); }
+
+.card-img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.item-thumbnail .item-category {
+.card-cat-chip {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
-  padding: 3px 8px;
+  top: 9px;
+  left: 9px;
+  padding: 3px 9px;
   border-radius: 999px;
   color: #fff;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  background: #3a6450;
+  letter-spacing: .04em;
 }
 
-.item-info {
+.card-body {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   flex: 1;
-  padding: 12px 16px;
 }
 
-.item-title {
-  margin: 0 0 4px;
-  font-size: 15px;
+.card-date {
+  font-size: 11px;
   font-weight: 700;
-  color: #1a2620;
-  line-height: 1.3;
+  color: #5aaa76;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #0f2a1a;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.item-meta {
-  font-size: 11px;
-  color: #8a9a8f;
+.card-excerpt {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6c7a6e;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
 }
 
-/* ============ EMPTY STATE ============ */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f5f0;
+}
+.card-meta { font-size: 11px; color: #8a9a8f; font-weight: 600; }
+.read-more { font-size: 12px; font-weight: 700; color: #3a6450; }
 
-.empty-state {
-  text-align: center;
-  padding: 60px;
-  color: #8a9a8f;
+/* ===== SKELETON ===== */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.skeleton-featured, .skeleton-card {
+  border-radius: 16px;
+  background: linear-gradient(90deg, #e4ede6 25%, #eff5f0 50%, #e4ede6 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.5s infinite;
+}
+.skeleton-featured { height: 200px; margin-bottom: 28px; }
+.skeleton-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.skeleton-card { height: 280px; }
+
+/* ===== EMPTY ===== */
+.empty-state { text-align: center; padding: 60px 20px; color: #8a9a8f; }
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty-title { font-size: 17px; font-weight: 800; color: #1c2a23; margin: 0 0 6px; }
+.empty-sub { font-size: 13px; margin: 0 0 20px; }
+.btn-reset-all {
+  padding: 11px 22px;
+  border-radius: 12px;
+  border: none;
+  background: #3a6450;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-reset-all:hover { background: #2f5b45; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 960px) {
+  .news-grid { grid-template-columns: repeat(2, 1fr); }
+  .skeleton-grid { grid-template-columns: repeat(2, 1fr); }
+  .featured-card { grid-template-columns: 220px 1fr; }
+}
+
+@media (max-width: 680px) {
+  .berita-body { padding: 20px 5% 48px; }
+  .featured-card { grid-template-columns: 1fr; min-height: unset; }
+  .featured-img-wrap { height: 180px; }
+  .featured-img-fallback { min-height: 180px; }
+  .featured-body { padding: 18px; }
+  .news-grid { grid-template-columns: 1fr; }
+  .skeleton-grid { grid-template-columns: 1fr; }
+  .topbar-brand { font-size: 14px; }
 }
 </style>

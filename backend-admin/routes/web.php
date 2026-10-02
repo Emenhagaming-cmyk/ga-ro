@@ -2,8 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\SppController;
+use App\Http\Controllers\TabunganController;
+use App\Http\Controllers\KoperasiController;
 
 // Panel admin terpisah dari web utama (spmb-backend-self.vercel.app)
 // Database sama (TiDB) — data yang dimonitor = data dari web utama.
@@ -35,4 +38,21 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     // SPP (rekap read-only untuk admin)
     Route::get('/admin/spp', [SppController::class, 'rekapIndex'])->name('admin.spp.index');
+
+    // Kelola Berita (CRUD + upload gambar)
+    Route::get('/berita', [BeritaController::class, 'index'])->name('berita.index');
+    Route::get('/berita/create', [BeritaController::class, 'create'])->name('berita.create');
+    Route::post('/berita', [BeritaController::class, 'store'])->name('berita.store');
+    Route::get('/berita/{berita}/edit', [BeritaController::class, 'edit'])->name('berita.edit');
+    Route::put('/berita/{berita}', [BeritaController::class, 'update'])->name('berita.update');
+    Route::delete('/berita/{berita}', [BeritaController::class, 'destroy'])->name('berita.destroy');
+
+    // Kelola Tabungan
+    Route::get('/tabungan', [TabunganController::class, 'adminIndex'])->name('tabungan.index');
+    Route::get('/tabungan/{user}', [TabunganController::class, 'adminShow'])->name('tabungan.show');
+    Route::post('/tabungan', [TabunganController::class, 'adminStore'])->name('tabungan.store');
+
+    // Kelola Koperasi
+    Route::get('/koperasi', [KoperasiController::class, 'adminIndex'])->name('koperasi.index');
+    Route::get('/koperasi/{order}', [KoperasiController::class, 'adminShow'])->name('koperasi.show');
 });

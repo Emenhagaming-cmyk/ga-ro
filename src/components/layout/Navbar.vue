@@ -27,9 +27,9 @@
               <span class="di-title">Koperasi</span>
             </span>
           </a>
-          <a href="/produk-siswa" class="dropdown-item" @click="guardSiswa">
+          <a href="/produk-siswa" class="dropdown-item">
             <span class="di-text">
-              <span class="di-title">Produk Siswa</span>
+              <span class="di-title">Karya Siswa</span>
             </span>
           </a>
           <a href="/spp" class="dropdown-item" @click="guardSiswa">
@@ -105,7 +105,15 @@
 
     <div class="nav-right">
       <a v-if="isSiswa" :href="BACKEND + '/profil'" class="nav-profile-link" :title="'Profil ' + session.name">
-        <span class="nav-avatar">{{ initial }}</span>
+        <span class="nav-avatar">
+          <span class="nav-avatar-initial">{{ initial }}</span>
+          <img
+            v-if="session.avatar && !avatarBroken"
+            :src="session.avatar"
+            alt="Foto profil"
+            @error="avatarBroken = true"
+          />
+        </span>
         <span class="nav-profile-text">
           <span class="nav-profile-name">{{ session.name }}</span>
           <span class="nav-profile-role">Siswa</span>
@@ -138,7 +146,7 @@
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
             <a v-if="!isSiswa" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
             <a href="/koperasi" @click="guardSiswa(); closeMenu()">Koperasi</a>
-            <a href="/produk-siswa" @click="guardSiswa(); closeMenu()">Produk Siswa</a>
+            <a href="/produk-siswa" @click="closeMenu()">Karya Siswa</a>
             <a href="/spp" @click="guardSiswa(); closeMenu()">SPP</a>
             <a href="/career-center" @click="guardSiswa(); closeMenu()">Career Center</a>
           </div>
@@ -169,7 +177,15 @@
         <a href="#contact" @click="closeMenu">Kontak</a>
         <div class="mobile-bottom">
           <a v-if="isSiswa" :href="BACKEND + '/profil'" class="mobile-profile" @click="closeMenu">
-            <span class="mobile-avatar">{{ initial }}</span>
+            <span class="mobile-avatar">
+              <span class="mobile-avatar-initial">{{ initial }}</span>
+              <img
+                v-if="session.avatar && !avatarBrokenMobile"
+                :src="session.avatar"
+                alt="Foto profil"
+                @error="avatarBrokenMobile = true"
+              />
+            </span>
             <span class="mobile-profile-text">
               <span class="mobile-profile-name">{{ session.name }}</span>
               <span class="mobile-profile-role">Siswa</span>
@@ -206,6 +222,8 @@ const tentangDropdownRef = ref(null);
 
 const isSiswa = computed(() => session.value.role === "siswa");
 const initial = computed(() => (session.value.name || "?").trim().charAt(0).toUpperCase());
+const avatarBroken = ref(false);
+const avatarBrokenMobile = ref(false);
 
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value;
@@ -584,6 +602,7 @@ onUnmounted(() => {
 }
 
 .nav-avatar {
+  position: relative;
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -596,6 +615,22 @@ onUnmounted(() => {
   justify-content: center;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
   flex-shrink: 0;
+  overflow: hidden;
+}
+.nav-avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.nav-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .nav-profile-text {
@@ -642,6 +677,7 @@ onUnmounted(() => {
 }
 
 .mobile-avatar {
+  position: relative;
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -653,6 +689,22 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.mobile-avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.mobile-avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .mobile-profile-text {

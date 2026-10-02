@@ -45,12 +45,21 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
         ];
     }
 
     public function sppBills(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(SppBill::class);
+    }
+
+    public function tabungans(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Tabungan::class);
+    }
+
+    public function koperasiOrders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(KoperasiOrder::class);
     }
 }

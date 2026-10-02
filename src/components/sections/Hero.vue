@@ -19,7 +19,7 @@ const toggleLogin = () => {
 
     <div class="container">
 
-      <span class="badge">Pendaftaran SPMB Dibuka</span>
+      
 
       <h1>
         Belajar<br />

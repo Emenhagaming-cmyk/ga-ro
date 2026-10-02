@@ -2,11 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BeritaApiController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\LamaranController;
 use App\Http\Controllers\TabunganController;
 use App\Http\Controllers\SppController;
+use App\Http\Controllers\KoperasiController;
 
 Route::get('/', [PendaftaranController::class, 'create'])->name('home');
 
@@ -40,7 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard-siswa', [PendaftaranController::class, 'myDashboard'])->name('dashboard.siswa');
     Route::get('/dashboard-siswa/snapshot', [PendaftaranController::class, 'myDashboardSnapshot'])->name('dashboard.siswa.snapshot');
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
-    Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa');
+    // "pendaftar" (belum dinyatakan diterima) juga boleh buka profil agar link dari topbar tidak error
+    Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa,pendaftar');
+    Route::post('/profil/avatar', [AuthController::class, 'updateAvatar'])->name('profil.avatar.update')->middleware('role:siswa,pendaftar');
+    Route::delete('/profil/avatar', [AuthController::class, 'destroyAvatar'])->name('profil.avatar.destroy')->middleware('role:siswa,pendaftar');
 
 // Surat keterangan diterima (bukti kelulusan) untuk pemilik pendaftaran
     Route::get('/pendaftaran/bukti', [PendaftaranController::class, 'downloadBukti'])
@@ -68,6 +73,7 @@ Route::middleware('auth')->group(function () {
 // Tabungan (admin)
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/tabungan', [TabunganController::class, 'adminIndex'])->name('admin.tabungan.index');
+    Route::get('/admin/tabungan/{user}', [TabunganController::class, 'adminShow'])->name('admin.tabungan.show');
     Route::post('/admin/tabungan', [TabunganController::class, 'store'])->name('admin.tabungan.store');
 });
 
@@ -86,6 +92,16 @@ Route::middleware(['auth', 'role:kasir,admin'])->group(function () {
 Route::middleware(['auth', 'role:guru,admin'])->group(function () {
     Route::get('/admin/spp', [SppController::class, 'adminIndex'])->name('admin.spp.index');
     Route::get('/admin/spp/rekap', [SppController::class, 'rekapIndex'])->name('spp.rekap');
+});
+
+// Berita publik — JSON API untuk frontend Vue
+Route::get('/berita', [BeritaApiController::class, 'index']);
+Route::get('/berita/{slug}', [BeritaApiController::class, 'show']);
+
+// Koperasi Siswa
+Route::middleware('auth')->group(function () {
+    Route::post('/koperasi/checkout', [KoperasiController::class, 'store'])->name('koperasi.checkout');
+    Route::get('/koperasi/orders', [KoperasiController::class, 'myOrders'])->name('koperasi.orders');
 });
 
 // SPP (publik) link orang tua — tanpa akun, via signed URL
