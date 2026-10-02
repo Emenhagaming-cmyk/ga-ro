@@ -34,23 +34,34 @@ const toggleLogin = () => {
 
         <div class="bg-word">SCHOOL</div>
 
-      <div class="buttons">
-        <a
-          v-if="isSiswa"
-          :href="`${BACKEND}/dashboard-siswa`"
-          class="primary btn-login"
-        >
-          Dashboard Siswa
-        </a>
-        <div class="btn-group-login" v-else>
-          <button class="primary btn-login" @click="toggleLogin">
-            Login
-          </button>
-          <div class="sub-buttons" :class="{ open: loginExpanded }">
-            <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
-            <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+        <div class="buttons">
+          <a
+            v-if="isSiswa"
+            :href="`${BACKEND}/dashboard-siswa`"
+            class="primary btn-login"
+          >
+            Dashboard Siswa
+          </a>
+          <div class="btn-group-login" v-else>
+            <button class="primary btn-login" @click="toggleLogin">
+              Login
+            </button>
+            <div class="sub-buttons" :class="{ open: loginExpanded }">
+              <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
+              <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div class="hero-visual">
+        <img
+          :src="heroVisual"
+          alt="Ilustrasi siswa SMK Bahrul Ulum"
+          width="740"
+          height="740"
+          decoding="async"
+        />
       </div>
     </div>
   </section>

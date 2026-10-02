@@ -35,6 +35,41 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-10-02) — Recovery: `git pull` Belum Sengaja → Hero Rusak (build + live)
+
+**Laporan user (panik):** "gw ga sengaja error ini di heronya plisss, balikin kayak semula bisa ga, ga sengaja git pull guwee".
+
+**Rantai kejadian (berdasar `git reflog` + `vercel ls`, bukan asumsi):**
+1. User ada di branch `syn`, commit `12e3bd4` "update berita preview and tabungan banner".
+2. `checkout` ke `main` (masih di `9d01e43`), lalu `git pull origin main` → **Fast-forward** ke `db2c1ba` ("fix Laravel auth helper conflict", cuma menyentuh `backend/app/helpers.php`).
+3. Merge branch `syn` ke `main` dijalankan dan **BERHENTI di tengah** ⇒ repo `mid-merge` (`MERGE_HEAD = 12e3bd4`). Conflict: `AGENTS.md`, `src/components/layout/Footer.vue`, dan **`src/components/sections/Hero.vue`**.
+4. Hero.vue sempat "diresolve" (di-`git add`) dengan hasil yang **rusak**, tapi **tanpa conflict markers** ⇒ lolos dari deteksi marker dan baru ketahuan saat compile.
+
+**Dua gejala yang berbeda (penting dibedakan — user mengira satu masalah):**
+- **Lokal:** Vite balas **HTTP 500** untuk `src/views/HomeView.vue` ⇒ `TypeError: Failed to fetch dynamically imported module` ⇒ **seluruh halaman kosong**, termasuk hero. Penyebabnya **dua lapis**: (a) conflict markers di `Footer.vue`, (b) `Hero.vue` yang tag-nya tidak seimbang.
+- **Live `smkbu-sby.vercel.app`:** **bukan** build sesi ini. `vercel ls` membuktikan ada **2 deploy production lain** (1 jam lalu & 32 menit lalu, username `zakkyilhamf-7419` = sesi CLI yang sama) yang **menimpa alias** hasil deploy sesi ini (`lomba-378j7oyq6`, 14 jam lalu). Hash aset di `index.html` live (`index-km3uEFSD.js`) **tidak sama** dengan build gw (`index-P8kwws1B.js`), dan DOM live **tidak punya** `.hero-copy`/`.hero-visual` sama sekali ⇒ live masih hero lama.
+  - Kenapa bisa lama: perubahan hero sesi-sesi sebelumnya **belum pernah di-commit**, jadi `origin/main` (`db2c1ba`) masih memuat Hero.vue versi lama. Deployment yang menimpa itu dibangun dari kondisi itu.
+
+**Yang Dampar (sebelum sentuh file apa pun):** `src/`, `public/hero-siswa.webp`, `AGENTS.md`, `PERF.md`, `PROGRESS.md` → `C:\Users\LENOVO\AppData\Local\Temp\opencode\ga-ro-backup-20261002` (63 file, 847 KB). Penting karena conflict resolution bisa menimpa file tanpa jejak.
+
+**Resolution (pilihan user: "Pertahankan hero gambar (versi gw)" + "Beresin conflict, gabungin"):**
+- `git checkout --ours -- AGENTS.md src/components/layout/Footer.vue` → **sisi HEAD/main** dipakai untuk dua file ini (versi `origin/main` jadi sumber kebenaran, tidak ada commit yang hilang). Konsekuensi yang perlu diketahui: tweak kosmetik `Footer.vue` (background putih, border dihapus) **tidak ikut** — kembali ke versi `origin/main`.
+- `git commit` merge `99b955a` "Merge branch 'syn': navbar sub-page seragam + hero ilustrasi siswa". **Belum di-push.**
+- `Hero.vue`: `script` (`heroVisual`) dan **seluruh CSS** (`.hero-copy`, `.hero-visual`, `heroIn`, `bg-word`, 3 breakpoint) utuh — yang rusak **hanya template**: blok `<div class="hero-visual"><img></div>` hilang dan 2 tag penutup hilang (`</div>` untuk `.hero-copy` dan untuk `.container`), indentasi `.buttons` juga meleset. Ditulis ulang pakai `edit`, bukan `git checkout` — supaya versi two-column (gambar + tombol ketengah) dipertahankan sesuai pilihan user, bukan di-rollback ke versi lama.
+
+**Verifikasi (setelah fix):**
+- `npm run build` → **sukses** (`✓ built in 22.15s`), `HomeView-DMytzTws.js` 26.38 kB (gz 8.64).
+- Playwright lokal @1440: `.hero-copy` x=130 w=560, `.hero-visual` x=850 w=460, **tidak overlap**; `img.complete = true`, `naturalWidth×height = 740x740`, `src = /hero-siswa.webp`.
+- Tombol Login: x=366 w=88 → center **410** = center kolom copy (130+280) ⇒ masih terpusat, bukan ke tengah layar.
+- `scrollWidth == clientWidth` (1440), **0 console error / 0 pageerror**.
+
+**Pelajaran (penting untuk sesi depan):**
+- Merge/pull yang terhenti di tengah **tidak otomatis merusak yang sudah ter-deploy** — Vercel membaca file kerja, bukan git. Tapi **yang ter-deploy dari working tree bisa lebih tua/beda** kalau ada deploy lain yang menimpa alias. Selalu cek `vercel ls` + hash aset `index.html` live sebelum menyimpulkan "yg live beda".
+- `git merge --abort`/marker scan **tidak cukup**: file yang sudah di-`git add` tapi salah resolve **tidak** punya marker. Satu-satunya deteksi yang jujur = **build**. `npm run build` harus jadi gate wajib setelah pull/merge, bukan hanya setelah edit biasa.
+- Konflik `Hero.vue` sudah ter-*stage* sebelum sesi ini ⇒ `git diff HEAD` sempat menampilkan file "utuh" padahal templatenya tidak valid. Always verify with a real build.
+
+---
+
 ## STATUS TERAKHIR (2026-10-02) — Deploy `spmb-admin`: Tombol Mata Login Admin Live
 
 **Permintaan user:** "oke" (menyetujui deploy project admin panel yang ditemukan di sesi sebelumnya).
