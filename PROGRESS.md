@@ -35,6 +35,47 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-10-02) — Push ke `origin/main` (fix hero gambar di VPS)
+
+**Laporan user:** "gw deploy juga divps cuma gambar siswa atau hasil yang harusnya kayak lokal di vps itu malah beda total, katanya 'kalau hasilnya tidak menampilkan hero-siswa.webp berarti asetnya belum pernah masuk Git'. benerkah? kalo iya kenapa vercel bisa muncul?"
+
+**Jawaban: bener, tapi bukan "belum pernah masuk Git" — melainkan "sudah ada di Git, tapi tidak ada di `origin/main`".** Bukti (read-only, sebelum push):
+
+| Cek | Hasil |
+|---|---|
+| `git ls-tree origin/main public/hero-siswa.webp` | **kosong** → tidak ada di `origin/main` |
+| `git ls-tree origin/syn public/hero-siswa.webp` | ada (commit `4e5de64` "leh'") |
+| `git ls-tree HEAD` (main lokal, sudah di-merge) | ada |
+| ukuran blob di HEAD | **41.738 byte** = identik dengan file lokal & `dist/hero-siswa.webp` (SHA-256 `510C6012…` sama persis) |
+| `.gitignore` / `.vercelignore` | **tidak** ada aturan yang mengecualikan `public/` |
+| `git rev-list --left-right --count origin/main...main` | **0 4** (4 commit belum ke-push) |
+
+**Kenapa Vercel bisa menampilkan gambarnya padahal `origin/main` tidak punya:**
+- `vercel deploy` (CLI) meng-upload **direktori kerja lokal**, bukan checkout git. File yang belum di-commit/push tetap ikut terkirim selama tidak di-ignore (`.vercelignore` cuma exclude `dist`, `node_modules`, `e2e`, `backend/vendor`, `backend/storage`). Jadi sesi iniandesteven setelah `git pull` pun Vercel tetap bisa kirim `public/hero-siswa.webp`.
+- Kalau project Vercel disambung **git auto-deploy**, Vercel melakukan checkout `main` ⇒ **gambar tidak akan muncul**. Itu pembeda intinya.
+-=VPS confirmed: user memakai `git pull` + `npm run build` **di server**, branch `main`. Kombinasi itu = hanya bisa melihat isi `origin/main` ⇒ aset tidak pernah ada di sana.
+
+**Eksekusi (atas persetujuan eksplisit user "ya, push sekarang"):**
+- `git push origin main` → `db2c1ba..6d98536  main -> main`.
+- 4 commit: `4e5de64` (aset + AGENTS.md), `12e3bd4`, `99b955a` (merge `syn`), `6d98536` (fix hero).
+- Verifikasi setelah push: `rev-list` → **0 0**; `git ls-tree origin/main public/hero-siswa.webp` → ada, **41.738 byte**; `src/components/layout/PageTopbar.vue` → ada. Isi `origin/main` sekarang **identik** dengan build production Vercel.
+- `package.json`/`package-lock.json` **tidak berubah** di 4 commit itu ⇒ di VPS cukup `npm run build`, `npm ci` tidak wajib.
+
+**Checklist untuk VPS (dijalankan user di server):**
+```bash
+git pull origin main
+npm run build
+ls -l dist/hero-siswa.webp        # harus 41738 byte
+curl -I https://<domain-vps>/hero-siswa.webp   # harus 200 + content-type: image/webp
+```
+Kalau `curl` tetap 404 padahal `dist/hero-siswa.webp` ada ⇒ bukan masalah git lagi: nginx `root` bukan folder `dist/` hasil build, atau cache. Perlu `nginx -T | grep -A3 root`.
+
+**Catatan penting untuk sesi depan:** `git push` **tidak** menyentuh Vercel project yang di-deploy via CLI. Kalau ternyata live Vercel masih beda setelah push, itu berarti ada deploy CLI lain yang menimpa alias (seperti kejadian 1 jam/32 menit lalu) — cek `vercel ls` + hash aset di `index.html` live.
+
+**Temuan sampingan (belum dikerjakan, menunggu instruksi):** `public/favicon.ico` dan `public/logo.svg` **0 byte** di repo (`git cat-file -s` = 0). Kalau ada halaman yang memakai `/logo.svg`, logo itu tidak akan tampil di mana pun — sama di VPS maupun Vercel. Perlu diisi ulang dari sumber aslinya.
+
+---
+
 ## STATUS TERAKHIR (2026-10-02) — Recovery: `git pull` Belum Sengaja → Hero Rusak (build + live)
 
 **Laporan user (panik):** "gw ga sengaja error ini di heronya plisss, balikin kayak semula bisa ga, ga sengaja git pull guwee".
