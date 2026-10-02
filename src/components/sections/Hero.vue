@@ -3,6 +3,9 @@ import { computed, ref } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 const { BACKEND, session } = useAuthSession();
 
+// Ilustrasi 3D siswa naik podium, background transparan (WebP 41KB dari PNG 338KB).
+const heroVisual = "/hero-siswa.webp";
+
 const isSiswa = computed(() => session.value.role === "siswa");
 
 const loginExpanded = ref(false);
@@ -18,25 +21,23 @@ const toggleLogin = () => {
     <div class="ambient ambient2"></div>
 
     <div class="container">
+      <div class="hero-copy">
+        <h1>
+          Belajar<br />
+          Berkarya<br />
+          Berprestasi
+        </h1>
 
-      
+        <p>
+          Sekolah menengah kejuruan unggulan yang membekali siswa dengan keterampilan nyata untuk masa depan.
+        </p>
 
-      <h1>
-        Belajar<br />
-        Berkarya<br />
-        Berprestasi
-      </h1>
-
-      <p>
-        Sekolah menengah kejuruan unggulan yang membekali siswa dengan keterampilan nyata untuk masa depan.
-      </p>
-
-      <div class="bg-word">SCHOOL</div>
+        <div class="bg-word">SCHOOL</div>
 
       <div class="buttons">
         <a
           v-if="isSiswa"
-      href="/dashboard-siswa"
+          :href="`${BACKEND}/dashboard-siswa`"
           class="primary btn-login"
         >
           Dashboard Siswa
@@ -46,8 +47,8 @@ const toggleLogin = () => {
             Login
           </button>
           <div class="sub-buttons" :class="{ open: loginExpanded }">
-            <a :href="`http://smkbu-sby.my.id/login`" class="sub-btn">Login Siswa</a>
-            <a :href="`http://smkbu-sby.my.id/login`" class="sub-btn">Login Pendaftar</a>
+            <a :href="`${BACKEND}/login`" class="sub-btn">Login Siswa</a>
+            <a :href="`${BACKEND}/login`" class="sub-btn">Login Pendaftar</a>
           </div>
         </div>
       </div>
@@ -116,9 +117,35 @@ const toggleLogin = () => {
   width: 100%;
   max-width: 1180px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  text-align: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.hero-copy {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  max-width: 560px;
+  text-align: left;
+}
+
+.hero-visual {
+  position: relative;
+  flex: 0 1 460px;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .badge {
@@ -148,8 +175,8 @@ h1 {
 
 .bg-word {
   position: absolute;
-  top: 52px;
-  left: -8px;
+  top: 8px;
+  left: -10px;
   color: #3a6450;
   opacity: 0.06;
   font-size: clamp(90px, 11vw, 130px);
@@ -171,6 +198,7 @@ p {
   gap: 14px;
   margin-top: 32px;
   align-items: flex-start;
+  justify-content: center;
 }
 
 .btn-group-login {
@@ -315,6 +343,52 @@ p {
   }
 }
 
+/* ponytail: gambar diam — hanya fade in sekali. Loop naik-turun dihapus atas
+   permintaan user (terlalu gerak untuk hero). Bayangan ::after tetap statis
+   sebagai penanda "berdiri di lantai", tidak ikut bergerak. */
+.hero-visual {
+  animation: heroIn 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) 0.25s both;
+}
+
+.hero-visual::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  bottom: 8%;
+  width: 52%;
+  height: 26px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(58, 100, 80, 0.26),
+    rgba(58, 100, 80, 0) 70%
+  );
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+@keyframes heroIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .container {
+    gap: 24px;
+  }
+
+  .hero-visual {
+    flex-basis: 380px;
+    min-width: 220px;
+  }
+}
+
 @media (max-width: 900px) {
   .hero {
     padding: 160px 24px 72px;
@@ -324,12 +398,22 @@ p {
     display: none;
   }
 
+  /* Ilustrasi disembunyikan di layar sempit — hero kembali fokus ke teks,
+     sama seperti sebelumnya gambar tidak pernah ada di mobile. */
+  .hero-visual {
+    display: none;
+  }
+
+  .hero-copy {
+    max-width: none;
+  }
+
   h1 {
     font-size: clamp(42px, 10vw, 54px);
   }
 
   .bg-word {
-    top: 44px;
+    top: 4px;
     left: -4px;
   }
 

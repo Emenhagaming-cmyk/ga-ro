@@ -1,10 +1,6 @@
 <template>
   <section class="produk-page">
-    <div class="top-bar">
-      <button type="button" class="back-button" @click="goBack">
-        <span class="back-icon">&lt;</span>
-      </button>
-    </div>
+    <PageTopbar brand="Karya Siswa" bg="#eef4ec" />
 
     <div class="page-header">
       <div>
@@ -88,6 +84,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import PageTopbar from "@/components/layout/PageTopbar.vue";
 
 const activeCategory = ref("Semua");
 const selected = ref(null);
@@ -120,47 +117,15 @@ function closeDetail() {
   selected.value = null;
   document.body.style.overflow = "";
 }
-
-function goBack() {
-  window.history.back();
-}
 </script>
 
 <style scoped>
 .produk-page {
-  padding: 80px 7%;
+  padding: 0 7% 80px;
   min-height: 100vh;
   min-height: 100dvh;
   background: #eef4ec;
   color: #1c2a23;
-}
-
-.top-bar {
-  margin-bottom: 20px;
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
-  border: 1px solid rgba(47, 91, 58, 0.16);
-  background: #ffffff;
-  color: #2f5b45;
-  border-radius: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  background: rgba(58, 100, 80, 0.08);
-  transform: translateY(-1px);
-}
-
-.back-icon {
-  font-size: 18px;
-  line-height: 1;
 }
 
 .page-label {
@@ -180,7 +145,7 @@ function goBack() {
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
-  margin-bottom: 28px;
+  margin: 32px 0 28px;
 }
 
 .page-header h1 {
@@ -490,10 +455,11 @@ function goBack() {
 
 @media (max-width: 768px) {
   .produk-page {
-    padding: 70px 5%;
+    padding: 0 5% 60px;
   }
   .page-header {
     flex-direction: column;
+    margin: 24px 0;
   }
   .produk-grid {
     grid-template-columns: 1fr;

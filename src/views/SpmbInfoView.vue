@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
 import { useAuthSession } from "@/composable/useAuthSession";
+import PageTopbar from "@/components/layout/PageTopbar.vue";
 import {
   GraduationCap,
   Calculator,
@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ArrowRight,
-  Sparkles,
   PhoneCall,
   Laptop,
   Network,
@@ -26,16 +25,7 @@ import {
   FileCheck
 } from "lucide-vue-next";
 
-const router = useRouter();
 const { spmbTarget } = useAuthSession();
-
-function goBack() {
-  if (window.history.length > 1) {
-    router.back();
-  } else {
-    router.push("/");
-  }
-}
 
 // Active quick nav section
 const activeSection = ref("kalkulator");
@@ -97,7 +87,7 @@ const waves = {
 const scholarships = {
   reguler: {
     id: "reguler",
-    name: "Jalur Reguler",
+    name: "Pilih jalur",
     desc: "Pendaftaran umum tanpa syarat prestasi khusus.",
     dspDiscountRate: 0,
     sppFreeMonths: 0,
@@ -295,7 +285,7 @@ const timelineSteps = [
 
 // --- REQUIREMENTS DATA ---
 const reqGeneral = [
-  "Lulusan SMP/MTs/Paket B atau sederajat (tahun lulus 2024, 2025, atau 2026).",
+  "Lulusan SMP/MTs/Paket B atau sederajat (tahun lulus 2024, 2025 atau 2026).",
   "Berusia setinggi-tingginya 21 tahun pada awal tahun pelajaran baru.",
   "Sehat jasmani dan rohani, tidak buta warna (khusus kejuruan RPL & TKJ).",
   "Berkelakuan baik dan bersedia menaati seluruh tata tertib SMK Bahrul Ulum.",
@@ -347,16 +337,7 @@ function toggleFaq(index) {
 <template>
   <section class="spmb-info-page">
     <!-- Top Navigation Bar -->
-    <div class="top-bar">
-      <button type="button" class="back-button" @click="goBack">
-        <span class="back-icon">&lt;</span>
-        <span>Kembali ke Beranda</span>
-      </button>
-      <div class="top-badge">
-        <Sparkles :size="14" />
-        <span>SPMB Tahun Pelajaran 2026/2027</span>
-      </div>
-    </div>
+    <PageTopbar brand="Informasi Biaya SPMB" bg="#eef4ec" />
 
     <!-- Header Banner -->
     <header class="page-header">
@@ -449,8 +430,8 @@ function toggleFaq(index) {
     <section id="kalkulator" class="content-section calc-section">
       <div class="section-heading">
         <div class="heading-badge">
-          <Calculator :size="14" />
-          <span>Simulasi Biaya Cerdas</span>
+          <!-- <Calculator :size="14" />
+          <span>Simulasi Biaya Cerdas</span> -->
         </div>
         <h2>Kalkulator Estimasi Biaya &amp; Beasiswa</h2>
         <p>Pilih jurusan, gelombang, dan jalur beasiswa Anda untuk melihat rincian biaya yang transparan dan skema cicilan yang fleksibel.</p>
@@ -649,7 +630,7 @@ function toggleFaq(index) {
             </div>
 
             <p class="result-note">
-              *Estimasi di atas bersifat simulasi resmi. Biaya final divalidasi oleh panitia SPMB saat verifikasi berkas asli.
+              * Estimasi di atas bersifat simulasi resmi. Biaya final divalidasi oleh panitia SPMB saat verifikasi berkas asli.
             </p>
           </div>
         </aside>
@@ -660,8 +641,8 @@ function toggleFaq(index) {
     <section id="alur" class="content-section">
       <div class="section-heading">
         <div class="heading-badge">
-          <Calendar :size="14" />
-          <span>Langkah Mudah</span>
+          <!-- <Calendar :size="14" />
+          <span>Langkah Mudah</span> -->
         </div>
         <h2>Alur &amp; Prosedur Pendaftaran SPMB</h2>
         <p>5 langkah mudah dan terstruktur untuk bergabung menjadi peserta didik baru SMK Bahrul Ulum.</p>
@@ -691,8 +672,8 @@ function toggleFaq(index) {
     <section id="syarat" class="content-section">
       <div class="section-heading">
         <div class="heading-badge">
-          <FileText :size="14" />
-          <span>Administrasi</span>
+          <!-- <FileText :size="14" />
+          <span>Administrasi</span> -->
         </div>
         <h2>Persyaratan &amp; Dokumen Wajib</h2>
         <p>Pastikan Anda telah menyiapkan dokumen kelengkapan berkas sebelum mengisi formulir.</p>
@@ -738,8 +719,8 @@ function toggleFaq(index) {
     <section id="jurusan" class="content-section">
       <div class="section-heading">
         <div class="heading-badge">
-          <GraduationCap :size="14" />
-          <span>Program Kejuruan</span>
+          <!-- <GraduationCap :size="14" /> -->
+          <!-- <span>Program Kejuruan</span> -->
         </div>
         <h2>Kompetensi Keahlian &amp; Kuota Kelas</h2>
         <p>SMK Bahrul Ulum menghadirkan kurikulum berbasis industri dengan sertifikasi keahlian terstandar nasional.</p>
@@ -764,7 +745,7 @@ function toggleFaq(index) {
             </div>
             <div class="m-stat">
               <span>Mitra Industri:</span>
-              <strong>PT Telkom, PT Software House, Startup</strong>
+              <strong>Maspion IT</strong>
             </div>
             <div class="m-stat">
               <span>Prospek Karir:</span>
@@ -773,7 +754,7 @@ function toggleFaq(index) {
           </div>
         </div>
 
-        <div class="major-card">
+        <!-- <div class="major-card">
           <div class="major-head">
             <Network :size="28" class="m-icon" />
             <div>
@@ -798,9 +779,9 @@ function toggleFaq(index) {
               <strong>Network Engineer, IT Support, Fiber Tech, SysAdmin</strong>
             </div>
           </div>
-        </div>
+        </div> -->
 
-        <div class="major-card">
+        <!-- <div class="major-card">
           <div class="major-head">
             <CalcIcon :size="28" class="m-icon" />
             <div>
@@ -825,7 +806,7 @@ function toggleFaq(index) {
               <strong>Staff Akunting, Teller Bank, Staff Pajak, Kasir</strong>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </section>
 
@@ -834,8 +815,8 @@ function toggleFaq(index) {
       <div class="download-banner">
         <div class="download-content">
           <div class="heading-badge light">
-            <Download :size="14" />
-            <span>Dokumen Resmi</span>
+            <!-- <Download :size="14" />
+            <span>Dokumen Resmi</span> -->
           </div>
           <h2>Unduh Brosur &amp; Panduan Pendaftaran SPMB</h2>
           <p>
@@ -865,8 +846,8 @@ function toggleFaq(index) {
     <section id="faq" class="content-section">
       <div class="section-heading">
         <div class="heading-badge">
-          <HelpCircle :size="14" />
-          <span>Tanya Jawab</span>
+          <!-- <HelpCircle :size="14" />
+          <span>Tanya Jawab</span> -->
         </div>
         <h2>Pertanyaan yang Sering Diajukan</h2>
         <p>Pertanyaan umum seputar pendaftaran, tes seleksi, dan biaya di SMK Bahrul Ulum.</p>
@@ -912,59 +893,12 @@ function toggleFaq(index) {
 
 <style scoped>
 .spmb-info-page {
-  padding: 80px 7% 100px;
+  padding: 0 7% 100px;
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--background-page, #eef4ec);
   color: var(--text, #1c2a23);
   font-family: inherit;
-}
-
-/* Top bar */
-.top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid rgba(47, 91, 58, 0.18);
-  background: var(--surface, #ffffff);
-  color: var(--primary, #3a6450);
-  border-radius: var(--radius-pill, 999px);
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  background: rgba(58, 100, 80, 0.08);
-  transform: translateY(-1px);
-}
-
-.back-icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.top-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: rgba(58, 100, 80, 0.1);
-  color: var(--primary, #3a6450);
-  border-radius: var(--radius-pill, 999px);
-  font-size: 13px;
-  font-weight: 700;
 }
 
 /* Page Header */
@@ -978,7 +912,7 @@ function toggleFaq(index) {
   border: 1px solid var(--border, #dfe4dd);
   border-radius: var(--radius-xl, 24px);
   box-shadow: var(--shadow-sm, 0 4px 12px rgba(35, 55, 42, 0.05));
-  margin-bottom: 28px;
+  margin: 28px 0;
 }
 
 .page-label {
@@ -1017,14 +951,14 @@ function toggleFaq(index) {
   display: flex;
   flex-direction: column;
   padding: 16px 20px;
-  background: var(--background, #f2f4f1);
+  background: #ffffff;
   border: 1px solid var(--border, #dfe4dd);
   border-radius: var(--radius-lg, 20px);
   min-width: 140px;
 }
 
 .stat-pill.highlight {
-  background: var(--primary-light, #e8f0e6);
+  background: #ffffff;
   border-color: rgba(58, 100, 80, 0.25);
 }
 
@@ -1103,19 +1037,6 @@ function toggleFaq(index) {
 
 .section-heading {
   margin-bottom: 32px;
-}
-
-.heading-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: rgba(58, 100, 80, 0.1);
-  color: var(--primary, #3a6450);
-  border-radius: var(--radius-pill, 999px);
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 8px;
 }
 
 .heading-badge.light {
@@ -1477,8 +1398,8 @@ function toggleFaq(index) {
 
 /* Total Box */
 .total-box {
-  background: var(--primary-light, #e8f0e6);
-  border: 1px solid rgba(58, 100, 80, 0.2);
+  background: #fff8f8;
+  border: 1px solid rgba(3, 3, 3, 0.2);
   border-radius: var(--radius, 16px);
   padding: 16px;
   margin: 20px 0 16px;
@@ -2083,11 +2004,12 @@ function toggleFaq(index) {
 
 @media (max-width: 768px) {
   .spmb-info-page {
-    padding: 70px 4% 80px;
+    padding: 0 4% 80px;
   }
   .page-header {
     grid-template-columns: 1fr;
     padding: 24px 20px;
+    margin: 20px 0;
   }
   .header-stats {
     flex-wrap: wrap;
