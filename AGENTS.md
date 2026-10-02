@@ -1,149 +1,245 @@
 # AGENTS.md — Proyek SPMB SMK Bahrul Ulum
 
-Konteks permanen proyek. Dibaca otomatis oleh opencode di setiap sesi baru.
-Baca juga `PROGRESS.md` untuk status terakhir & TODO lanjutan.
+Konteks permanen proyek. Dibaca otomatis di setiap sesi baru.
+Baca juga `PROGRESS.md` (status terakhir + TODO), `IMPLEMENTATION_SUMMARY.md` (detail teknis),
+`PERF.md` (ledger optimasi).
 
-## Struktur Proyek (3 bagian)
+> **Path repo: `C:\Users\User\ga-ro`.** Dokumen lama (`IMPLEMENTATION_SUMMARY.md`) masih menyebut
+> `C:\Users\LENOVO\lomba\ga-ro` — path mesin lama + path CLI vercel yang sudah tidak ada. Selalu
+> pakai path relatif dari root repo.
 
-- **Backend Laravel 12** → `C:\Users\LENOVO\lomba\ga-ro\backend`
-  - Server: `php artisan serve --port=8000`
-  - DB: MySQL Laragon, database `pendaftaran_db` (host 127.0.0.1, port 3306, user root, password kosong)
-  - Auth: Laravel session (bukan Sanctum/API) — login/register/logout pakai blade
-  - Views: `resources/views/` (auth/, pendaftaran/, layouts/)
-  - Form pendaftaran multi-step: `resources/views/pendaftaran/create.blade.php`
-  - Routes: `routes/web.php` (web), `routes/api.php` (API Lama — tidak dipakai frontend baru)
-  - **Web utama = SISWA/PENDAFTAR only** — login admin DITOLAK (pesan arahkan ke panel). Route admin dihapus (GET /admin → 404).
+## Monorepo: 3 deployable, bukan monorepo tool
 
-- **Panel Admin terpisah** → `C:\Users\LENOVO\lomba\ga-ro\backend-admin` (salinan backend, domain `paneladminsmkbu.vercel.app`, project Vercel `spmb-admin`)
-  - Login hanya role admin ("Hanya akun admin..."); logout → `/login`. Route: `/`, `/login`, `/logout`, forgot/reset-password, group admin (`/admin`, `/pendaftaran`, export, snapshot, show, PUT status, DELETE).
-  - DB SAMA: TiDB production. Env production: DB_CONNECTION=mysql + DB_* + MYSQL_ATTR_SSL_CA=/var/task/user/certs/isrgrootx1.pem + APP_KEY=`base64:gtKJvpBuztMINYQwxnKgMFIHQaYvy3WnzBS0+ItkX5g=` + SESSION_SAME_SITE=lax + SESSION_SECURE_COOKIE=true (via vercel.json env & project env).
-  - `.env` lokal panel hanya untuk artisan (DB_CONNECTION=sqlite + APP_KEY lokal `base64:9uLdV6nujM/LUS2A3S3ekei8uhIjks1qgm8MfKAlESI=` — JANGAN dipakai production). Vendor di-copy lokal (tidak ter-upload).
-  - Deploy: `vercel deploy --prod --yes` lalu `vercel alias set <url> spmb-admin.vercel.app` (alias TIDAK otomatis). CLI: `C:\nvm4w\nodejs\vercel.cmd`, team `zakkys-projects-99c4bf23`.
-  - **Trap**: project Vercel baru punya deployment protection (ssoProtection) → matikan via API PATCH `{"ssoProtection":null}`. `vercel link` bikin `.env.local` → hapus. Deploy kadang `fetch failed` → retry.
+Tidak ada workspace root. Tiga folder berdiri sendiri, masing-masing punya `package.json`/
+`composer.json` sendiri.
 
-- **Landing page Vue 3** → `C:\Users\LENOVO\lomba\ga-ro`
-  - Server: `npm run dev` (port 5174)
-  - File dashboard Vue lama (DashboardSiswa.vue, DashboardAdmin.vue, LoginView.vue, RegisterView.vue) TIDAK DIPAKAI — tidak aktif. Backend pakai Laravel blade.
-  - Logo sekolah: `C:\Users\LENOVO\lomba\ga-ro\public\logo.png` (copy juga ke `backend\public\logo.png`)
+| Folder | Isi | Domain | Vercel project |
+|---|---|---|---|
+| `backend/` | Laravel 12 — web siswa & API (port dev 8000) | `pendaftaranspmb.vercel.app` | `spmb-backend` |
+| `backend-admin/` | Laravel 12 — panel admin (salinan `backend`, bukan symlink) | `paneladminsmkbu.vercel.app` | `spmb-admin` |
+| root (`src/`) | Vue 3 + Vite 7 — landing page (port dev 5174) | `smkbu-sby.vercel.app` | `lomba` |
 
-## Command Penting
+- `backend/` dan `backend-admin/` **pakai satu DB yang sama** (`pendaftaran_db` di TiDB Cloud).
+  Migrate selalu dari `backend/` saja (lihat "Migrasi DB").
+- Admin dashboard (`/admin`, daftar/export/status pendaftar, Kelola Berita/Tabungan/Koperasi,
+  Laporan) **hanya ada di `backend-admin/`**. `backend/routes/web.php` tidak punya route `/admin`
+  → `GET /admin` = 404 di web utama.
+- `backend/` TETAP punya route ber-role admin/kasir/guru: `/admin/tabungan`, `/admin/spp`,
+  `/admin/spp/rekap`, `/spp/kasir`, `/spp/pay`.
+- Tambah fitur yang menyentuh model/tabel/validasi **harus di kedua backend** (copy-paste sinkron);
+  `IMPLEMENTATION_SUMMARY.md` ada di root + kedua folder sebagai salinan.
+
+## Setup lokal (fresh clone perlu ini)
+
+`vendor/` dan `node_modules/` di-gitignore → **belum ada / belum lengkap** di clone baru.
+`.env` juga tidak di-commit (dan saat ini memang tidak ada di mana pun).
 
 ```powershell
-# Backend
-cd C:\Users\LENOVO\lomba\ga-ro\backend
-php artisan serve --port=8000
-php artisan migrate
-php artisan db:seed --class=AdminSeeder
-php artisan view:cache
+# 1. Root — WAJIB pakai npm.cmd / vercel.cmd (lihat "Execution policy" di bawah)
+npm.cmd install
+npm.cmd run dev            # port 5174, strictPort (gagal kalau 5174 dipakai proses lain)
 
-# Frontend (landing page)
-cd C:\Users\LENOVO\lomba\ga-ro
-npm run dev
+# 2. Backend
+cd backend
+composer install
+copy .env.example .env
+php artisan key:generate  # .env.example punya APP_KEY kosong
 ```
 
-## Credentials
+**Execution policy (verified):** PowerShell memblokir semua `.ps1` di mesin ini.
+`npm`, `vercel`, `npx` polos = error `cannot be loaded because running scripts is disabled`.
+Selalu tulis **`npm.cmd` / `vercel.cmd`** (`vercel.cmd` ada di `$env:APPDATA\npm\`, bukan
+`C:\nvm4w\nodejs\` seperti tertulis di `IMPLEMENTATION_SUMMARY.md`).
 
-- **Admin**: username `admin` / password `admin123` (email `admin@smkbahrululum.sch.id`)
-- MySQL: root (tanpa password)
-- DB: `pendaftaran_db`
+Isi `.env` lokal: DB harus **MySQL** Laragon (`DB_CONNECTION=mysql`, db `pendaftaran_db`,
+`127.0.0.1:3306`, user `root`, password kosong) + `FRONTEND_URL=http://localhost:5174`.
+`.env.example` default-nya `sqlite` **dan `APP_KEY` kosong**. `FRONTEND_URL` /
+`NINEROUTER_*` tidak ada di `.env.example` → set manual.
 
-## Roles & Alur Akses
+- `backend-admin/` **tidak punya `.env.example` sama sekali** → copy dari `backend/.env.example`
+  bila butuh artisan lokal di folder itu. `composer run setup` di sana akan gagal (script-nya
+  `copy .env.example .env`) dan script `setup` juga menjalankan `migrate --force` — jangan
+  dijalankan sembarangan.
+- `php artisan storage:link` dibutuhkan kalau view pakai `asset('storage/...')` (upload pendaftar).
 
-- **Role admin**: akses dashboard via URL `/admin` saja — TIDAK BOLEH ada button/navbar admin di halaman manapun (keamanan).
-- **Role siswa**: register → isi form pendaftaran → dashboard `/dashboard-siswa` untuk cek status & edit form.
-- **Navbar form page** (`create.blade.php`) kondisional:
-  - Login siswa: button **Dashboard Siswa** + **Logout**
-  - Guest: TIDAK ADA button (SPMB & Masuk dihapus)
-  - Tidak ada akses admin di navbar
-- **Navbar layout `layouts/app.blade.php`**: Beranda, Formulir, Dashboard Siswa (jika siswa), Login/Daftar (guest) atau Logout.
+## Command
 
-## Aturan Bisnis
+```powershell
+# Test (backend) — sqlite :memory:, TIDAK butuh MySQL
+cd backend; composer test          # = php artisan config:clear + php artisan test
+php artisan test --filter=SppControllerTest
+php artisan test tests/Feature/SppControllerTest.php
 
-- Status pendaftaran: `baru` → `diproses` → `diterima` / `ditolak`. Hanya admin yang bisa ubah (via edit page di `/admin`).
-- Siswa bisa EDIT form hanya jika: status = `baru` DAN `created_at` ≤ 3 hari (deadline `created_at + 3 hari`).
-- Setelah diproses/diterima/ditolak, siswa tidak bisa edit — hanya lihat status.
-- User lama dihapus (fresh start). Data baru: register → form.
-- **Draft pendaftaran**: jika guest submit form → data disimpan ke session `pending_pendaftaran` → redirect login. Setelah login/register → redirect ke form, form terisi ulang otomatis (JS prefill dari `@json($draft)`). Draft dihapus saat submit sukses; tetap jika validasi gagal. Pesan error/success tampil di form page.
+# Frontend
+npm.cmd run build                  # hanya build; TIDAK ada lint/typecheck/e2e di repo ini
 
-## Tabel Database (pendaftaran_db)
+# Migrasi — hanya dari backend/
+cd backend
+php artisan migrate
+php artisan db:seed --class=AdminSeeder
+php artisan spp:generate --periode=2026-09 --nominal=500000   # auto-tagihan SPP bulanan
+```
 
-- `users`: id, name, email, password (hashed), role enum('admin','siswa','pendaftar','guru','kasir') default 'siswa', timestamps
-- `spp_bills`: user_id, periode, nominal, status (belum/lunas), jatuh_tempo, timestamps
-- `spp_payments`: bill_id, metode (tunai/transfer), amount, paid_at, input_by, timestamps
-- `tabungans`: user_id, type (setor/tarik), amount, description, timestamps
-- `koperasi_orders`: user_id, items (json), total, metode, status, timestamps
-- `beritas`: title, slug, category, content, image_path, author, published_at, featured, is_published, user_id, timestamps
-- `pendaftarans`: ~45 kolom termasuk field form baru:
-  - Identitas: nama_lengkap, nama_panggilan, nisn, nik, tempat_lahir, tanggal_lahir, umur, agama, kewarnegaraan, kategori_pendaftar, jenis_kelamin, alamat, rt_rw, kode_pos, no_hp, email
-  - Sekolah: asal_sekolah, gelombang, tahun_lulus, rata_rata_nilai, jurusan_pilihan (RPL/TKJ/AKL)
-  - Keluarga: jumlah_saudara, anak_ke, status_keluarga, nama_ayah, pendidikan_ayah, pekerjaan_ayah, penghasilan_ayah, alamat_ayah, hp_ayah, nama_ibu, pendidikan_ibu, pekerjaan_ibu, penghasilan_ibu, alamat_ibu, hp_ibu, nama_wali, hubungan_wali, email_orang_tua
-  - Lain: jenis_pembayaran, berkas_tambahan, foto_3x4, kk_file, ijazah_file, sktm_file (file path, storage/app/public/pendaftaran)
-  - Status: status, data_confirmed, confirmed_at, status_updated_at, user_id (FK), timestamps
-  - Legacy (nullable): nama_orang_tua, no_hp_orang_tua
+Deploy — **cwd harus folder target** (`backend/` | `backend-admin/` | root), tidak dari root:
 
-## Backend Files Kunci
+```powershell
+vercel.cmd deploy --prod --yes
+vercel.cmd alias set <deployment-url> paneladminsmkbu.vercel.app   # lihat catatan di bawah
+```
 
-- `app/Http/Controllers/AuthController.php` — login/register/logout (session)
-- `app/Http/Controllers/PendaftaranController.php` — CRUD, myDashboard, rules validasi lengkap, handleFileUploads
-- `app/Http/Middleware/CheckRole.php` — guard role (admin/siswa)
-- `app/Http/Middleware/HandleTokenMismatch.php` — penanganan 419/CSRF (cek response, bukan catch exception; `session()->save()` manual)
-- `app/Http/Middleware/Cors.php` — allow smkbu-sby.vercel.app + localhost:5174
-- `app/Http/Middleware/SecurityHeaders.php` — X-Content-Type-Options, X-Frame-Options, HSTS, Referrer-Policy
-- `app/helpers.php` — frontendAuthUrl(), formatPeriode()
-- `app/Models/Pendaftaran.php` — fillable semua field
-- `app/Models/SppBill.php` — bill + payments relasi
-- `app/Models/SppPayment.php` — bill + inputter relasi
-- `app/Models/Tabungan.php` — tabungan siswa
-- `app/Models/Berita.php` — berita + generateSlug()
-- `app/Models/Lowongan.php` — job listing model (title, company, location, jurusan, type, description, deadline, is_active)
-- `app/Models/Lamaran.php` — job application model (user_id, lowongan_id, cover_letter, cv_path, status)
-- `app/Http/Controllers/LowonganController.php` — index (search/filter/sort), show
-- `app/Http/Controllers/LamaranController.php` — store (CV upload), myApplications, show, cancel
-- `database/seeders/AdminSeeder.php` — admin account
-- `database/seeders/LowonganSeeder.php` — 25 sample job listings
-- Routes: `web.php` (publik: `/` `/login` `/register` `pendaftaran/create`+`store`; auth: dashboard-siswa, update; admin: `/admin`, index, export, show, edit, status, destroy) — `Route::resource` tidak dipakai
-  - Career Center: `/lowongan` (GET, public), `/lowongan/{lowongan}` (GET, public), `/lamaran` (POST, auth), `/lamaran/saya` (GET, auth), `/lamaran/{lamaran}` (GET/DELETE, auth). **Tanpa prefix `/api/`** — Vercel PHP runtime intercept `/api/*` sebagai function path.
-  - SPP: `/spp` (siswa), `/spp/kasir` (kasir,admin), `/spp/pay` (POST), `/admin/spp` (JSON), `/admin/spp/rekap`, `/spp/ortu/{user}` (signed URL publik)
-  - Tabungan: `/tabungan` (GET/POST, auth), `/admin/tabungan` (GET/POST, admin)
-  - Berita API: `/berita` (GET, publik), `/berita/{slug}` (GET, publik)
+Alias: `backend-admin/vercel.json` tidak punya field `alias`, jadi domain production ditentukan
+project Vercel. Sesi 2026-09 melaporkan **auto-alias sudah jalan** (deploy → 200 di domain);
+sesi lama harus `alias set` manual. Kalau deploy selesai tapi domain lama, jalankan
+`vercel.cmd alias set`.
 
-## Style & Konvensi
+## Verifikasi / test quirk
 
-- Bahasa UI: Indonesia
-- Blade: extends `layouts.app` (kecuali `create.blade.php` yang full custom + navbar sendiri)
-- Frontend Vue lama tidak disentuh kecuali diminta — fokus backend Laravel
-- File upload: `store('pendaftaran', 'public')`
-- **WAJIB: update PROGRESS.md SETIAP selesai mengerjakan sesuatu** (perintah/pengerjaan apapun) — tambahkan entri sesi baru langsung setelah pekerjaan selesai, jangan ditunda ke akhir sesi. Sinkronkan juga `IMPLEMENTATION_SUMMARY.md` jika ada perubahan teknis/verifikasi baru.
-- **JANGAN sentuh/mengubah `.env` (termasuk `src/server/.env` & key Groq) dan file chatbot (`api/chat.js`, `api/knowledge/**`, `vite.config.js` bagian chat) KECUALI diperintah user secara eksplisit.**
-- JANGAN hapus folder/file tanpa konfirmasi user (pelajaran Sesi 8).
+- **Tidak ada lint, format, typecheck, atau e2e di repo ini.** Tidak ada `.github/`, tidak ada
+  `eslint`/`prettier`/`pint.json`. Verifikasi = `php artisan test` + `npm.cmd run build`
+  (frontend) atau `php -l` untuk cek syntax PHP cepat.
+- `@playwright/test` ada di devDependency tapi **tidak ada config/spec** — jangan coba
+  `npx playwright test`.
+- **Test BUTUH `APP_KEY`** (verified). `phpunit.xml` tidak menyetel `APP_KEY`, jadi tanpa
+  `.env` + `php artisan key:generate` semua test HTTP gagal `MissingAppKeyException`.
+  Cara cepat tanpa bikin `.env`:
+  `$env:APP_KEY='base64:<32 byte acak>'; php artisan test`.
+- **`vendor/` bisa ada tapi rusak** (verified): sisa `composer install` terputus hanya berisi
+  `vendor/composer/tmp-*.zip`, tidak ada `autoload.php` → `composer test` fatal
+  `Failed to open vendor/autoload.php`. Fix = jalankan `composer install` penuh.
+- `backend-admin/vendor` belum tentu ada → `composer install` dulu sebelum test di sana.
+- **Suite `backend-admin` merah dari sananya (verified, 2 dari 3 gagal)** — bukan regresi kamu:
+  1. `ExampleTest` minta `GET /` = 200, tapi `/` redirect 302 ke `/admin`.
+  2. `RegistrationInsightServiceTest` identik punya `backend/`, tapi
+     `backend-admin/app/Services/RegistrationInsightService.php` sudah dipangkas jadi
+     **selalu return fallback** (tidak memanggil HTTP sama sekali) → assert gagal.
+  Test SPP (`SppControllerTest`, `SppModelTest`, `SppCommandTest`) hanya ada di `backend/`.
+- Test SPP **tidak pakai `RefreshDatabase`**; `setUp()` membuat tabel manual via `Schema::create`
+  + `tearDown()` drop. Schema test bisa meleset dari migration asli — kalau test gagal, cek dulu
+  apakah kolomnya memang ada di DB.
+- `phpunit.xml` set `DB_CONNECTION=sqlite` + `:memory:` → test jalan tanpa MySQL.
+  Tanpa `.env`, semua test berstatus *warning* (`file_get_contents(.env)`) tapi **exit code tetap 0**.
+- Verifikasi cepat tanpa HTTP: `php artisan route:list` (jalan tanpa `.env`).
 
-## Agent Skills (OpenCode)
+## Migrasi DB
 
-Skills dari `addyosmani/agent-skills` diinstall di `.agents/skills/<name>/SKILL.md` (plus `design-taste-frontend` & `imagegen-frontend-web` existing). Checklist bersama ada di `.agents/references/`.
+- **Jalankan `php artisan migrate` hanya di `backend/`.** Set migration `backend-admin/` tidak
+  lengkap — ketinggalan 6 file: `2026_08_22_100000_create_lowongans`,
+  `2026_08_22_100001_create_lamarans`, `2026_08_23_000000_add_applicant_fields_to_lamarans`,
+  `2026_08_23_100000_add_email_to_lamarans`, `2026_08_29_140000_create_tabungans`,
+  `2026_08_30_110000_drop_plain_password` (padahal punya
+  `..._add_input_by_to_tabungans_table`). Migrate dari `backend-admin` = data/tabel tidak sinkron.
+- Jangan `migrate:fresh` / `rollback` tanpa konfirmasi user — `backend` & `backend-admin` berbagi
+  satu DB production.
+- 3 migration lama (`2026_08_03_152852`, `2026_08_03_153258`, `2026_08_09_094358`) MySQL-only
+  (`ALTER TABLE ... MODIFY`) **tanpa driver guard** → `migrate` di sqlite akan gagal. Kalau
+  menambah migration destruktif, ikuti pola `2026_08_30_100000` yang cek
+  `DB::getDriverName() !== 'mysql'` lalu `return`.
+- `config/database.php` pakai `PDO::MYSQL_ATTR_SSL_CA` (bukan `Mysql::ATTR_SSL_CA`) — wajib untuk
+  TiDB SSL.
+- `env()` dipakai langsung di `app/helpers.php` dan `Cors.php` (bukan lewat `config/`) →
+  **jangan jalankan `config:cache`/`optimize`** dulu, `FRONTEND_URL` jadi null.
 
-### Core Rules
+## Autentikasi & boundary antar app
 
-- Jika task cocok dengan suatu skill, panggil `skill` tool SEBELUM bertindak.
-- Skill ada di `.agents/skills/<skill-name>/SKILL.md`.
-- Ikuti workflow skill secara ketat; jangan separuh-separuh.
-- Jangan skip step wajib (spec, plan, test) ketika skill menuntutnya.
+- Auth = **Laravel session**, bukan Sanctum/token. Blade login di `backend/`.
+- **Tidak ada `routes/api.php`.** `bootstrap/app.php` hanya mendaftarkan `web.php` + `console.php`;
+  semua endpoint JSON (`/berita`, `/lowongan`, `/auth-status`, `/csrf-token`) ada di `routes/web.php`.
+- Web utama (`backend/`) **menolak login role admin** di `AuthController::login` → "Akun admin
+  dikelola di panel admin terpisah". Role `kasir` → `/spp/kasir`, role `guru` → `/spp/rekap`.
+- Panel admin (`backend-admin/`) **menolak semua role selain admin**.
+- Middleware role = alias `role` (`CheckRole`). Salah role → redirect `/login` + error flash
+  (atau 401/403 kalau `Accept: application/json`).
+- Role DB: `admin | siswa | pendaftar | guru | kasir` (default kolom = `pendaftar`, bukan `siswa`).
+  Frontend menormalisasi `pendaftar` → `siswa` (`src/composable/useAuthSession.js:norm()`).
+- **Route backend TIDAK BOLEH berawalan `/api/`.** Vercel PHP runtime memotong `/api/*` sebagai
+  path function. Route API ditulis polos: `/lowongan`, `/berita`, `/auth-status`, `/csrf-token`.
+- Credential frontend ditentukan `VITE_BACKEND_URL` (`src/composable/useAuthSession.js:3`), default
+  `http://localhost:8000`. Tidak ada `.env.example` di root — set manual bila perlu.
+- Cross-origin: `app/Http/Middleware/Cors.php` hanya mengizinkan
+  `https://smkbu-sby.vercel.app`, `localhost:5174`, dan `env(FRONTEND_URL)`. Origin lain = tanpa
+  header CORS (request tetap jalan, browser yang memblokir).
+- Handler 419/CSRF: `HandleTokenMismatch` bekerja di **layer response**
+  (`$response->getStatusCode() === 419`), bukan `catch (TokenMismatchException)` — exception-nya
+  tidak pernah sampai ke middleware luar.
+- `layouts/app.blade.php` **tidak ada `@vite`** (sengaja dihapus; tidak ada build dir di production).
+  CSS admin dimuat manual dari `/css/admin.css`. Jangan tambahkan `@vite` di blade.
 
-### Intent → Skill Mapping
+## Aturan bisnis
 
-- Fitur / fungsionalitas baru → `spec-driven-development`, lalu `incremental-implementation` dan `test-driven-development`
-- Perencanaan / breakdown → `planning-and-task-breakdown`
-- Bug / gagal / perilaku tak terduga → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
-- Refactor / simplification → `code-simplification`
-- Desain API atau interface → `api-and-interface-design`
-- Kerja UI → `frontend-ui-engineering`
-- Redesign/UI landing page → `design-taste-frontend`
-- Web performance / Core Web Vitals → `performance-optimization`
-- Deploy / production → `shipping-and-launch`
+- Status: `baru` → `diproses` → `diterima` / `ditolak`. Hanya admin yang mengubah (di panel admin).
+- Siswa bisa edit form **hanya** bila `status = 'baru'` **dan** `now() < created_at + 3 hari`
+  (`backend/app/Http/Controllers/PendaftaranController.php:202`).
+- **Draft pendaftaran**: submit form sebagai guest → data disimpan ke session `pending_pendaftaran`
+  (+ tabel `pendaftaran_drafts` + cookie `pending_draft`) → redirect login. Setelah login/register,
+  `restorePendingDraft()` memulihkan draft dan form di-prefill dari `@json($draft)`. Draft dihapus
+  hanya saat submit sukses. `HandleTokenMismatch` juga rescuing draft saat 419.
+- Upload pendaftar: `store('pendaftaran', 'public')` → `storage/app/public/pendaftaran`.
+- Role `pendaftar` + status `diterima` → dianggap `siswa` (ada di 3 tempat: `frontendAuthUrl()`
+  di `app/helpers.php`, `AuthController@authStatus` di kedua backend).
 
-### Execution Model
+## File penting
 
-1. Tentukan apakah ada skill yang berlaku (meski kemungkinannya kecil).
-2. Load skill dengan `skill({ name: "<skill-name>" })`.
-3. Ikuti alur skill persis.
-4. Baru lanjut implementasi setelah step wajib selesai.
+Backend (kedua folder):
+- `bootstrap/app.php` — wiring middleware (Cors prepend, HandleTokenMismatch prepend, alias `role`)
+- `app/Http/Controllers/AuthController.php` — login/register/logout + tolak role berlawanan
+- `app/Http/Controllers/PendaftaranController.php` — `create/store/myDashboard/update`,
+  `handleFileUploads`; di `backend-admin` juga `dashboard` + `updateStatus` + `resetUserPassword`
+- `app/Http/Controllers/{SppController,TabunganController,KoperasiController}.php`
+- `app/Http/Controllers/{LowonganController,LamaranController,BeritaApiController}.php` — **hanya `backend/`**
+- `app/Http/Controllers/BeritaController.php` — **hanya `backend-admin/`** (CRUD Kelola Berita)
+- `app/Http/Middleware/{CheckRole,Cors,HandleTokenMismatch,SecurityHeaders,PreventBrowserCache}.php`
+- `app/Models/{Pendaftaran,User,SppBill,SppPayment,Tabungan,KoperasiOrder,Berita}.php`
+- `app/Services/RegistrationInsightService.php` — versi `backend/` panggil NineRouter
+  (`NINEROUTER_URL/MODEL/KEY`) + fallback; versi `backend-admin/` **sudah dipangkas, selalu fallback**
+- `app/Console/Commands/GenerateSppBills.php` — `spp:generate`
+- `app/helpers.php` — `frontendAuthUrl()` (handoff auth via query `?auth=<base64>`),
+  `formatPeriode()`, `formatPeriodeShort()`
+- `database/seeders/AdminSeeder.php` — **seeding juga siswa demo** (`siswa`/`siswa123`), bukan hanya admin
+
+Frontend:
+- `src/composable/useAuthSession.js` — sumber tunggal `BACKEND`, polling `/auth-status` 30 dtk
+  (hanya saat login), baca `?auth=`
+- `src/services/fetchJson.js` — fetch terautentikasi; `Accept: application/json` wajib agar 401
+  jadi JSON, bukan HTML login
+- `src/services/csrf.js` — cache token per sesi (retry kalau gagal), bukan per request
+- `src/router/index.js` — `meta.requiresSiswa` guard; `/login` & `/register` cuma redirect ke `BACKEND`
+- `vite.config.js` — plugin `chatApiPlugin` menyajikan `/api/chat` di dev; baca `GROQ_API_KEY` dari
+  env root atau `src/server/.env` (folder ini tidak ada di repo, kode aman kalau hilang)
+- `api/chat.js` + `api/knowledge/**` — serverless function Groq untuk production (dipakai juga
+  FloatingAI). `api/knowledge/data/*.json` banyak yang **0 byte** (berita, faq, guru, organisasi,
+  pkl, prestasi).
+
+## JANGAN (tanpa instruksi eksplisit user)
+
+- **Jangan ubah file `.env` / `src/server/.env` / key Groq.** `backend-admin/vercel.json`
+  memuat kredensial DB production secara plaintext — jangan dicetak ulang ke jawaban/log.
+- **Jangan sentuh chatbot**: `api/chat.js`, `api/knowledge/**`, bagian chat di `vite.config.js`.
+- **Jangan hapus folder/file tanpa konfirmasi user.**
+- **Jangan tambah dependency baru** tanpa diminta (repo sengaja ramping).
+- Setelah selesai mengerjakan sesuatu, **WAJIB update `PROGRESS.md`** (entri sesi baru, langsung
+  setelah pekerjaan, jangan ditunda) dan `IMPLEMENTATION_SUMMARY.md` bila ada perubahan teknis.
+- Bahasa UI: Indonesia. Blade extends `layouts.app`, kecuali `pendaftaran/create.blade.php` yang
+  full-custom. Bahasa komentar juga Indonesia/awet (banyak bertekan "ponytail" = catatan optimasi).
+
+## Git
+
+- Branch tunggal `main`, remote `https://github.com/Emenhagaming-cmyk/ga-ro.git`, tanpa CI.
+- Commit message: prefix conventional (`feat:`, `fix:`, `docs:`) + deskripsi Bahasa Indonesia.
+- `docs:` commit untuk update `PROGRESS.md`/`IMPLEMENTATION_SUMMARY.md` adalah pola yang biasa dipakai.
+- **`npm install` (npm 11) mengubah `package-lock.json`** (menghapus flag `dev: true`) — jangan
+  ikut ter-commit bersama perubahan fitur.
+- `.playwright-mcp/*.yml|png` (46 file) adalah artefak snapshot browser yang ikut ter-commit —
+  jangan dianggap fixture tes.
+
+## Agent Skills
+
+Skills di `.agents/skills/<name>/SKILL.md`; checklist bersama di `.agents/references/`
+(accessibility, security, testing, performance, observability, definition-of-done, orchestration).
+
+Intent → skill: fitur baru → `spec-driven-development` + `incremental-implementation` +
+`test-driven-development`; planning → `planning-and-task-breakdown`; bug → `debugging-and-error-recovery`;
+review → `code-review-and-quality`; refactor → `code-simplification`; API design → `api-and-interface-design`;
+UI → `frontend-ui-engineering`; redesign landing → `design-taste-frontend`; performa → `performance-optimization`;
+deploy → `shipping-and-launch`.
+
+Panggil skill **sebelum** bertindak dan ikuti workflow-nya utuh — jangan separuh-separuh.

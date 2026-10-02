@@ -54,6 +54,10 @@ const schoolImage = "/sklh.webp";
               <div class="stat-value">24</div>
               <div class="stat-label">Program Keahlian</div>
             </div>
+            <div class="stat-item">
+              <div class="stat-value">B</div>
+              <div class="stat-label">Akreditasi</div>
+            </div>
           </div>
         </div>
       </div>
