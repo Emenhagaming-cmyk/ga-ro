@@ -8,7 +8,7 @@ use App\Models\Pendaftaran;
  */
 function frontendAuthUrl(): string
 {
-    $frontend = env('FRONTEND_URL', 'http://localhost:5174');
+    $frontend = env('FRONTEND_URL', 'http://leon.smkbu-sby.my.id');
     $payload = ['logged_in' => false, 'role' => null, 'name' => null, 'has_pendaftaran' => false, 'status' => null];
 
     if (auth()->check()) {

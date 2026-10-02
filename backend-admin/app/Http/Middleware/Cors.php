@@ -16,7 +16,7 @@ class Cors
     public function handle(Request $request, Closure $next): Response
     {
         $allowedOrigins = [
-            env('FRONTEND_URL', 'http://localhost:5174'),
+            env('FRONTEND_URL', 'http://leon.smkbu-sby.my.id'),
             'http://localhost:5174',
         ];
 

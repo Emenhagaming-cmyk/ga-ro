@@ -103,7 +103,7 @@
       <a href="#contact">Kontak</a>
     </nav>
 
-    <div class="nav-right">
+    <div class="nav-right"> Updated upstream
       <a v-if="isSiswa" :href="BACKEND + '/profil'" class="nav-profile-link" :title="'Profil ' + session.name">
         <span class="nav-avatar">
           <span class="nav-avatar-initial">{{ initial }}</span>
@@ -114,6 +114,10 @@
             @error="avatarBroken = true"
           />
         </span>
+=======
+      <a v-if="isSiswa" href="/profil" class="nav-profile-link" :title="'Profil ' + session.name">
+        <span class="nav-avatar">{{ initial }}</span>
+>>>>>>> Stashed changes
         <span class="nav-profile-text">
           <span class="nav-profile-name">{{ session.name }}</span>
           <span class="nav-profile-role">Siswa</span>
@@ -176,6 +180,7 @@
         </div>
         <a href="#contact" @click="closeMenu">Kontak</a>
         <div class="mobile-bottom">
+ Updated upstream
           <a v-if="isSiswa" :href="BACKEND + '/profil'" class="mobile-profile" @click="closeMenu">
             <span class="mobile-avatar">
               <span class="mobile-avatar-initial">{{ initial }}</span>
@@ -186,6 +191,10 @@
                 @error="avatarBrokenMobile = true"
               />
             </span>
+=======
+          <a v-if="isSiswa" href="/profil" class="mobile-profile" @click="closeMenu">
+            <span class="mobile-avatar">{{ initial }}</span>
+>>>>>>> Stashed changes
             <span class="mobile-profile-text">
               <span class="mobile-profile-name">{{ session.name }}</span>
               <span class="mobile-profile-role">Siswa</span>

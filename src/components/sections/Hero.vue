@@ -36,7 +36,7 @@ const toggleLogin = () => {
       <div class="buttons">
         <a
           v-if="isSiswa"
-          :href="`${BACKEND}/dashboard-siswa`"
+      href="/dashboard-siswa"
           class="primary btn-login"
         >
           Dashboard Siswa

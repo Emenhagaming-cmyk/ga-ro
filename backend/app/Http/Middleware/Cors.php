@@ -17,7 +17,7 @@ class Cors
     {
 $allowedOrigins = [
             'https://smkbu-sby.vercel.app',
-            env('FRONTEND_URL', 'http://localhost:5174'),
+            env('FRONTEND_URL', 'http://leon.smkbu-sby.my.id'),
             'http://localhost:5174',
         ];
 

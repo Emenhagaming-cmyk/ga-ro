@@ -30,8 +30,13 @@ function formatPeriodeShort(string $periode): string
  */
 function frontendAuthUrl(): string
 {
-    $frontend = env('FRONTEND_URL', 'http://localhost:5174');
+<<<<<<< Updated upstream
+    $frontend = env('FRONTEND_URL', 'http://smkbu-sby.my.id');
     $payload = ['logged_in' => false, 'role' => null, 'name' => null, 'avatar' => null, 'has_pendaftaran' => false, 'status' => null];
+=======
+	    $frontend = env('FRONTEND_URL', 'http://smkbu-sby.my.id');
+    $payload = ['logged_in' => false, 'role' => null, 'name' => null, 'avatar' => null, 'has_pendaftaran' => false, 'status' => null];
+>>>>>>> Stashed changes
 
     if (auth()->check()) {
         $user = auth()->user();
