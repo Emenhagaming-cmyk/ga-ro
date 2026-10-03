@@ -4,6 +4,25 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 
 ---
 
+## STATUS TERAKHIR (2026-10-03) — Ikon Font Awesome Tidak Muncul di Footer & Career Center
+
+**Laporan user:** ikon di footer (Instagram) dan Career Center (sidebar/menu/semua `fas fa-*`) tidak muncul.
+
+**Akar masalah — Font Awesome tidak pernah dimuat dengan benar:**
+1. `index.html` hanya memuat 2 link CDN FA **6.5.1**: `fontawesome.min.css` (core) + `brands.min.css`. **`solid.min.css` tidak ada** → semua glyph `fas fa-*` (Career Center: sidebar, hamburger, dashboard, cari lowongan, lamaran, spinner, dst.) tidak pernah didefinisikan → ikon kosong. `regular` (`far fa-bookmark` di `CareerJobCard.vue`) juga tidak ada.
+2. `Footer.vue` memaksa `font-family: "Font Awesome 7 Brands"` (`.social-icon i`, baris 303) — font FA**7** tidak pernah di-load (CDN memuat FA6) → glyph Instagram rusak/placeholder (TikTok selamat karena inline SVG). Konsisten dengan diagnosis sesi 2026-09-30, tapi perbaikan sesi itu (SVG IG) tidak tersimpan di working tree — file saat ini masih `<i class="fa-brands fa-instagram">`.
+3. `package.json` sudah punya `@fortawesome/fontawesome-free@7.3.1` (lengkap: core + semua glyph + `@font-face` FA7 + 4 webfonts) **tapi tidak pernah di-import**; `src/style.css` malah sudah menyiapkan rule `.fab,.fas,... { font-family: var(--_fa-family, "Font Awesome 7 Free") }` → referensi FA7 tanpa font FA7.
+
+**Perbaikan (2 file):**
+- `src/main.js` — import `@fortawesome/fontawesome-free/css/all.min.css` (sebelum `variable.css`/`style.css`). `all.min.css` FA7 memuat: base rule `.fa,.fas,.far,.fab,...` (`--_fa-family` + `font-weight`), semua glyph via pola `--fa:"\..."`, `@font-face` FA7 Free (400 + 900) & FA7 Brands (400), plus shim FA5/v4.
+- `index.html` — hapus 2 link CDN Font Awesome 6.5.1 (versi 6 vs 7 ini sumber mismatch font-family).
+
+**Kenapa cukup 2 file, tanpa menyentuh Footer/CareerCenter:** semua 25 pemakaian kelas FA di `src/` memakai nama ikon yang ada di FA7 (diverifikasi: `fa-gauge-high`, `fa-bars`, `fa-arrow-left`, `fa-chart-simple`, `fa-envelope`, `fa-newspaper`, `fa-file-lines`, `fa-briefcase`, `fa-building`, `fa-check-circle`, `fa-lock`, `fa-right-to-bracket`, `fa-location-dot`, `fa-paper-plane`, `fa-xmark`, `fa-spinner`, `fa-search`, `fa-magnifying-glass`, `fa-instagram`, `fa-bookmark` — semua ada). Override CSS Footer kini cocok dengan font yang benar-benar di-load.
+
+**Verifikasi:** `npm run build` sukses — 4 font FA7 woff2 (`fa-solid-900` 119KB, `fa-brands-400` 115KB, `fa-regular-400` 19.5KB, `fa-v4compatibility`) masuk `dist/assets/`, CSS global 89KB. Belum di-commit/deploy. Cek visual: footer → ikon IG muncul (hijau ⇄ putih saat hover); `/career-center/*` → ikon sidebar + isi halaman tampil.
+
+---
+
 ## STATUS TERAKHIR (2026-09-30) — Showcase Karya Siswa Dibuka untuk Umum (Feedback Juri)
 
 **Feedback juri:** karya siswa tidak bisa dilihat sebelum login — minta showcase dibuka supaya orang lain bisa yakin dengan sekolah & melihat project.
