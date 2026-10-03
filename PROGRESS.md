@@ -21,6 +21,32 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 =======
 ---
 
+## STATUS TERAKHIR (2026-10-02) — Ikon Instagram Footer Kosong + "Garis" Bawahnya (Font Awesome 7 vs 6.5.1)
+
+**Laporan user:** "eh itu icon instagram di footer hilang lagi bejir" → setelah glifnya muncul: "kenapa dibawah icon instagramnya ada garis ya? gw ingin kayak icon instagram yang dulu, lebih bagus".
+
+**Root cause #1 — glif nggak ketemu (ikon kosong).** `index.html:12-13` memuat **Font Awesome 6.5.1** dari cdnjs, tapi CSS repo nge-hardcode nama family **Font Awesome 7**:
+- `src/style.css` (semula baris 15-24): `.fab, .fas, .far, .fa, .fa-brands, .fa-solid, .fa-regular, .fa-classic { font-family: var(--_fa-family, "Font Awesome 7 Free"); }`
+- `src/components/layout/Footer.vue` (semula line 265-270 & 301-304): `font-family: "Font Awesome 7 Free"` / `"Font Awesome 7 Brands"`.
+
+CSS app dimuat **setelah** `<link>` FA di `<head>` (urutan terverifikasi: `fontawesome.min.css` → `brands.min.css` → `/assets/index-*.css`), jadi override menang → browser memakai family yang **tidak ada** → glif di private-use area (U+F16D) tidak punya karakter → **ikon kosong**. Verified di browser: computed `font-family` = `"Font Awesome 7 Brands"`; `document.fonts.check('400 16px "Font Awesome 6 Brands"')` = **false** padahal FA6 Brands memang termuat.
+Dampak: **semua** ikon FA situs ikut rusak (`.fas` di career-center/dashboard/statistik/pesan/berita), bukan cuma Instagram — user baru sadar di footer.
+
+**Fix (version-agnostic — bukan sekadar ganti angka 7→6):**
+- `src/style.css`: blok `.fa* { font-family: ... }` **dihapus**, diganti komentar penjelasan. Sekarang family di solely dari CSS Font Awesome sendiri.
+- `Footer.vue`: aturan `.social-icon i { font-family: "Font Awesome 7 Brands" }` dihapus; `font-family`/`font-weight` di `.contact-link i` ikut dihapus (isinya SVG, bukan `<i>`).
+- FA 6.5.1 **sudah punya** `.fa-instagram` di `brands.min.css` (family `"Font Awesome 6 Brands"`) → ikon instagram jalan tanpa perlu CDN baru.
+
+**Root cause #2 — "garis" di bawah ikon (= "kayak yang dulu, lebih bagus").** `.social-icon` adalah `<a href>`; **UA stylesheet Chrome** memberi `text-decoration: underline` ke semua `<a href>`. Ikon **SVG** (TikTok, dan Instagram versi lama) nggak kena karena bukan teks — itulah alasan versi lama "lebih bagus". Ikon `<i>` Font Awesome = teks → ketarik garis. Fix: `text-decoration: none` pada `.social-icon`.
+
+**Verifikasi (Playwright di dev :5174 + `vite preview` :4173 + LIVE `smkbu-sby.vercel.app`, 11 route):** semua `ok` — tidak ada `<a>` ber-underline yang memuat ikon FA, tidak ada sisa computed `font-family: "Font Awesome 7 …"`, `FA6brands=true`, Instagram `font-family="Font Awesome 6 Brands"`, box 15.8px, `textDecorationLine=none`. `npm run build` sukses.
+
+**Deploy:** `vercel deploy --prod` → `https://lomba-g9v9acyuk-zakkys-projects-99c4bf23.vercel.app`, alias `smkbu-sby.vercel.app` (✓ Aliased). Catatan: percobaan pertama error `Not authorized`, percobaan kedua identik sukses → **gejala transient**, retry aja kalau muncul.
+
+**Belum:** perubahan ini **belum di-commit** (menunggu persetujuan user) ⇒ `origin/main` masih punya bug FA7 hardcode, jadi VPS yang `git pull` akan tetap menampilkan ikon kosong. `public/favicon.ico` & `public/logo.svg` masih 0 byte (temuan lama, belum dikerjakan).
+
+---
+
 ## STATUS TERAKHIR (2026-10-02) — Fix: Tombol Mata Show Password Hilang di Production (Deploy `spmb-backend`)
 
 **Laporan user:** "ini gw kan ada fitur mata buat show password di halaman login atau daftar, tapi di versi yang dideploy ga muncul jir".

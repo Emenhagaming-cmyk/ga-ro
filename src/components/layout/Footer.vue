@@ -121,7 +121,6 @@ defineEmits(['openContact'])
 
       <div class="footer-bottom">
         <p>© 2026 SMK Bahrul Ulum</p>
-        <p>Made by RPL SMK Bahrul Ulum</p>
       </div>
     </div>
   </footer>
@@ -244,7 +243,7 @@ defineEmits(['openContact'])
   gap: 8px;
   margin-top: 16px;
   padding: 10px 20px;
-  background: rgba(58, 100, 80, 0.08);
+  background: #ffffff;
   border: 1.5px solid rgba(58, 100, 80, 0.2);
   border-radius: 12px;
   color: #3a6450;
@@ -266,8 +265,6 @@ defineEmits(['openContact'])
 .contact-link i {
   font-size: 18px;
   color: #3a6450;
-  font-family: "Font Awesome 7 Free";
-  font-weight: 900;
 }
 
 .social-section {
@@ -297,12 +294,14 @@ defineEmits(['openContact'])
   font-size: 18px;
   transition: all 0.2s ease;
   background: #fff;
+  /* UA stylesheet men-underline semua <a href>; tanpa ini glif Font Awesome
+     (teks) dapat garis bawah, ikon SVG lama tidak. */
+  text-decoration: none;
 }
 
-.social-icon i {
-  font-family: "Font Awesome 7 Brands";
-  font-weight: 400;
-}
+/* Font family untuk .fa-brands Dichiarkan oleh CSS Font Awesome (dari <link>
+   di index.html). Jangan di-hardcode di sini — kalau versinya meleset, ikon
+  -brand (Instagram) jadi kosong. */
 
 .social-icon:hover {
   background: #3a6450;

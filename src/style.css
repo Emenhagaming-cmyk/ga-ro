@@ -12,16 +12,11 @@
   font-weight: inherit;
 }
 
-.fab,
-.fas,
-.far,
-.fa,
-.fa-brands,
-.fa-solid,
-.fa-regular,
-.fa-classic {
-  font-family: var(--_fa-family, "Font Awesome 7 Free");
-}
+/* JANGAN set font-family untuk .fa* di sini. Font Awesome yang dimuat via
+   <link> di index.html sudah mendeklarasikan family-nya sendiri
+   ("Font Awesome 6 Brands" / "Font Awesome 6 Free"). Hardcode nama family
+   di sini = versi meleset (mis. "Font Awesome 7 ...") => glif di private-use
+   area tidak punya karakter => ikon jadi kosong. */
 
 :root {
   font-family: "Quicksand", sans-serif;
