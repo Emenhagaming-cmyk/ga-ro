@@ -172,19 +172,6 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-.bp-flag {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  background: #3a6450;
-}
-
 .bp-body {
   display: flex;
   flex-direction: column;
