@@ -9,7 +9,6 @@ const schoolImage = "/sklh.webp";
       <div class="grid-layout">
         <div class="big-card" v-reveal>
           <div class="big-card-content">
-            <span class="section-label">Tentang Sekolah</span>
             <h2>Sejarah & Tentang Sekolah Kami</h2>
             <p>
               SMK Bahrul Ulum berdiri sejak 1998 dengan visi mencetak generasi
@@ -193,7 +192,7 @@ h2 {
 
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   align-items: stretch;
 }
