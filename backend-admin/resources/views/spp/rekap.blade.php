@@ -86,8 +86,6 @@
         </tbody>
     </table>
 </div>
-@endsection
-
 <style>
 .rk-head { margin-bottom: 20px; }
 .rk-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
@@ -106,3 +104,4 @@
     .rk-period { min-width: 84px; }
 }
 </style>
+@endsection

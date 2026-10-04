@@ -13,11 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-    public function showRegister()
-    {
-        return view('auth.register');
-    }
-
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -161,14 +156,6 @@ class AuthController extends Controller
     public function showResetForm(string $token)
     {
         return view('auth.reset-password', compact('token'));
-    }
-
-    public function showProfile()
-    {
-        $user = Auth::user();
-        $pendaftaran = \App\Models\Pendaftaran::where('user_id', $user->id)->first();
-
-        return view('auth.profile', compact('user', 'pendaftaran'));
     }
 
     public function resetPassword(Request $request)

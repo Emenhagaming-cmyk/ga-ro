@@ -182,7 +182,7 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 - `BeritaApiController.php` — index (JSON), show (JSON)
 
 ### Laravel Controllers (Panel Admin)
-- `PendaftaranController.php` — dashboard, index, show, exportCsv, snapshot, updateStatus, destroy, chartData, laporan, resetUserPassword
+- `PendaftaranController.php` — dashboard, index, show, laporan, updateStatus, destroy, snapshot, exportCsv, resetUserPassword (method pendaftaran siswa & `chartData` dihapus 2026-10-04)
 - `TabunganController.php` — adminIndex, adminShow
 - `BeritaController.php` — CRUD (index, create, store, edit, update, destroy)
 

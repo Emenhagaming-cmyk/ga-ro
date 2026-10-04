@@ -2,9 +2,41 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
-## STATUS TERAKHIR (2026-10-04) — OPTIMASI PERFORMA FRONTEND (sudah dikerjakan, BELUM commit/push)
+## STATUS TERAKHIR (2026-10-04) — AUDIT + FIX 11 BUG PANEL ADMIN (`backend-admin`)
 
-**Diminta user:** Lighthouse-related complain (Performance 71 / SEO 83 / A11y 97) → optimasi. Semua perubahan **di working tree, belum di-commit** (menunggu izin user).
+**Diminta user:** "cek panel admin satu-satu, pasti ada error banyak". Audit read-only dulu (30 route, 16 view, 61 file `php -l`), dapat **11 temuan**, lalu user-approved **fix Batch A + B + C** (hapus method mati, bukan pulihkan route). DB lokal **tidak** diperbaiki — user intranet pakai DB dari Webuzo.
+
+### Yang diperbaiki
+
+| # | Temuan | File | Fix |
+|---|---|---|---|
+| 1 | **Statistik dashboard salah total.** `GROUP BY status, jurusan_pilihan` → `pluck('cnt','status')` key `status` duplikat saling menimpa, jadi kartu per status cuma **1 jurusan terakhir**. Salah di `/admin`, `/laporan`, dan JSON `pendaftaran-snapshot` (di-poll tiap 20 dtk) | `backend-admin/app/Http/Controllers/PendaftaranController.php` | `GROUP BY status` saja. Bukti (sqlite in-memory, 4 baris: baru×3 jurusan + diterima): lama `baru=1 sum=2`, baru `baru=3 sum=4` |
+| 2 | **`<style>` di luar `@section`** di `spp/rekap` → ter-render **sebelum `<!DOCTYPE>`** → quirks mode | `resources/views/spp/rekap.blade.php` | `<style>` dipindah ke dalam `@section('content')`, `@endsection` dipindah ke akhir file |
+| 3 | **`togglePw` tabrakan.** `dashboard.blade.php` definisi `togglePw(id)`, `layouts/app.blade.php` definisi `togglePw(btn)` → yang layout menang → klik "Tampilkan hash" = `TypeError: btn.closest is not a function` | `resources/views/pendaftaran/dashboard.blade.php` | Rename jadi `toggleHash(id)` (kode layout tidak diubah) |
+| 7 | **Nama pendaftar disuntik mentah ke literal JS.** `onclick="openDeleteModal('…','{{ nama }}')"` → `{{ }}` jadi `&#039;` → di-attribute di-decode balik ke `'` → `SyntaxError`, tombol Hapus mati. Sama untuk `confirm('Reset password {{ name }}?')` | `index.blade.php:110`, `dashboard.blade.php:109` | `@js()` (JSON_HEX_APOS/QUOT/TAG). Render terverifikasi: `openDeleteModal('7', 'Budi\u0027s \u0022Joko\u0022 \u003Cscript\u003E')` |
+| 10 | `FRONTEND_URL` tidak ada di `.env` admin, dua default **beda** (`bhapppp.vercel.app` vs `leon.smkbu-sby.my.id`) dan bukan domain produksi | `app/helpers.php`, `index.blade.php:57` | Dua default disamakan ke `https://smkbu-sby.vercel.app` |
+| 6 | **500 saat ubah status** jadi `diterima`/`ditolak` kalau `user_id IS NULL` (kolomnya `nullable`) — `$pendaftaran->user->update()` tanpa null-check | **kedua backend** | `if ($user = $pendaftaran->user) { … }` |
+| 9 | `HandleTokenMismatch` cabang draft memanggil `route('pendaftaran.create')` yang **tidak ada** di admin → 419 jadi 500 | `backend-admin/app/Http/Middleware/HandleTokenMismatch.php` | Cabang itu dihapus (route-nya memang tidak ada) |
+| 8 | **7 method mati** + 4 helper yang jadi mati: `AuthController::showRegister`/`showProfile`; `PendaftaranController::myDashboard`/`create`/`store`/`update`/`downloadBukti` + `sanitizeDraft`/`rules`/`handleFileUploads`/`chartData`. Semuanya menunjuk view/route yang sudah dibuang dari panel | `backend-admin/app/Http/Controllers/*` | Dihapus (−260 baris). Import `Cache` yang tak terpakai ikut dibuang |
+| 5 | **7 migration hilang** di `backend-admin` (bukan 6 seperti catatan `AGENTS.md` — `2026_09_30_090000_add_avatar_to_users_table.php` juga lupa dicatat) → `add_input_by_to_tabungans` gagal di DB fresh | `backend-admin/database/migrations/` | 7 file dicopy dari `backend/`, hash SHA256 identik. Set migration sekarang **26 = 26 identik** |
+
+### Verifikasi
+
+- `php -l` bersih untuk semua file yang disentuh + 26 migration.
+- Semua 16 view dikompilasi Blade (0 gagal) dan 3 view kritikal dirender nyata dengan data berisi `Budi's "Joko" <script>`: doctype di offset 3 (hanya didahului BOM), `</style>` tidak lagi setelah `</html>`, 1 definisi `togglePw` + 1 `toggleHash` (nihil tabrakan).
+- `backend/`: **39 passed** (144 assertions) — fix #6 aman untuk SPP/kasir/guru.
+- `backend-admin/`: 2 failed / 1 passed = **baseline merah yang sudah diketahui** (`ExampleTest` mau 200 tapi `/` memang 302 → `/admin`; `RegistrationInsightServiceTest` karena service di-pangkas jadi fallback). Tidak ada gagal baru.
+
+### Tidak dikerjakan (disengaja)
+
+- **#4 DB lokal**: `.env` admin masih sqlite dan 3 migration MySQL-only tanpa driver guard menghentikan `migrate` → tabel `beritas`/`tabungans`/`spp_*` tidak ada lokal. **User intranet pakai DB Webuzo**, jadi ini dibiarkan.
+- `AuthController::register` dan `AuthController::authStatus` juga **tidak ter-route** di admin, tapi **dipakai** — `register` masih hidup secara kode dan `authStatus` sengaja ada di kedua backend (lihat `AGENTS.md`). Tidak dihapus.
+- **#11** (redirect loop sesi non-admin) dan default `FRONTEND_URL` menua di `backend/app/helpers.php` (`http://smkbu-sby.my.id`) + `backend/app/Http/Middleware/Cors.php` (`leon.smkbu-sby.my.id`) belum disentuh — di luar scope panel admin.
+- Belum commit/push/deploy.
+
+## SEBELUMNYA (2026-10-04) — OPTIMASI PERFORMA FRONTEND (sudah commit `323e903` + `826b4f0`, belum deploy ulang)
+
+**Diminta user:** Lighthouse-related complain (Performance 71 / SEO 83 / A11y 97) → optimasi. Semua perubahan **sudah di-commit** (catatan sebelumnya bilang "belum commit" — dikoreksi di sini).
 
 **PENTING — skor 71 itu dari `localhost:5174` (dev server)**, bukan produksi: dev = 59 request / 2.08 MB / JS 1.15 MB unminified. Angka dev selalu lebih buruk. Verifikasi sesi ini memakai `vite preview` (build produksi) di `localhost:4173` dengan throttling 4G (1.6 Mbps / RTT 150 ms / CPU 4x).
 
@@ -44,7 +76,7 @@ Verifikasi lain: smoke test 7 route (`/`, `/spmb-info`, `/berita`, `/produk-sisw
 - **PNG asli masih ada** (`public/logo.png`, `public/ch.png`, `public/logos/*.png`, ~660 KB) karena tidak boleh hapus file tanpa izin. Mereka ikut ter-copy ke `dist` tapi tidak pernah di-request browser. Boleh dihapus setelah konfirmasi.
 - `sklh.webp` (115 KB, 720×1280) **sengaja tidak di-resize**: di-crop `object-fit:cover` jadi pita 300 px dan sudah `loading="lazy"` (tidak memblokir FCP); mengecilkannya hanya bikin makin buram.
 - `content-visibility:auto` untuk section below-fold **tidak dipakai** — risiko CLS, dan TBT sudah turun cukup dari defer mount.
-- Belt & braces: `HomeView.vue` sempat ditulis dengan karakter asing (`Mount它们`, `hanyadimuat`) dan `index.html` sempat berisi teks nonsense (`SMKanimalsXpcede.tech`, `Watcher SPP`) — **sudah dikoreksi**, tapi jangan lupa cek ulang kalau ada diff aneh.
+- Belt & braces: `HomeView.vue` sempat ditulis dengan karakter asing (`Mount<2 huruf CJK>`, `hanyadimuat`) dan `index.html` sempat berisi teks nonsense (`SMKanimalsXpcede.tech`, `Watcher SPP`) — **sudah dikoreksi**, tapi jangan lupa cek ulang kalau ada diff aneh.
 - Bulk edit PowerShell (`Get-Content -Raw` + `Set-Content -Encoding UTF8`) **merusak file**: menambah BOM dan mengubah `═══` jadi mojibake `â•â•â•` (PowerShell baca sebagai ANSI). Sudah di-`git checkout` 8 file itu dan redo pakai tool edit satu per satu. **Pelajaran: jangan bulk-replace file UTF-8 non-ASCII lewat PowerShell.**
 - Ainda workstream terpisah (butuh akses server/backend, tidak dikerjakan di sesi ini): nginx `try_files` (404 sub-halaman di VPS), mixed-content `http://api.*`, CORS origin `smkbu-sby.my.id`, `POST /api/chat` 404, hardcode `http://smkbu-sby.my.id/login|pendaftaran`, `/kelulusan` tidak ada di router + tanpa catch-all.
 
@@ -112,7 +144,6 @@ I. Sync `dist` terbaru ke VPS (tertinggal 1+ build).
 **Kenapa cukup 2 file, tanpa menyentuh Footer/CareerCenter:** semua 25 pemakaian kelas FA di `src/` memakai nama ikon yang ada di FA7 (diverifikasi: `fa-gauge-high`, `fa-bars`, `fa-arrow-left`, `fa-chart-simple`, `fa-envelope`, `fa-newspaper`, `fa-file-lines`, `fa-briefcase`, `fa-building`, `fa-check-circle`, `fa-lock`, `fa-right-to-bracket`, `fa-location-dot`, `fa-paper-plane`, `fa-xmark`, `fa-spinner`, `fa-search`, `fa-magnifying-glass`, `fa-instagram`, `fa-bookmark` — semua ada). Override CSS Footer kini cocok dengan font yang benar-benar di-load.
 
 **Verifikasi:** `npm run build` sukses — 4 font FA7 woff2 (`fa-solid-900` 119KB, `fa-brands-400` 115KB, `fa-regular-400` 19.5KB, `fa-v4compatibility`) masuk `dist/assets/`, CSS global 89KB. Belum di-commit/deploy. Cek visual: footer → ikon IG muncul (hijau ⇄ putih saat hover); `/career-center/*` → ikon sidebar + isi halaman tampil.
-=======
 ---
 
 ## STATUS TERAKHIR (2026-10-02) — Ikon Instagram Footer Kosong + "Garis" Bawahnya (Font Awesome 7 vs 6.5.1)
@@ -379,7 +410,6 @@ Kalau `curl` tetap 404 padahal `dist/hero-siswa.webp` ada ⇒ bukan masalah git 
 **Perubahan:** `AGENTS.md` di-ringtas 149 → 109 baris. Yang dihapus: daftar 45 kolom `pendaftarans`, daftar file kunci controller/model yang sudah terlihat dari struktur folder, section "Command Penting" (duplikat), uraian skill panjang. Yang ditambahkan/diperbaiki: peta repo 3 deployable + 3 project Vercel; daftar file yang divergen `backend`↔`backend-admin`; blok command dengan `npm.cmd`; status baseline test `backend-admin` (MERAH sejak awal); 4 gotcha baru (`/api/` prefix, session auth + `?auth=` handoff, `Accept: application/json`, `CACHE_STORE`/`env.deploy` menua, upload `/tmp` tidak persisten, `public/` tak disajikan vercel-php); `NINEROUTER_*` untuk ringkasan AI admin; house rules.
 
 **Belum di-commit/deploy.**
->>>>>>> bc8e4c7936c0c773adfe60ef6236adde798330bb
 
 ---
 

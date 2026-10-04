@@ -54,7 +54,7 @@
             </svg>
             <p>Belum ada data pendaftaran</p>
             <p style="font-size:13px;color:#9ba8a0;">Data muncul otomatis saat pendaftar mengisi formulir di web utama.</p>
-            <a href="{{ env('FRONTEND_URL', 'https://bhapppp.vercel.app') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration:none;">Buka Web Utama</a>
+            <a href="{{ env('FRONTEND_URL', 'https://smkbu-sby.vercel.app') }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration:none;">Buka Web Utama</a>
         </div>
     @else
         <div class="table-wrap">
@@ -107,7 +107,7 @@
                                         @endforeach
                                     </select>
                                 </form>
-                                <button type="button" class="action-btn action-btn-delete" onclick="openDeleteModal('{{ $item->id }}', '{{ $item->nama_lengkap }}')">Hapus</button>
+                                <button type="button" class="action-btn action-btn-delete" onclick="openDeleteModal('{{ $item->id }}', @js($item->nama_lengkap))">Hapus</button>
                                 <form id="delete-form-{{ $item->id }}" action="{{ route('pendaftaran.destroy', $item) }}" method="POST" style="display: none;">
                                     @csrf
                                     @method('DELETE')

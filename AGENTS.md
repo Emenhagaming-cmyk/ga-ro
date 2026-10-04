@@ -122,12 +122,14 @@ sesi lama harus `alias set` manual. Kalau deploy selesai tapi domain lama, jalan
 
 ## Migrasi DB
 
-- **Jalankan `php artisan migrate` hanya di `backend/`.** Set migration `backend-admin/` tidak
-  lengkap — ketinggalan 6 file: `2026_08_22_100000_create_lowongans`,
-  `2026_08_22_100001_create_lamarans`, `2026_08_23_000000_add_applicant_fields_to_lamarans`,
-  `2026_08_23_100000_add_email_to_lamarans`, `2026_08_29_140000_create_tabungans`,
-  `2026_08_30_110000_drop_plain_password` (padahal punya
-  `..._add_input_by_to_tabungans_table`). Migrate dari `backend-admin` = data/tabel tidak sinkron.
+- **Jalankan `php artisan migrate` hanya di `backend/`.**/learn Set migration kedua folder
+  sekarang **sudah identik (26 file)** — 7 file yang dulu tertinggal sudah dicopy pada
+  2026-10-04 (`create_lowongans`, `create_lamarans`, `add_applicant_fields_to_lamarans`,
+  `add_email_to_lamarans`, `create_tabungans`, `drop_plain_password`, `add_avatar`; catatan lama
+  menyebut 6 file, kelewatan `add_avatar`). Tetap migrate dari `backend/` sebagai sumber tunggal.
+- **3 migration lama (`2026_08_03_152852`, `2026_08_03_153258`, `2026_08_09_094358`) MySQL-only**
+  (`ALTER TABLE … MODIFY`) tanpa driver guard → `migrate` di **sqlite** (DB lokal / test) berhenti
+  di sana. Pola guard yang benar: `if (DB::getDriverName() !== 'mysql') return;`.
 - Jangan `migrate:fresh` / `rollback` tanpa konfirmasi user — `backend` & `backend-admin` berbagi
   satu DB production.
 - 3 migration lama (`2026_08_03_152852`, `2026_08_03_153258`, `2026_08_09_094358`) MySQL-only
@@ -182,8 +184,12 @@ sesi lama harus `alias set` manual. Kalau deploy selesai tapi domain lama, jalan
 Backend (kedua folder):
 - `bootstrap/app.php` — wiring middleware (Cors prepend, HandleTokenMismatch prepend, alias `role`)
 - `app/Http/Controllers/AuthController.php` — login/register/logout + tolak role berlawanan
-- `app/Http/Controllers/PendaftaranController.php` — `create/store/myDashboard/update`,
-  `handleFileUploads`; di `backend-admin` juga `dashboard` + `updateStatus` + `resetUserPassword`
+- `app/Http/Controllers/PendaftaranController.php` — di `backend/`: `create/store/myDashboard/
+  update`, `handleFileUploads`; di `backend-admin/` **hanya** `dashboard` + `index` + `laporan` +
+  `show` + `updateStatus` + `destroy` + `snapshot` + `exportCsv` + `resetUserPassword`. Method
+  pendaftaran siswa (`create/store/update/myDashboard/downloadBukti` + `rules`/`sanitizeDraft`/
+  `  handleFileUploads`/`chartData`) **dihapus dari `backend-admin/`** 2026-10-04 karena route+view-nya
+  tidak ada di panel admin (kode mati) — jangan di-restore tanpa route yang sesuai.
 - `app/Http/Controllers/{SppController,TabunganController,KoperasiController}.php`
 - `app/Http/Controllers/{LowonganController,LamaranController,BeritaApiController}.php` — **hanya `backend/`**
 - `app/Http/Controllers/BeritaController.php` — **hanya `backend-admin/`** (CRUD Kelola Berita)

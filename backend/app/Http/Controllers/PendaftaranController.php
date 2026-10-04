@@ -225,10 +225,14 @@ public function index(RegistrationInsightService $insightService)
             'status_updated_at' => now()
         ]);
 
-        if ($validated['status'] === 'diterima') {
-            $pendaftaran->user->update(['role' => 'siswa']);
-        } elseif (in_array($validated['status'], ['ditolak', 'baru'])) {
-            $pendaftaran->user->update(['role' => 'pendaftar']);
+        // ponytail: user_id nullable (pendaftar lama bisa tanpa akun) — jangan deref buta,
+        // kalau null panggil update() = 500.
+        if ($user = $pendaftaran->user) {
+            if ($validated['status'] === 'diterima') {
+                $user->update(['role' => 'siswa']);
+            } elseif (in_array($validated['status'], ['ditolak', 'baru'])) {
+                $user->update(['role' => 'pendaftar']);
+            }
         }
 
         return back()->with('success', 'Status berhasil diperbarui.');

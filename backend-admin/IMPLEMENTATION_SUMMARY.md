@@ -43,7 +43,7 @@ Login **hanya admin**. Siswa/pendaftar ditolak ("Hanya akun admin yang dapat men
 ## Key Files
 
 - `routes/web.php` — admin-only routes
-- `app/Http/Controllers/PendaftaranController.php` — dashboard, index, show, export, snapshot, chartData, laporan, resetUserPassword
+- `app/Http/Controllers/PendaftaranController.php` — dashboard, index, show, laporan, updateStatus, destroy, snapshot, exportCsv, resetUserPassword (method pendaftaran siswa + `chartData` dihapus 2026-10-04 — route/view-nya tidak ada di panel admin)
 - `app/Http/Controllers/TabunganController.php` — adminIndex, adminShow
 - `app/Http/Controllers/BeritaController.php` — CRUD berita
 - `app/Models/User.php` — relasi tabungans(), koperasiOrders()

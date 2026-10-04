@@ -32,19 +32,8 @@ class HandleTokenMismatch
     {
         $session = $request->session();
 
-        if ($request->is('pendaftaran')) {
-            $draft = collect($request->except(['_token', '_method']))
-                ->reject(fn ($v) => $v instanceof \Illuminate\Http\UploadedFile)
-                ->all();
-
-            $session->put('pending_pendaftaran', $draft);
-
-            $session->flash('error', 'Session berakhir. Data Anda sudah tersimpan otomatis - periksa kembali lalu kirim ulang.');
-            $session->save();
-
-            return redirect()->route('pendaftaran.create');
-        }
-
+        // ponytail: cabang draft pendaftaran DIHAPUS di backend-admin — tidak ada route
+        // pendaftaran.create di sini, jadi redirect()-nya cuma jadi RouteNotFoundException (500).
         if ($request->is('logout')) {
             $session->save();
             return redirect(frontendAuthUrl());
