@@ -2,7 +2,47 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
-## STATUS TERAKHIR (2026-10-04) — AUDIT + FIX 11 BUG PANEL ADMIN (`backend-admin`)
+## STATUS TERAKHIR (2026-10-04, lanjutan) — FIX #11 (REDIRECT LOOP PANEL ADMIN) + CORS/`FRONTEND_URL`
+
+Menyelesaikan sisa temuan yang sengaja ditunda di entry sebelumnya, atas izin user ("gas beresin").
+
+### #11 — `ERR_TOO_MANY_REDIRECTS` untuk sesi non-admin (akar masalahnya di vendor)
+
+Rantai yang membentuk loop, diverifikasi dengan baca `vendor/laravel/framework/src/Illuminate/Auth/Middleware/RedirectIfAuthenticated.php`:
+
+1. `/admin` → `CheckRole` tolak role → `redirect()->route('login')`
+2. `/login` ada middleware `guest` → sudah login → `defaultRedirectUri()`
+3. `defaultRedirectUri()` cari route bernama `dashboard`, lalu `home` → **tidak ada keduanya** di `backend-admin/routes/web.php` → jatuh ke `/`
+4. `/` = `redirect('/admin')` → kembali ke langkah 1 → **loop tak berujung**
+
+Fix (2 lapis, keduanya di `backend-admin`):
+- `CheckRole` — sudah login tapi role salah → `abort(403)`, **bukan** redirect ke `/login` (rumus loop-nya hilang di titik ini).
+- `routes/web.php` route `/` — arahkan sesuai sesi: tamu → `/login`, admin → `/admin`, selain itu 403.
+- `backend/CheckRole` **tidak** disentuh: di web utama `/` = landing page dan route bernama `dashboard.siswa` ada, jadi loop tidak mungkin terjadi; mengubahnya berisiko merusak perilaku yang dipakai `SppControllerTest`.
+
+### CORS + default `FRONTEND_URL` (kedua backend)
+
+- `backend/app/Http/Middleware/Cors.php` — allowlist dirapikan: `https://smkbu-sby.vercel.app` + `env('FRONTEND_URL')` + `https://smkbu-sby.my.id` + `http://smkbu-sby.my.id` + `http://localhost:5174`, di-`array_unique(array_filter(...))` supaya tidak ada entri `null`/duplikat. Versi lama fallback-nya `http://leon.smkbu-sby.my.id` (domain mati).
+- `backend-admin/app/Http/Middleware/Cors.php` — allowlist sama, **plus** perbaikan: versi lama memakai `reset($allowedOrigins)` sehingga origin yang **tidak dikenal** tetap menerima header `Access-Control-Allow-Origin` (menunjuk domain yang salah). Sekarang early return, sama seperti `backend/`.
+- `backend/app/helpers.php` — `frontendAuthUrl()` default `http://smkbu-sby.my.id` (HTTP tanpa TLS, domain yang sudah diaudit bermasalah) → `https://smkbu-sby.vercel.app`, plus `rtrim(..., '/')`. **`FRONTEND_URL` tidak ada di `backend/vercel.json`** (hanya `backend-admin/vercel.json` yang punya), jadi di produksi web utama yang dipakai justru nilai default ini.
+- `backend-admin/app/helpers.php` + `index.blade.php` sudah disamakan di commit sebelumnya.
+
+### Verifikasi
+
+- `php -l` bersih untuk 6 file yang diubah; scan karakter asing (CJK/Cyrillic) bersih.
+- `backend/`: **39 test passed** (144 assertions).
+- `backend-admin/`: suite penuh tetap **2 gagal = baseline bawaan** (`ExampleTest` 302 vs 200, `RegistrationInsightServiceTest` service dipangkas).
+- **Test sementara `RedirectLoopTest`** (4 passed, 8 assertions) membuktikan: `/` tamu → 302 ke `/login`; `/` admin → 302 ke dashboard; **sesi non-admin `/admin` → 403** (dulu loop) dan `/` → 403; tamu di `/admin` tetap 302 ke login. Berkas ada di `backend-admin/tests/Feature/RedirectLoopTest.php` **belum di-commit** — bilang saja kalau mau dipakai sebagai regression guard permanen.
+- Deploy `spmb-admin` → `https://paneladminsmkbu.vercel.app` (auto-alias) ✅
+- Deploy `spmb-backend` → `https://pendaftaranspmb.vercel.app` (auto-alias) ✅
+- Produksi: panel `/` 302, `/admin` 302, `/login` 200 · backend `/auth-status` 200 JSON · `/berita` 200 JSON dengan `Access-Control-Allow-Origin: https://smkbu-sby.vercel.app` **dan** `https://smkbu-sby.my.id` (kedua-duanya dapat header, tidak ada domain yang tertinggal).
+
+### Temuan sampingan (belum diperbaiki)
+
+- **`Cors` tidak terdaftar di `backend-admin/bootstrap/app.php`** — hanya `PreventBrowserCache` (append) + `HandleTokenMismatch` (prepend) + alias `role`. Jadi `backend-admin/app/Http/Middleware/Cors.php` = **dead code** (aman: panel server-rendered, tidak ada fetch cross-origin ke domain panel). Perlu keputusan: daftarkan middleware-nya atau hapus berkasnya.
+- **Frontend masih hardcode `http://smkbu-sby.my.id/...`** di 4 tempat (`src/composable/useAuthSession.js:103`, `src/router/index.js:17`, `src/services/fetchJson.js:15`, `src/views/HomeView.vue:43,45`) untuk `login` / `pendaftaran` / `pendaftaran/bukti` — padahal backend-nya sudah tinggal di `pendaftaranspmb.vercel.app`. Klik "Login"/"Daftar" dari landing production bisa mendarat ke domain VPS. Ini workstream VPS yang belum disentuh (deploy frontend Vercel juga pernah gagal).
+
+## SEBELUMNYA (2026-10-04) — AUDIT + FIX 11 BUG PANEL ADMIN (`backend-admin`)
 
 **Diminta user:** "cek panel admin satu-satu, pasti ada error banyak". Audit read-only dulu (30 route, 16 view, 61 file `php -l`), dapat **11 temuan**, lalu user-approved **fix Batch A + B + C** (hapus method mati, bukan pulihkan route). DB lokal **tidak** diperbaiki — user intranet pakai DB dari Webuzo.
 
