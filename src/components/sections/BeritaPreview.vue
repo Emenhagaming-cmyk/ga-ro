@@ -38,6 +38,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { BACKEND } from "@/composable/useAuthSession";
 
 const router = useRouter();
 const previewNews = ref([]);
@@ -56,7 +57,6 @@ function goDetail(slug) {
 }
 
 onMounted(async () => {
-  const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
   try {
     // Coba API backend dulu
     const res = await fetch(`${BACKEND}/berita`, { credentials: "include" });

@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\Cors;
 use App\Http\Middleware\PreventBrowserCache;
 use App\Http\Middleware\HandleTokenMismatch;
 
@@ -23,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(prepend: [
             HandleTokenMismatch::class,
+            // Cors ikut dipasang di sini (dulu filenya ada tapi tidak pernah
+            // didaftarkan = dead code). Prepend -> jalan sebelum middleware lain
+            // supaya header CORS tetap terkirim pada respons redirect/403.
+            Cors::class,
         ]);
 
         $middleware->alias([

@@ -123,7 +123,7 @@ import { ref, computed, onMounted, watch, reactive } from "vue";
 import { useRouter } from "vue-router";
 import PageTopbar from "@/components/layout/PageTopbar.vue";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+import { BACKEND } from "@/composable/useAuthSession";
 const router  = useRouter();
 
 const news         = ref([]);

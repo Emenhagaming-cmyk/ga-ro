@@ -1,6 +1,16 @@
 import { ref } from "vue";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+// ponytail: SATU sumber kebenaran untuk host backend. Vercel bisa punya
+// VITE_BACKEND_URL ngawur ( pernah ketemu isinya base64 bukan URL ), jadi nilai
+// env divalidasi dulu — kalau bukan http(s) DIABAIKAN, bukan dipakai. Tanpa ini
+// satu env salah = semua fetch bocor diam-diam ke host ngawur.
+const PROD_BACKEND = "https://pendaftaranspmb.vercel.app";
+const envBackend = String(import.meta.env.VITE_BACKEND_URL || "");
+const BACKEND = /^https?:\/\//i.test(envBackend)
+  ? envBackend.replace(/\/+$/, "")
+  : import.meta.env.DEV
+    ? "http://localhost:8000"
+    : PROD_BACKEND;
 const STORAGE_KEY = "spmb_session_status";
 
 const GUEST = {
@@ -100,7 +110,7 @@ export function useAuthSession() {
     if (isSiswaLoggedIn() && session.value.has_pendaftaran) {
       return `${BACKEND}/dashboard-siswa`;
     }
-    return `http://smkbu-sby.my.id/pendaftaran`;
+    return `${BACKEND}/pendaftaran`;
   };
 
   // Refresh di background + sesekali revalidate; render pakai cache instan.

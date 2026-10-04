@@ -12,7 +12,7 @@ export async function fetchJson(url, options = {}) {
   });
 
   if (res.status === 401) {
-    window.location.assign(`http://smkbu-sby.my.id/login`);
+    window.location.assign(`${BACKEND}/login`);
     throw new Error("Sesi berakhir, silakan masuk kembali.");
   }
 

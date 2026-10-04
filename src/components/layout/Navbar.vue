@@ -255,7 +255,7 @@ const closeTentangDropdown = () => {
 };
 
 const goSPMB = () => {
-  window.location.href = `http://smkbu-sby.my.id/login`;
+  window.location.href = `${BACKEND}/login`;
   closeMenu();
 };
 
