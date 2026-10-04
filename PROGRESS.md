@@ -2,7 +2,49 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
-## STATUS TERAKHIR (2026-10-04, lanjutan) — FIX #11 (REDIRECT LOOP PANEL ADMIN) + CORS/`FRONTEND_URL`
+## STATUS TERAKHIR (2026-10-04, lanjutan 2) — HOST BACKEND FRONTEND DIPERSEBERATKAN + KETIGA APP LIVE
+
+Tiga deployable sekarang **sudah production** dan terverifikasi. Permintaan user: bereskan `Cors` panel (keputusan: **daftarkan**, bukan hapus), jangan commit test sementara, dan lanjutkan perbaikan host backend frontend.
+
+### 1. `VITE_BACKEND_URL` di Vercel project `lomba` isinya SAMPAH (temuan serius)
+
+`vercel env ls` menunjukkan nilainya `eyJ2IjoidjIiLCJjIj…` = base64 dari `{"v":"v","c":"c…` — **bukan URL**. Efeknya di production: `BACKEND` jadi string ngawur, jadi **setiap** fetch dari landing (`/auth-status`, `/berita`, `/tabungan`, nav, dll.) ditembak ke host ngawur.diam-diam saja karena error-nya ditangkap `catch`.
+
+- EnvProduction dihapus lalu diisi ulang `https://pendaftaranspmb.vercel.app` (begitu juga Preview). CLI 58 `env add` **nilai lewat stdin**, bukan positional (`env add NAMA <nilai>` akan ditolak `Invalid environment`).
+- Insurance di kode: `BACKEND` sekarang **validasi** nilai env — kalau bukan `/^https?:\/\//` diabaikan, lalu fallback `http://localhost:8000` (dev) atau `https://pendaftaranspmb.vercel.app` (prod). Satu env salah tidak lagi bisa menjatuhkan seluruh fetch.
+
+### 2. Hardcode `http://smkbu-sby.my.id` dihapus dari 9 titik
+
+Semuanya kini `${BACKEND}` (sumber tunggal = `useAuthSession.js`):
+`useAuthSession.js:spmbTarget` · `router/index.js:/login` · `fetchJson.js:401` · `HomeView.vue:scTarget` · `Navbar.vue:258` · `TabunganBanner.vue` · `career/ApplyModal.vue` · `BeritaPreview.vue` (sekalian duplicat `BACKEND` lokal dibuang) · `views/NewsView.vue` (duplikat yang sama).
+
+`index.html`: `<link rel="preconnect" href="%VITE_BACKEND_URL%" />` → URL literal. Placeholder itu **tidak** konsisten dengan `import.meta.env` dan kalau env kosong dibiarkan utuh jadi `href` ngawur.
+
+> Pelajaran scanning: `Select-String -Path src\**\*.vue` **tidak recursive** di PowerShell (`**` diperlakukan sebagai `*`) — scan pertama sempat bilang "bersih" padahal masih ada 4 file. Wong andal: `Get-ChildItem -Recurse` + `Select-String`, atau `rg`.
+
+### 3. `Cors` didaftarkan di panel admin
+
+`backend-admin/bootstrap/app.php` → `Cors::class` di-`prepend` ke group `web`. Prepend (bukan append) supaya header tetap terkirim pada respons redirect/403. Alias `role` + `PreventBrowserCache` + `HandleTokenMismatch` tetap sama.
+
+### 4. Deploy + verifikasi (ketiga app)
+
+| App | Domain | Hasil |
+|---|---|---|
+| frontend `lomba` | `https://smkbu-sby.vercel.app` | ✅ aliased, `GET /` 200 |
+| `backend` | `https://pendaftaranspmb.vercel.app` | ✅ aliased, `/auth-status` 200 JSON |
+| `backend-admin` | `https://paneladminsmkbu.vercel.app` | ✅ aliased, `/login` 200 |
+
+- **Deploy frontend akhirnya berhasil** — catatan lama "deploy frontend Vercel selalu gagal" itu karena tidak pakai `--scope`, bukan karena projectnya rusak.
+- Produksi frontend: `dist` & hasil deploy **0 kemunculan** `smkbu-sby.my.id`, **0** `localhost:8000`, `2` `pendaftaranspmb.vercel.app` di entry chunk; preconnect ke backend benar.
+- `npm.cmd run build` sukses (14–30 dtk), `php -l` bersih, scan karakter asing bersih.
+
+### Sisa pekerjaan (tidak dikerjakan)
+
+- Workstream UX scroll cepat (`LazyMount` rootMargin, prefetch section) masih cuma rencana.
+- Domain VPS `smkbu-sby.my.id` tidak dipakai lagi oleh frontend, tapi nginx/CORS/mixed-content/`POST /api/chat` 404 di sana belum dibereskan.
+- `tests/k6/stress.js` masih untracked (bukan parte dari sesi ini).
+
+## STATUS SEBELUMNYA (2026-10-04, lanjutan 1) — FIX #11 (REDIRECT LOOP PANEL ADMIN) + CORS/`FRONTEND_URL`
 
 Menyelesaikan sisa temuan yang sengaja ditunda di entry sebelumnya, atas izin user ("gas beresin").
 
@@ -39,8 +81,8 @@ Fix (2 lapis, keduanya di `backend-admin`):
 
 ### Temuan sampingan (belum diperbaiki)
 
-- **`Cors` tidak terdaftar di `backend-admin/bootstrap/app.php`** — hanya `PreventBrowserCache` (append) + `HandleTokenMismatch` (prepend) + alias `role`. Jadi `backend-admin/app/Http/Middleware/Cors.php` = **dead code** (aman: panel server-rendered, tidak ada fetch cross-origin ke domain panel). Perlu keputusan: daftarkan middleware-nya atau hapus berkasnya.
-- **Frontend masih hardcode `http://smkbu-sby.my.id/...`** di 4 tempat (`src/composable/useAuthSession.js:103`, `src/router/index.js:17`, `src/services/fetchJson.js:15`, `src/views/HomeView.vue:43,45`) untuk `login` / `pendaftaran` / `pendaftaran/bukti` — padahal backend-nya sudah tinggal di `pendaftaranspmb.vercel.app`. Klik "Login"/"Daftar" dari landing production bisa mendarat ke domain VPS. Ini workstream VPS yang belum disentuh (deploy frontend Vercel juga pernah gagal).
+- **`Cors` tidak terdaftar di `backend-admin/bootstrap/app.php`** — **SUDAH DIPERBAIKI**, sekarang di-`prepend` ke group `web` (lihat entry paling atas).
+- **Frontend masih hardcode `http://smkbu-sby.my.id/...`** di 4 tempat — **SUDAH DIPERBAIKI** di entry paling atas (9 titik, semua jadi `${BACKEND}`).
 
 ## SEBELUMNYA (2026-10-04) — AUDIT + FIX 11 BUG PANEL ADMIN (`backend-admin`)
 
