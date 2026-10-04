@@ -1,7 +1,7 @@
 <template>
   <header class="navbar" :class="{ shrink: scrolled }">
     <a href="#top" class="logo">
-      <img src="/logo.png" alt="Logo Sekolah" class="logo-img" width="40" height="40" />
+      <img src="/logo.webp" alt="Logo Sekolah" class="logo-img" width="40" height="40" />
 
       <div>
         <h2>SMK Bahrul Ulum</h2>
@@ -661,7 +661,7 @@ onUnmounted(() => {
 }
 
 .nav-profile-role {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #3a6450;
 }
@@ -735,7 +735,7 @@ onUnmounted(() => {
 }
 
 .mobile-profile-role {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #3a6450;
 }

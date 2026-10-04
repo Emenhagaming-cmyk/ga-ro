@@ -8,7 +8,7 @@ import BackgroundFX from "@/components/common/BackgroundFX.vue";
 import FloatingAi from "@/components/chatbot/FloatingAi.vue";
 import ContactModal from "@/components/common/ContactModal.vue";
 import LazyMount from "@/components/common/LazyMount.vue";
-import { ref, defineAsyncComponent } from "vue";
+import { ref, defineAsyncComponent, onMounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 
 // ponytail: section di bawah fold pakai async component + lazy mount → chunk
@@ -19,6 +19,19 @@ const CareerPreview = defineAsyncComponent(() => import("@/components/sections/C
 const KoperasiPreview = defineAsyncComponent(() => import("@/components/sections/KoperasiPreview.vue"));
 const ProdukPreview = defineAsyncComponent(() => import("@/components/sections/ProdukPreview.vue"));
 const TabunganBanner = defineAsyncComponent(() => import("@/components/sections/TabunganBanner.vue"));
+
+// ponytail: FloatingAi / BackgroundFX / CursorGlow itu aksesori, bukan konten.
+// Mount bareng HomeView menyumbang long task di main thread (TBT).
+// Ditunda ke idle browser; timeout jadi jaring pengaman kalau requestIdleCallback
+// tidak pernah dipanggil (tab tersembunyi / browser lama).
+const decoReady = ref(false);
+onMounted(() => {
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(() => { decoReady.value = true; }, { timeout: 800 });
+  } else {
+    setTimeout(() => { decoReady.value = true; }, 400);
+  }
+});
 
 const { session, BACKEND } = useAuthSession();
 const showContact = ref(false);
@@ -40,10 +53,10 @@ const scLabel = () => {
 
 <template>
   <div class="page-wrapper">
-    <FloatingAi />
+    <FloatingAi v-if="decoReady" />
 
-    <BackgroundFX />
-    <CursorGlow />
+    <BackgroundFX v-if="decoReady" />
+    <CursorGlow v-if="decoReady" />
 
     <div class="page">
       <Navbar />

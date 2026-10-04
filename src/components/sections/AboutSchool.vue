@@ -128,7 +128,7 @@ const schoolImage = "/sklh.webp";
   border-radius: 999px;
   background: rgba(125, 184, 141, 0.18);
   color: #2f5b45;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;

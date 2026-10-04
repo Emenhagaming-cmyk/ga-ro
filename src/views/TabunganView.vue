@@ -116,7 +116,7 @@ onUnmounted(() => {
         <button class="tab-back" @click="goBack" aria-label="Kembali">
           <ChevronLeft :size="18" :stroke-width="2.5" />
         </button>
-        <img src="/logo.png" alt="Logo Sekolah" class="tab-logo" />
+        <img src="/logo.webp" alt="Logo Sekolah" class="tab-logo" />
         <span class="tab-brand">Tabungan Siswa</span>
       </div>
       <button class="tab-refresh" @click="loadData" aria-label="Muat ulang">

@@ -1,16 +1,38 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/png" href="/logo-fav.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="" />
-    <title>SMK Bahrul Ulum</title>
+    <title>SMK Bahrul Ulum Surabaya — Pendaftaran SPMB, SPP, Tabungan & Koperasi</title>
+    <meta
+      name="description"
+      content="SMK Bahrul Ulum Surabaya. Pendaftaran SPMB online, info lowongan kerja, SPP, tabungan siswa, dan koperasi sekolah. Cek jadwal, lokasi, dan daftar langsung di sini."
+    />
     <link rel="preconnect" href="%VITE_BACKEND_URL%" />
     <link rel="preload" href="/fonts/Quicksand-Variable.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/logo.png" as="image" fetchpriority="high" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/brands.min.css" crossorigin="anonymous" />
+    <link rel="preload" href="/logo.webp" as="image" type="image/webp" fetchpriority="high" />
+    <!-- Font Awesome: dimuat NON-BLOCKING (preload -> stylesheet saat selesai).
+         Kalau <link rel=stylesheet> biasa, script type=module MENUNGGU CSS ini
+         (style-blocking script) => seluruh app baru start setelah CSS cdnjs selesai,
+         dan FCP = waktu CDN. Itu punyanya slowdown terbesar di halaman ini.
+         brands.min.css sengaja TIDAK dimuat: satu-satunya ikon brand (Instagram)
+         sudah inline SVG di Footer, jadi fa-brands-400.woff2 (115KB) tak perlu. -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css"
+      crossorigin="anonymous"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css"
+        crossorigin="anonymous"
+      />
+    </noscript>
   </head>
   <body>
     <div id="app"></div>

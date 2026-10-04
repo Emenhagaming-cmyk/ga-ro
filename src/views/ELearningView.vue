@@ -2,7 +2,7 @@
   <section class="el">
     <aside class="el-sidebar">
       <div class="sidebar-brand">
-        <img src="/logo.png" alt="Logo Sekolah" />
+        <img src="/logo.webp" alt="Logo Sekolah" />
         <span class="brand-text">SMK Bahrul Ulum</span>
       </div>
       <span class="sidebar-label">MENU</span>

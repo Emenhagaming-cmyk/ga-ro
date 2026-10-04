@@ -2,6 +2,100 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-04) — OPTIMASI PERFORMA FRONTEND (sudah dikerjakan, BELUM commit/push)
+
+**Diminta user:** Lighthouse-related complain (Performance 71 / SEO 83 / A11y 97) → optimasi. Semua perubahan **di working tree, belum di-commit** (menunggu izin user).
+
+**PENTING — skor 71 itu dari `localhost:5174` (dev server)**, bukan produksi: dev = 59 request / 2.08 MB / JS 1.15 MB unminified. Angka dev selalu lebih buruk. Verifikasi sesi ini memakai `vite preview` (build produksi) di `localhost:4173` dengan throttling 4G (1.6 Mbps / RTT 150 ms / CPU 4x).
+
+### Temuan utama: FCP = waktu CDN, bukanoe Quartet
+
+Baseline (build produksi, throttled): **FCP 6232 ms**. Penyebabnya bukan gambar — **2 stylesheet Font Awesome dari cdnjs yang render-blocking**. `<script type="module">` adalah *style-blocking script*: eksekusinya menunggu stylesheet yang masih diunduh. Jadi seluruh app baru start setelah CSS cdnjs selesai, dan DNS `cdnjs.cloudflare.com` di mesin ini butuh **2.2 detik**. Semua resource lain baru mulai download di ~6.1 s.
+
+### Perubahan
+
+| # | File | Apa |
+|---|---|---|
+| 1 | `index.html` | FA CDN jadi **non-blocking** (`rel=preload as=style` + `onload` → `rel=stylesheet`, plus `<noscript>` fallback). `lang="en"`→`"id"`, tambah `meta description`, favicon → `/logo-fav.png`, preload → `/logo.webp` |
+| 2 | `index.html` + `Footer.vue` | **Ikon Instagram jadi inline SVG** (sebelumnya satu-satunya `fa-brands` di repo; TikTok sudah SVG). `brands.min.css` + `fa-brands-400.woff2` (115 KB) tidak pernah dimuat lagi. `fontawesome.min.css` tetap (dipakai ikon `fas` di career-center) |
+| 3 | `src/router/index.js` | `HomeView` di-import **statis** (route `/` bukan dynamic import) → hilangkan 1 round-trip sebelum Vue mount. Entry `index.js` 8.49 KB → 34.53 KB (gzip 3.42 → 11.50 KB), chunk `HomeView-*` hilang (merged). Route lain tetap lazy |
+| 4 | `src/views/HomeView.vue` | `FloatingAi` / `BackgroundFX` / `CursorGlow` (aksesori, bukan konten) di-mount lewat `requestIdleCallback` + `timeout: 800` → turunkan long task / TBT |
+| 5 | 11 file `.vue` | Gambar di-resize ke ukuran render + WebP q82 (Playwright canvas, tanpa dependency baru): 5 logo partner `public/logos/*.webp`, `ch.webp` (avatar BISA), `logo.webp`, plus `logo-fav.png` 32×32 untuk favicon. Logo partner dapat `loading="lazy"` + `width/height` (di bawah fold). Referensi `/logo.png` & `/ch.png` diganti di Navbar, Footer, PageTopbar, CareerCenterView, KoperasiView, ELearningView, SppView, TabunganView, FloatingAi, ChatHeader |
+| 6 | `Footer.vue`, `Navbar.vue`, `AboutSchool.vue` | A11y: kontras `.footer-bottom` `#8B95A5` (≈3:1, gagal AA) → `#6b7280` (≈4.8:1); font 11px → 12px di `.footer-title`, `.nav-profile-role`, `.mobile-profile-role`, `.section-label` |
+
+### Hasil (build produksi, throttled, rata-rata beberapa run)
+
+| Metrik | Sebelum | Sesudah |
+|---|---|---|
+| FCP | 6232 ms | **1936–2304 ms** |
+| LCP | 6232 ms | **1936–2304 ms** |
+| TBT | ~2499 ms | **1160–1865 ms** |
+| CLS | 0 | **0** (aman) |
+| Total transfer | 994 KB | **266 KB** (−73%) |
+| Gambar | 771 KB | **165 KB** |
+| Font | 143 KB | **28 KB** |
+| Request | 26 | **14** |
+
+Verifikasi lain: smoke test 7 route (`/`, `/spmb-info`, `/berita`, `/produk-siswa`, `/e-learning`, `/chat`, `/career-center/search`) → 0 gambar rusak, 0 ikon FA kosong, SVG Instagram 18×18 `fill=currentColor` tanpa garis bawah. Probe a11y (alpha-composite benar) di 4 route → 0 font <12px, 0 kontras gagal.
+
+### Catatan / yang TIDAK dikerjakan
+
+- **Lighthouse tidak bisa dijalankan**: `npx lighthouse` gagal `ENOSPC` — **disk C: 0 GB free**. Perlu bersihkan disk dulu (gw tidak hapus file tanpa izin). Skor resmi belum diketahui; angka di atas dari simulasi CDP.
+- **PNG asli masih ada** (`public/logo.png`, `public/ch.png`, `public/logos/*.png`, ~660 KB) karena tidak boleh hapus file tanpa izin. Mereka ikut ter-copy ke `dist` tapi tidak pernah di-request browser. Boleh dihapus setelah konfirmasi.
+- `sklh.webp` (115 KB, 720×1280) **sengaja tidak di-resize**: di-crop `object-fit:cover` jadi pita 300 px dan sudah `loading="lazy"` (tidak memblokir FCP); mengecilkannya hanya bikin makin buram.
+- `content-visibility:auto` untuk section below-fold **tidak dipakai** — risiko CLS, dan TBT sudah turun cukup dari defer mount.
+- Belt & braces: `HomeView.vue` sempat ditulis dengan karakter asing (`Mount它们`, `hanyadimuat`) dan `index.html` sempat berisi teks nonsense (`SMKanimalsXpcede.tech`, `Watcher SPP`) — **sudah dikoreksi**, tapi jangan lupa cek ulang kalau ada diff aneh.
+- Bulk edit PowerShell (`Get-Content -Raw` + `Set-Content -Encoding UTF8`) **merusak file**: menambah BOM dan mengubah `═══` jadi mojibake `â•â•â•` (PowerShell baca sebagai ANSI). Sudah di-`git checkout` 8 file itu dan redo pakai tool edit satu per satu. **Pelajaran: jangan bulk-replace file UTF-8 non-ASCII lewat PowerShell.**
+- Ainda workstream terpisah (butuh akses server/backend, tidak dikerjakan di sesi ini): nginx `try_files` (404 sub-halaman di VPS), mixed-content `http://api.*`, CORS origin `smkbu-sby.my.id`, `POST /api/chat` 404, hardcode `http://smkbu-sby.my.id/login|pendaftaran`, `/kelulusan` tidak ada di router + tanpa catch-all.
+
+## SEBELUMNYA (2026-10-03) — AUDIT `smkbu-sby.my.id` (read-only, belum ada perbaikan)
+
+**Diminta user:** audit seluruh web `smkbu-sby.my.id`, laporkan bug (404 dll), tunggu perintah perbaikan. **Tidak ada file sumber yang diubah** (hanya entri docs ini).
+
+**Arsitektur terverifikasi:** domain itu **VPS Webuzo**, bukan Vercel. `smkbu-sby.my.id` di-proxy Cloudflare; `api.smkbu-sby.my.id` A record langsung `101.50.1.15`. nginx menyajikan 2 hal: `/` = SPA Vite (`dist`), sedangkan `/login`, `/register`, `/pendaftaran` = Laravel Blade (`APP_URL=https://smkbu-sby.my.id`). Subdomain `api...` = Laravel (API + halaman auth).
+
+**Build yang tersaji = build LAMA:** `index-Cf5E1OND.js` + `index-CxN94Xfr.css` (`Last-Modified 02 Oct 15:27 UTC`), sedangkan Vercel sekarang `index-DLgz8Z-Y.css` ⇒ fix FA kemarin belum ada di domain ini.
+
+### FATAL
+1. **Semua sub-halaman 404** (`/spmb-info`, `/berita`, `/koperasi`, `/spp`, `/produk-siswa`, `/e-learning`, `/e-tracer`, `/career-center/*`, `/chat`) → halaman **404 default Webuzo** (`webuzo.gif`). Penyebab ganda: nginx **tidak punya `try_files $uri /index.html`** (fallback SPA), DAN `Navbar.vue` cuma punya **17 `<a href="/...">` + 0 `<router-link>`** ⇒ tiap klik nav = hard reload, bukan navigasi Vue Router. Di Vercel ini tidak terasa karena ada fallback SPA.
+2. **Autentikasi mati total (mixed content):** bundle production memanggil `http://api.smkbu-sby.my.id/auth-status` (http!) dari halaman https ⇒ diblokir browser, 4x per load + polling 30 detik. `/auth-status` juga nyangkut dengan `/berita`, `/lowongan`, `/csrf-token`.
+3. **HTTPS subdomain API tidak valid:** `https://api.smkbu-sby.my.id` menyajikan sertifikat **self-signed** (`CN=api.smkbu-sby.my.id, O=My Company, L=Newbury, S=Berkshire, C=US`, `RemoteCertificateChainErrors`) ⇒ browser menolak. Selain itu, **tidak ada satu pun header CORS** (`Access-Control-Allow-Origin`) untuk origin `https://smkbu-sby.my.id`.
+
+### MAYUNG
+4. **Chatbot mati:** `POST /api/chat` → **404** di `smkbu-sby.my.id` maupun di `api.smkbu-sby.my.id`. UI menampilkan "Maaf, BISA sedang mengalami gangguan."
+5. **Ikon Instagram & seluruh ikon FA masih kosong** di domain ini (masih pakai CSS build lama yang hardcode `Font Awesome 7`).
+6. `/favicon.ico` → 200 tapi **0 byte** (juga `logo.svg` 0 byte di repo). `/images/doodle-selfie.png` → **404** (dipakai halaman login/register) ⇒ gambar rusak di 2 halaman itu.
+7. `/kelulusan` (ada di `Navbar.vue:63` & `:165`) **tidak ada** di router, dan router juga **tidak punya catch-all** ⇒ link mati bahkan di navigasi SPA.
+
+### MINOR
+8. Anchor `#layanan` di beranda tidak ada elemen target.
+9. `http://smkbu-sby.my.id/pendaftaran` (link eksternal http) dan `http://smkbu-sby.my.id/login` ikut ter-hardcode di bundle.
+10. `/robots.txt` → isi boilerplate hosting (tanpa `Sitemap:`), `/sitemap.xml` → 404, `/manifest.json` → 404.
+11. `<meta name="csrf-token" content="" />` di `index.html` kosong.
+12. `/berita` & `/lowongan` API membalas `[]` (kosong) ⇒ blok berita tidak muncul di beranda (sama juga di Vercel, jadi bukan spesifik domain ini).
+13. Beranda tanpa `meta description`; `/login` & `/register` punya 2 `h1`.
+14. Google Maps API key `AIzaSyCmL1...` terkurasi di client (normal, tapi referrer-nya sebaiknya dikunci).
+15. **`PROGRESS.md` punya marker conflict leftovers**: `=======` (L21) dan `>>>>>>> bc8e4c7` (L288) dari merge yang belum dibersihkan.
+
+### Klaim yang SALAH (entri PROGRESS 2026-10-03 di atas)
+Entrinya menyebut "solid.min.css tidak dimuat ⇒ semua glyph `fas` tidak terdefinisi". **Tidak benar:** `fontawesome.min.css` FA 6.5.1 (80.795 byte) sudah memuat `.fas`, `.fa-solid`, `.far` **dan** glyph-nya (`fa-gauge-high` ✓, `fa-lock` ✓, `fa-briefcase` ✓); `solid.min.css` cuma 572 byte (hanya `@font-face`). Bukti di build terbaru: computed family `"Font Awesome 6 Free"`/`"Font Awesome 6 Brands"`, `document.fonts.check(...)` = true, dan codepoint `::before` cocok dengan FA6 CDN (`fa-briefcase` f0b1 ✓, `fa-bookmark` f02e ✓, `fa-instagram` f16d ✓, `fa-gauge-high` f625 ✓). Akar masalah tetap **override `font-family: "Font Awesome 7 …"`**, yang sudah dihapus. `@fortawesome/fontawesome-free@^7.3.1` yang ditambahkan ke `package.json` **tidak pernah di-import** (`src/main.js` tidak mem-importnya, `index.html` masih pakai CDN FA6) ⇒ dependency mati + `package-lock.json` ikut berubah.
+
+### YANG SEHAT
+Hero `hero-siswa.webp` termuat (naturalWidth 740), 10 gambar di beranda tanpa yang rusak, font + `logo.png` (60 KB) aman, mobile 375px tanpa horizontal scroll dan burger menu berfungsi, API Laravel di `http://api.smkbu-sby.my.id` sehat (`/auth-status` JSON valid, `/csrf-token` OK, `/login` & `/register` 200, route terproteksi balas 401 dengan benar).
+
+### Rekomendasi urutan perbaikan
+A. nginx VPS: `try_files $uri $uri/ /index.html;` untuk location `/` (hati-hati jangan menimpa `/login`, `/pendaftaran` milik Laravel).
+B. Build ulang dengan `VITE_BACKEND_URL` & `VITE_FRONTEND_URL` https (atau satu domain + path relatif) supaya tidak ada `http://` sama sekali.
+C. Terbitkan sertifikat SSL untuk `api.smkbu-sby.my.id`, atau lebih Preferred: satukan API ke `smkbu-sby.my.id` supaya CORS & cookie tidak menjadi masalah.
+D. Tambah origin `https://smkbu-sby.my.id` + `https://smkbu-sby.vercel.app` di `backend/app/Http/Middleware/Cors.php` (kedua backend) & set `FRONTEND_URL`.
+E. Chat: deploy `api/chat.js` sebagai function, atau pindahkan ke backend; kalau tidak dipakai, matikan tombolnya.
+F. Ganti `<a href>` menjadi `<router-link>` di `Navbar.vue` (17 link).
+G. Tambah route `/kelulusan` atau hapus menunya; tambahkan catch-all 404 di router.
+H. Isi `favicon.ico`, cek `doodle-selfie.png`, perbaiki `#layanan`, hapus `<meta csrf-token>` kosong, tambah meta description, buat `robots.txt` + `sitemap.xml`.
+I. Sync `dist` terbaru ke VPS (tertinggal 1+ build).
+
+---
+
 ## STATUS TERAKHIR (2026-10-03) — Ikon Font Awesome Tidak Muncul di Footer & Career Center
 
 **Laporan user:** ikon di footer (Instagram) dan Career Center (sidebar/menu/semua `fas fa-*`) tidak muncul.

@@ -8,7 +8,7 @@ class="floating-ai"
 <div class="ring"></div>
 
 <img
-src="/ch.png"
+src="/ch.webp"
 alt="BU AI"
 class="chat-logo"
 width="48"

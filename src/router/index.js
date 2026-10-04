@@ -1,10 +1,15 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthSession, BACKEND } from "../composable/useAuthSession";
+// ponytail: HomeView di-import STATIS (bukan dynamic import). Route "/" adalah
+// landing page — kalau dynamic, browser baru tahu chunk-nya SETELAH index.js
+// selesai parse, jadi FCP/LCP nunggu satu round-trip extra ke chunk HomeView.
+// Semua route lain tetap lazy (hanyadimuat saat benar-benar dibuka).
+import HomeView from "../views/HomeView.vue";
 
 const routes = [
   {
     path: "/",
-    component: () => import("../views/HomeView.vue"),
+    component: HomeView,
   },
   {
     path: "/login",

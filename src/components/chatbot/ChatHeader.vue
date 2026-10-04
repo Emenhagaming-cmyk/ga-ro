@@ -9,7 +9,7 @@
 
     <div class="info">
 
-      <img src="/ch.png" class="avatar">
+      <img src="/ch.webp" class="avatar" width="40" height="40" alt="BISA">
 
       <div>
 

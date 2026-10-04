@@ -4,7 +4,7 @@
 
     <aside class="career-sidebar" :class="{ open: sidebarOpen }">
       <div class="sidebar-brand">
-        <img src="/logo.png" alt="Logo" />
+        <img src="/logo.webp" alt="Logo" />
         <div>
           <span class="brand-name">Career Center</span>
           <span class="brand-sub">SMK Bahrul Ulum</span>

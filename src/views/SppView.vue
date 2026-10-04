@@ -58,7 +58,7 @@ onMounted(loadData);
         <button class="spp-back" @click="goBack" aria-label="Kembali">
           <ChevronLeft :size="18" :stroke-width="2.5" />
         </button>
-        <img src="/logo.png" alt="Logo Sekolah" class="spp-logo" />
+        <img src="/logo.webp" alt="Logo Sekolah" class="spp-logo" />
         <span class="spp-brand">SPP</span>
       </div>
       <button class="spp-refresh" @click="loadData" aria-label="Muat ulang">
