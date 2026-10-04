@@ -24,7 +24,11 @@ Semuanya kini `${BACKEND}` (sumber tunggal = `useAuthSession.js`):
 
 ### 3. `Cors` didaftarkan di panel admin
 
-`backend-admin/bootstrap/app.php` → `Cors::class` di-`prepend` ke group `web`. Prepend (bukan append) supaya header tetap terkirim pada respons redirect/403. Alias `role` + `PreventBrowserCache` + `HandleTokenMismatch` tetap sama.
+`backend-admin/bootstrap/app.php` → `$middleware->prepend(Cors::class)` ke stack **global**, sama seperti `backend/`. Alias `role` + `PreventBrowserCache` + `HandleTokenMismatch` tetap sama.
+
+Kenapa global dan bukan `web(prepend: [Cors])`: kalau Cors berada *di dalam* group `web`, ia jalan **setelah** `HandleTokenMismatch`, dan begitu handler 419 mengubah respons jadi redirect, Cors tidak pernah sempat menambah header. Terbukti di produksi: `POST /login` (419 → 302) **tidak** membawa `Access-Control-Allow-Origin` sampai Cors dipindah ke prepend global. Hasil setelah dipindah — `POST /login` 302, `GET /admin` 302, `GET /up` 200 (health route juga kena karena global), semuanya membawa ACAO untuk origin Vercel, sedangkan origin asing tetap nihil header.
+
+Alias `role`, `PreventBrowserCache`, dan `HandleTokenMismatch` tidak berubah.
 
 ### 4. Deploy + verifikasi (ketiga app)
 

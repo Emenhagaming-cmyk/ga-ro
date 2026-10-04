@@ -22,12 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
             PreventBrowserCache::class,
         ]);
 
+        // Cors di-prepend ke stack GLOBAL (sama seperti backend/), bukan(group web:
+        // dia harus membungkus HandleTokenMismatch, kalau tidak header CORS hilang
+        // tepat di respons yang paling butuh — redirect 419/403. Dulu file Cors ada
+        // tapi tidak pernah didaftarkan = dead code.
+        $middleware->prepend(Cors::class);
+
         $middleware->web(prepend: [
             HandleTokenMismatch::class,
-            // Cors ikut dipasang di sini (dulu filenya ada tapi tidak pernah
-            // didaftarkan = dead code). Prepend -> jalan sebelum middleware lain
-            // supaya header CORS tetap terkirim pada respons redirect/403.
-            Cors::class,
         ]);
 
         $middleware->alias([
