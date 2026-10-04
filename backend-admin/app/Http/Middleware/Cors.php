@@ -15,13 +15,22 @@ class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $allowedOrigins = [
-            env('FRONTEND_URL', 'http://leon.smkbu-sby.my.id'),
+        // ponytail: allowlist sama seperti backend/ + early return untuk origin tak dikenal.
+        // Versi lama pakai reset($allowedOrigins) sehingga origin asing tetap dapat header
+        // Access-Control-Allow-Origin (menunjuk domain yang salah).
+        $allowedOrigins = array_values(array_unique(array_filter([
+            'https://smkbu-sby.vercel.app',
+            env('FRONTEND_URL'),
+            'https://smkbu-sby.my.id',
+            'http://smkbu-sby.my.id',
             'http://localhost:5174',
-        ];
+        ])));
 
         $origin = $request->header('Origin');
-        $allowOrigin = in_array($origin, $allowedOrigins) ? $origin : reset($allowedOrigins);
+        if (!in_array($origin, $allowedOrigins, true)) {
+            return $next($request);
+        }
+        $allowOrigin = $origin;
 
         if ($request->isMethod('OPTIONS')) {
             return response('', 204)

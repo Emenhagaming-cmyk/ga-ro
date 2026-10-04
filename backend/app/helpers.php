@@ -30,7 +30,10 @@ function formatPeriodeShort(string $periode): string
  */
 function frontendAuthUrl(): string
 {
-    $frontend = env("FRONTEND_URL", "http://smkbu-sby.my.id");
+    // ponytail: default = domain frontend produksi (Vercel, HTTPS). Nilai lama
+    // http://smkbu-sby.my.id = HTTP tanpa TLS dan domain yang sudah diaudit bermasalah.
+    // FRONTEND_URL tidak ada di backend/vercel.json, jadi default ini yang dipakai di production.
+    $frontend = rtrim(env("FRONTEND_URL", "https://smkbu-sby.vercel.app"), '/');
     $payload = ["logged_in" => false, "role" => null, "name" => null, "avatar" => null, "has_pendaftaran" => false, "status" => null];
 
     if (auth()->check()) {

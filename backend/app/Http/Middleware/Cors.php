@@ -15,11 +15,15 @@ class Cors
      */
     public function handle(Request $request, Closure $next): Response
     {
-$allowedOrigins = [
+// ponytail: allowlist = domain frontend produksi (Vercel) + VPS + dev lokal.
+        // Default env() dipakai hanya kalau FRONTEND_URL belum di-set.
+        $allowedOrigins = array_values(array_unique(array_filter([
             'https://smkbu-sby.vercel.app',
-            env('FRONTEND_URL', 'http://leon.smkbu-sby.my.id'),
+            env('FRONTEND_URL'),
+            'https://smkbu-sby.my.id',
+            'http://smkbu-sby.my.id',
             'http://localhost:5174',
-        ];
+        ])));
 
         $origin = $request->header('Origin');
         // Hanya kirim CORS header untuk origin yang dikenal; selain itu biarkan kosong.

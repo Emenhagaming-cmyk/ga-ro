@@ -11,7 +11,20 @@ use App\Http\Controllers\KoperasiController;
 // Panel admin terpisah dari web utama (spmb-backend-self.vercel.app)
 // Database sama (TiDB) — data yang dimonitor = data dari web utama.
 
-Route::get('/', fn () => redirect('/admin'));
+// Root: arahkan sesuai sesi — supaya tidak ada rantai / -> /admin -> /login -> / (loop).
+Route::get('/', function () {
+    $user = auth()->user();
+
+    if (!$user) {
+        return redirect()->route('login');
+    }
+
+    if ($user->role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
+    abort(403, 'Hanya akun admin yang dapat mengakses panel ini.');
+});
 
 // Auth (admin only — role dicek di AuthController::login)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');

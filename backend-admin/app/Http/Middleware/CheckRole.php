@@ -30,6 +30,9 @@ class CheckRole
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        return redirect()->route('login')->withErrors(['username' => 'Anda tidak memiliki akses ke halaman ini.']);
+        // ponytail: sudah login tapi role salah -> 403, JANGAN redirect ke /login.
+        // Redirect itu bikin loop: /login (middleware guest) -> / (tidak ada route
+        // 'dashboard'/'home' jadi defaultRedirectUri() jatuh ke '/') -> /admin -> /login -> ...
+        abort(403, 'Akun Anda tidak memiliki akses ke panel admin ini.');
     }
 }
