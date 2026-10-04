@@ -27,12 +27,18 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - `backend/`: **39 passed** (144 assertions) — fix #6 aman untuk SPP/kasir/guru.
 - `backend-admin/`: 2 failed / 1 passed = **baseline merah yang sudah diketahui** (`ExampleTest` mau 200 tapi `/` memang 302 → `/admin`; `RegistrationInsightServiceTest` karena service di-pangkas jadi fallback). Tidak ada gagal baru.
 
+### Ship
+
+- Commit **`7623263`** (`fix: perbaiki 9 bug panel admin`) + **push** ke `origin/main` (`323e903..7623263`).
+- Deploy `spmb-admin` **sukses** → `https://paneladminsmkbu.vercel.app` (auto-alias jalan, tidak perlu `alias set`).
+- Verifikasi produksi: `/` = 302, `/login` = 200 (9.6 KB, CSRF token valid), `/admin` tanpa sesi = 302, **`POST /login` password salah = 302 (bukan 500)** → query `users` di TiDB production jalan normal, DB tidak rusak.
+- **Gotcha Vercel CLI di mesin ini:** `vercel deploy` tanpa `--scope` gagal `Error: Not authorized` walau `whoami` normal — project `spmb-admin` ada di team `zakkys-projects-99c4bf23`, sedangkan CLI default ke scope personal. Perintah yang dipakai: `C:\nvm4w\nodejs\vercel.cmd deploy --prod --yes --scope zakkys-projects-99c4bf23` (cwd = `backend-admin/`).
+
 ### Tidak dikerjakan (disengaja)
 
 - **#4 DB lokal**: `.env` admin masih sqlite dan 3 migration MySQL-only tanpa driver guard menghentikan `migrate` → tabel `beritas`/`tabungans`/`spp_*` tidak ada lokal. **User intranet pakai DB Webuzo**, jadi ini dibiarkan.
 - `AuthController::register` dan `AuthController::authStatus` juga **tidak ter-route** di admin, tapi **dipakai** — `register` masih hidup secara kode dan `authStatus` sengaja ada di kedua backend (lihat `AGENTS.md`). Tidak dihapus.
 - **#11** (redirect loop sesi non-admin) dan default `FRONTEND_URL` menua di `backend/app/helpers.php` (`http://smkbu-sby.my.id`) + `backend/app/Http/Middleware/Cors.php` (`leon.smkbu-sby.my.id`) belum disentuh — di luar scope panel admin.
-- Belum commit/push/deploy.
 
 ## SEBELUMNYA (2026-10-04) — OPTIMASI PERFORMA FRONTEND (sudah commit `323e903` + `826b4f0`, belum deploy ulang)
 

@@ -48,8 +48,15 @@ php artisan key:generate  # .env.example punya APP_KEY kosong
 
 **Execution policy (verified):** PowerShell memblokir semua `.ps1` di mesin ini.
 `npm`, `vercel`, `npx` polos = error `cannot be loaded because running scripts is disabled`.
-Selalu tulis **`npm.cmd` / `vercel.cmd`** (`vercel.cmd` ada di `$env:APPDATA\npm\`, bukan
-`C:\nvm4w\nodejs\` seperti tertulis di `IMPLEMENTATION_SUMMARY.md`).
+Selalu tulis **`npm.cmd` / `vercel.cmd`**. Path yang benar (verified 2026-10-04):
+`npm.cmd` = `C:\nvm4w\nodejs\npm.cmd`, `vercel.cmd` = **`C:\nvm4w\nodejs\vercel.cmd`**
+(bukan `$env:APPDATA\npm\` — folder itu tidak ada di mesin ini; catatan lama di
+`IMPLEMENTATION_SUMMARY.md` juga salah soal ini).
+
+**Deploy wajib pakai `--scope`:** tanpa itu `vercel deploy` gagal `Error: Not authorized`
+meskipun `vercel whoami` normal, karena ketiga project Vercel ada di **team**
+`zakkys-projects-99c4bf23` sedangkan CLI default ke scope personal. Perintah:
+`& "C:\nvm4w\nodejs\vercel.cmd" deploy --prod --yes --scope zakkys-projects-99c4bf23`.
 
 Isi `.env` lokal: DB harus **MySQL** Laragon (`DB_CONNECTION=mysql`, db `pendaftaran_db`,
 `127.0.0.1:3306`, user `root`, password kosong) + `FRONTEND_URL=http://localhost:5174`.
