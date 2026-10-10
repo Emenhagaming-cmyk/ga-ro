@@ -2,6 +2,40 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-10) — RATE LIMIT LOGIN (LARAVEL) + TEMUAN STACK VPS
+
+Fokus permintaan user: pasang proteksi brute-force `POST /login` saja (panduan "Penanganan Spam Login"). Poin #1/#2 (pulihkan MariaDB, session) & #5-#7 **tidak** dikerjakan sesi ini.
+
+### 1. Temuan arsitektur penting (dari luar, read-only)
+
+Situs ternyata **dua stack berbeda**, bukan satu:
+
+| | Stack LAMA (dipakai juri) | Stack BARU (repo ini) |
+|---|---|---|
+| SPA | `smkbu-sby.my.id` — build lama `index-8lOPjcun.js`, `preconnect https://api.smkbu-sby.my.id` | `smkbu-sby.vercel.app` — build repo `index-D31WrddD.js`, `preconnect https://pendaftaranspmb.vercel.app` |
+| API | `api.smkbu-sby.my.id` (Laravel 12.64.0/PHP 8.2.33) → `leon_db` | `pendaftaranspmb.vercel.app` → TiDB `pendaftaran_db` |
+| Status saat dicek | **MATI** (semua route 500) | hidup, tapi data kosong (`/berita` = `[]`) |
+
+- `api.smkbu-sby.my.id` + `smkbu-sby.my.id/login` sama-sama 500 dengan `SQLSTATE[HY000] [2002] Connection refused (Host: 127.0.0.1, DB: leon_db, SQL: select * from sessions)`. Artinya `SESSION_DRIVER=database` + **MariaDB VPS sedang tidak jalan**. `APP_DEBUG=true` → stack trace 908 KB bocor publik.
+- `leon_db` **tidak ada di repo** (hanya `.env.example` yang di-track; `.env`/`.env.deploy` untracked). `.env.deploy` lokal sudah punya `SESSION_DRIVER=file` + `CACHE_STORE=array`.
+- Frontend sekarang menunjuk Vercel (`pendaftaranspmb.vercel.app`, DB kosong) sedangkan user bilang `leon_db` yang otoritatif → arah produksi **belum diputuskan** (A: VPS lama, B: Vercel baru).
+
+### 2. Rate limit login (yang dikerjakan)
+
+- `backend/app/Providers/AppServiceProvider.php` — `boot()` dulu kosong, kini mendefinisikan `RateLimiter::for('login')` dengan **dua Limit** (bukan satu `username|ip`): `5/menit per-IP` + `10/menit per-kredensial` (input `username`, di-lowercase). Dua-duanya harus lolos.
+- `backend/routes/web.php:21` — `throttle:5,1` → `throttle:login` (middleware `guest` & `name('login')` di GET tidak disentuh).
+- `backend/bootstrap/app.php` — renderer `ThrottleRequestsException`: JSON 429 untuk `expectsJson`, guard `hasSession`, selain itu `back()->withErrors(['username' => '...'])->withInput('username')`. Pesan umum (tidak membocorkan apakah akun ada).
+- **Mirror** ke `backend-admin/`: `AppServiceProvider.php` (limiter sama), `routes/web.php:31` (`POST /login` sebelumnya **tanpa throttle sama sekali**), `bootstrap/app.php` (renderer sama).
+- `backend/tests/Feature/LoginRateLimitTest.php` (baru) — 3 test: blokir percobaan ke-6 per-IP, limit per-akun lepas dari IP (spoof XFF), ganti username dari IP sama tetap kena limit IP. Pakai `Schema::create('users')` pola test SPP (tanpa `RefreshDatabase`).
+- **`php artisan test` di `backend/`: 42 passed** (baseline 39 + 3 baru), 183 assertions.
+
+### Catatan / belum
+
+- **Koreksi vs panduan user:** Cloudflare **Free** tidak punya field `http.request.method` (hanya Path + Verified Bot, period 10 dtk, 1 rule) → rule di panduan akan ditolak. Langkah Cloudflare (#4) belum diterapkan (butuh dashboard user).
+- `trustProxies(at:'*')` masih `'*'` → limit per-IP di production **bisa dipalsukan** via `X-Forwarded-For`; disengaja belum diubah (scope #3/#4).
+- Limiter pakai cache default; di VPS/Vercel `CACHE_STORE=database` → counter disimpan di MySQL (kalau DB down, throttle ikut 500). Test pakai `array` (dari `phpunit.xml`).
+- Deploy ke VPS (`api.smkbu-sby.my.id`) belum; belum ada script deploy VPS di repo.
+
 ## STATUS TERAKHIR (2026-10-04, lanjutan 2) — HOST BACKEND FRONTEND DIPERSEBERATKAN + KETIGA APP LIVE
 
 Tiga deployable sekarang **sudah production** dan terverifikasi. Permintaan user: bereskan `Cors` panel (keputusan: **daftarkan**, bukan hapus), jangan commit test sementara, dan lanjutkan perbaikan host backend frontend.

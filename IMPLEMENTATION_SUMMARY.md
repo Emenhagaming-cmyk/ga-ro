@@ -213,6 +213,7 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 
 ### Security Hardening
 - Rate limiting, CSRF aktif, security headers
+- **Login rate limit** (`throttle:login`, kedua backend): `RateLimiter::for('login')` di `AppServiceProvider@boot` — dua Limit = `5/menit per-IP` + `10/menit per-kredensial` (input `username`, di-lowercase). Dipasang di `POST /login`; renderer `ThrottleRequestsException` di `bootstrap/app.php` mengubah 429 jadi pesan ramah (JSON untuk `expectsJson`, `back()->withErrors` untuk form). GET `/login` & `name('login')` tidak diubah. Test: `backend/tests/Feature/LoginRateLimitTest.php`.
 - XSS chatbot (DOMPurify), upload hardening (mimetypes)
 - Race condition fix (DB::transaction + lockForUpdate)
 - IDOR prevention
@@ -281,4 +282,4 @@ cd C:\Users\LENOVO\lomba\ga-ro
 
 ---
 
-## Last Updated: 2026-08-30
+## Last Updated: 2026-10-10
