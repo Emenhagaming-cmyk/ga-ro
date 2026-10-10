@@ -28,7 +28,7 @@ Route::get('/', function () {
 
 // Auth (admin only — role dicek di AuthController::login)
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest', 'throttle:login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 // Reset kata sandi (tanpa email sender: link ditampilkan langsung di halaman)

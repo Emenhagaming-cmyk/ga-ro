@@ -18,7 +18,7 @@ Route::get('/cs.png', fn () => response(file_get_contents(public_path('cs.png'))
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'login'])->middleware('guest', 'throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest', 'throttle:login');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register')->middleware('guest');
 Route::post('/register', [AuthController::class, 'register'])->middleware('guest', 'throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');

@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +22,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Throttle POST /login (panel admin): per-IP + per-kredensial.
+        // Kredensial di-lowercase supaya variasi huruf tidak menembus limit.
+        RateLimiter::for('login', function (Request $request) {
+            $identifier = mb_strtolower(trim((string) $request->input('username')));
+
+            return [
+                Limit::perMinute(5)->by('login:ip:'.$request->ip()),
+                Limit::perMinute(10)->by('login:user:'.$identifier),
+            ];
+        });
     }
 }
