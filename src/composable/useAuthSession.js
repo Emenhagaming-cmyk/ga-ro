@@ -4,7 +4,7 @@ import { ref } from "vue";
 // VITE_BACKEND_URL ngawur ( pernah ketemu isinya base64 bukan URL ), jadi nilai
 // env divalidasi dulu — kalau bukan http(s) DIABAIKAN, bukan dipakai. Tanpa ini
 // satu env salah = semua fetch bocor diam-diam ke host ngawur.
-const PROD_BACKEND = "https://pendaftaranspmb.vercel.app";
+const PROD_BACKEND = "https://api.smkbu-sby.my.id";
 const envBackend = String(import.meta.env.VITE_BACKEND_URL || "");
 const BACKEND = /^https?:\/\//i.test(envBackend)
   ? envBackend.replace(/\/+$/, "")
