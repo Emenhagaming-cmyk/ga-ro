@@ -1,4 +1,16 @@
 import { getKnowledge } from "./knowledge/registry.js"
+
+const MAX_CHAT_PER_SESSION = 50
+
+const SESSION_LIMIT_MESSAGE = `Wah, terima kasih sudah bertanya! Saya sudah mencapai batas maksimal percakapan sehari ini (50 chat).
+Tetap saja, saya masih bisa bantu jawab soal sekolah seputar profil, fasilitas, PPDB, dll.
+Untuk informasi lebih lanjut, hubungi:
+📞 (031) 9953 9925
+🌐 https://smkbahrululumsurabaya.sch.id
+📷 @smkbu.sby (Instagram)
+
+Atau kunjungi website resmi untuk detail lainnya. Terima kasih!`
+
 export default async function handler(req, res) {
 
   if(req.method !== "POST"){
@@ -32,6 +44,14 @@ export default async function handler(req, res) {
   if (sanitized.length === 0) {
     return res.status(400).json({
       reply: "Pesan tidak boleh kosong."
+    })
+  }
+
+  // Session limit check (dikirim dari frontend via localStorage)
+  const sessionCount = Number(req.body?.sessionCount || 0)
+  if (sessionCount >= MAX_CHAT_PER_SESSION) {
+    return res.status(200).json({
+      reply: SESSION_LIMIT_MESSAGE
     })
   }
 
