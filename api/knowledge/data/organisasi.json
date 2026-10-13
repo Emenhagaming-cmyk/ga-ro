@@ -1,0 +1,70 @@
+﻿{
+  "keywords": ["organisasi", "osis", "ekstrakurikuler", "ekskul", "pramuka", "pmr", "rohis", "karang", "taruna", "struktur", "pengurus"],
+  "priority": 70,
+  "data": {
+    "nama": "Organisasi Siswa & Ekstrakurikuler",
+    "organisasi": [
+      {
+        "nama": "OSIS (Organisasi Siswa Intra Sekolah)",
+        "jenis": "Organisasi Utama",
+        "visi": "Mewujudkan siswa yang berkarakter, berprestasi, dan berwawasan lingkungan",
+        "misi": ["Mengembangkan kepemimpinan siswa", "Menyelenggarakan kegiatan siswa bermakna", "Menjembatani komunikasi siswa-sekolah"],
+        "struktur": {
+          "ketua": "Muhammad Rizki (XII RPL)",
+          "wakil": "Siti Aisyah (XI RPL)",
+          "sekretaris": "Ahmad Fauzi (X RPL)",
+          "bendahara": "Citra Dewi (X RPL)"
+        },
+        "kegiatan_rutin": ["Hari Kartini", "Bakti Sosial", "Pemilihan OSIS", "Study Tour", "Festival Seni"]
+      },
+      {
+        "nama": "Pramuka",
+        "jenis": "Ekstrakurikuler Wajib",
+        "tingkat": "Penegak / Pandega",
+        "pembina": "Eko Prasetyo, S.Pd",
+        "kegiatan": ["Kemah Berkala", "Upacara Bendera", "Bakti Alam", "Jambore", "Kesehatan Lingkungan"],
+        "prestasi": ["Juara Parade Pramuka Tingkat Kota 2024"]
+      },
+      {
+        "nama": "PMR (Palang Merah Remaja)",
+        "jenis": "Ekstrakurikuler",
+        "pembina": "Dewi Sartika, S.Pd",
+        "kegiatan": ["Donor Darah Rutin", "Pelatihan P3K", "Simulasi Bencana", "Kampanye Kesehatan"],
+        "prestasi": ["Sekolah Donor Darah Teraktif Kota Surabaya 2025"]
+      },
+      {
+        "nama": "Rohis (Rohani Islam)",
+        "jenis": "Ekstrakurikuler",
+        "pembina": "H. Muhammad Yasin, S.Ag",
+        "kegiatan": ["Kajian Rutin", "Sholat Berjamaah", "Ramadhan Berbagi", "Maulid Nabi", "Islamic Camp"],
+        "catatan": "Berkolaborasi dengan Pondok Pesantren Bahrul Ulum"
+      },
+      {
+        "nama": "Robotik & IoT Club",
+        "jenis": "Ekstrakurikuler Pilihan",
+        "pembina": "Budi Santoso, S.T., M.T",
+        "kegiatan": ["Workshop Arduino/Raspberry Pi", "Lomba Robot Line Follower", "IoT Smart Home Project", "Maker Faire"],
+        "prestasi": ["Finalis Lomba Robotik Nasional 2025"]
+      },
+      {
+        "nama": "Coding Club",
+        "jenis": "Ekstrakurikuler Pilihan",
+        "pembina": "Ahmad Fauzi, S.Kom., M.Kom",
+        "kegiatan": ["Algorithm Practice", "Competitive Programming", "Hackathon Internal", "Open Source Contribution"],
+        "prestasi": ["Banyak alumni jadi Software Engineer di startup ternama"]
+      },
+      {
+        "nama": "Multimedia & Design Club",
+        "jenis": "Ekstrakurikuler Pilihan",
+        "pembina": "Siti Nurhaliza, S.Kom",
+        "kegiatan": ["Video Editing", "Motion Graphics", "Photography", "UI/UX Workshop", "Portfolio Building"],
+        "prestasi": ["Juara Desain Poster Nasional 2024"]
+      },
+      {
+        "nama": "Karang Taruna",
+        "jenis": "Organisasi Lingkungan",
+        "deskripsi": "Kolaborasi dengan Karang Taruna Kelurahan Putat Jaya untuk kegiatan lingkungan & sosial"
+      }
+    ]
+  }
+}

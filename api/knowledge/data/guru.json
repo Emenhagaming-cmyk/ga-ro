@@ -1,0 +1,88 @@
+﻿{
+  "keywords": ["guru", "pengajar", "dosen", "instruktur", "walikelas", "kepala", "program", "keahlian", "staff", "pegawai"],
+  "priority": 75,
+  "data": {
+    "nama": "Data Guru & Staf Pengajar",
+    "guru": [
+      {
+        "nip": "197501012000121001",
+        "nama": "Drs. H. Abdul Rohman, M.Pd",
+        "jabatan": "Kepala Sekolah",
+        "bidang": "Manajemen Pendidikan",
+        "kontak": "kepsek@smkbu.sch.id"
+      },
+      {
+        "nip": "198002152005011002",
+        "nama": "Ahmad Fauzi, S.Kom., M.Kom",
+        "jabatan": "Waka Kurikulum / Guru RPL",
+        "bidang": "Rekayasa Perangkat Lunak",
+        "mata_pelajaran": ["Pemrograman Dasar", "Database", "Web Development"],
+        "kontak": "ahmad.fauzi@smkbu.sch.id"
+      },
+      {
+        "nip": "198503202010012003",
+        "nama": "Siti Nurhaliza, S.Kom",
+        "jabatan": "Guru RPL / Walikelas X",
+        "bidang": "Rekayasa Perangkat Lunak",
+        "mata_pelajaran": ["Mobile Development", "UI/UX Design", "Project Management"],
+        "kontak": "siti.nurhaliza@smkbu.sch.id"
+      },
+      {
+        "nip": "199004102015022004",
+        "nama": "Budi Santoso, S.T., M.T",
+        "jabatan": "Guru RPL / Koordinator PKL",
+        "bidang": "Jaringan & Sistem",
+        "mata_pelajaran": ["Jaringan Komputer", "Keamanan Siber", "Praktikum PKL"],
+        "kontak": "budi.santoso@smkbu.sch.id"
+      },
+      {
+        "nip": "198807252012012005",
+        "nama": "Dewi Sartika, S.Pd",
+        "jabatan": "Guru Matematika & BK",
+        "bidang": "Matematika & Bimbingan Konseling",
+        "mata_pelajaran": ["Matematika", "Bimbingan Konseling", "PKK"],
+        "kontak": "dewi.sartika@smkbu.sch.id"
+      },
+      {
+        "nip": "198211302008011006",
+        "nama": "Agus Wijaya, S.Pd",
+        "jabatan": "Guru Bahasa Indonesia & PKN",
+        "bidang": "Bahasa & Kewarganegaraan",
+        "mata_pelajaran": ["Bahasa Indonesia", "PKN", "Sejarah"],
+        "kontak": "agus.wijaya@smkbu.sch.id"
+      },
+      {
+        "nip": "199205152018022007",
+        "nama": "Rina Marlina, S.Pd",
+        "jabatan": "Guru Bahasa Inggris",
+        "bidang": "Bahasa Inggris",
+        "mata_pelajaran": ["Bahasa Inggris", "English for IT"],
+        "kontak": "rina.marlina@smkbu.sch.id"
+      },
+      {
+        "nip": "197809052003121008",
+        "nama": "H. Muhammad Yasin, S.Ag",
+        "jabatan": "Guru PAI & Kesiswaan",
+        "bidang": "Pendidikan Agama Islam",
+        "mata_pelajaran": ["PAI", "Kesiswaan", "Akhlak"],
+        "kontak": "muhammad.yasin@smkbu.sch.id"
+      },
+      {
+        "nip": "198601202011022009",
+        "nama": "Eko Prasetyo, S.Pd",
+        "jabatan": "Guru PJOK & Pramuka",
+        "bidang": "Pendidikan Jasmani & Pramuka",
+        "mata_pelajaran": ["PJOK", "Pramuka", "Kesehatan"],
+        "kontak": "eko.prasetyo@smkbu.sch.id"
+      },
+      {
+        "nip": "199508102020022010",
+        "nama": "Fitri Handayani, S.Kom",
+        "jabatan": "Guru RPL / Asisten Lab",
+        "bidang": "Rekayasa Perangkat Lunak",
+        "mata_pelajaran": ["Basis Data", "Sistem Operasi", "Asisten Praktikum Lab"],
+        "kontak": "fitri.handayani@smkbu.sch.id"
+      }
+    ]
+  }
+}

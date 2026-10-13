@@ -22,9 +22,9 @@ const GUEST = {
   status: null,
 };
 
-// UI hanya membedakan admin vs siswa; role DB 'pendaftar' = siswa di frontend
+// UI hanya membedakan admin vs siswa; role DB 'pendaftar' = siswa di frontend HANYA kalau status diterima
 function norm(d) {
-  if (d && d.logged_in && d.role === "pendaftar") {
+  if (d && d.logged_in && d.role === "pendaftar" && d.status === "diterima") {
     return { ...d, role: "siswa" };
   }
   return d;

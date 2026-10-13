@@ -13,12 +13,14 @@ const routes = [
   },
   {
     path: "/login",
+    component: { template: "<div></div>" },
     beforeEnter: () => {
       window.location.href = `${BACKEND}/login`;
     },
   },
   {
     path: "/register",
+    component: { template: "<div></div>" },
     beforeEnter: () => {
       window.location.href = `${BACKEND}/register`;
     },

@@ -1,0 +1,86 @@
+﻿{
+  "keywords": ["pkl", "praktik", "kerja", "lapangan", "magang", "internship", "industri", "mitra", "tempat", "durasi", "laporan", "sertifikat"],
+  "priority": 85,
+  "data": {
+    "nama": "PKL (Praktik Kerja Lapangan) / Magang Industri",
+    "deskripsi_umum": "PKL adalah program wajib siswa SMK kelas XI/XII untuk mendapatkan pengalaman kerja nyata di industri mitra selama 3-6 bulan. SMK Bahrul Ulum bekerjasama dengan berbagai perusahaan IT, software house, dan startup.",
+    "durasi": "6 bulan (Semester genap kelas XI - semester ganjil kelas XII)",
+    "wajib": true,
+    "mitra_industri": [
+      {
+        "nama": "PT. Digital Solusi Indonesia",
+        "bidang": "Software Development & Web Agency",
+        "lokasi": "Surabaya",
+        "kuota": "5 siswa/tahun",
+        "fokus": "Web Development (Laravel, React), Mobile App (Flutter)",
+        "kontak": "hr@digitalsolusi.co.id"
+      },
+      {
+        "nama": "CV. Kreatif Nusantara",
+        "bidang": "UI/UX Design & Multimedia",
+        "lokasi": "Surabaya",
+        "kuota": "3 siswa/tahun",
+        "fokus": "UI/UX Design, Motion Graphics, Video Editing",
+        "kontak": "career@kreatifnusantara.com"
+      },
+      {
+        "nama": "PT. Jaringan Prima Teknologi",
+        "bidang": "Network Infrastructure & Cybersecurity",
+        "lokasi": "Sidoarjo",
+        "kuota": "4 siswa/tahun",
+        "fokus": "Network Admin, Server Management, Security Audit",
+        "kontak": "recruitment@jaringanprima.co.id"
+      },
+      {
+        "nama": "Startup EduTech \"BelajarKita\"",
+        "bidang": "EdTech Platform Development",
+        "lokasi": "Surabaya (Remote Hybrid)",
+        "kuota": "6 siswa/tahun",
+        "fokus": "Fullstack Development, API Design, Database Optimization",
+        "kontak": "jobs@belajarkita.id"
+      },
+      {
+        "nama": "Dinas Komunikasi Informatika Kota Surabaya",
+        "bidang": "Pemerintahan & E-Government",
+        "lokasi": "Surabaya",
+        "kuota": "3 siswa/tahun",
+        "fokus": "Sistem Informasi Pemerintahan, Data Center, Helpdesk IT",
+        "kontak": "diskominfo@surabaya.go.id"
+      },
+      {
+        "nama": "PT. Solusi Cloud Indonesia",
+        "bidang": "Cloud Computing & DevOps",
+        "lokasi": "Jakarta (Remote)",
+        "kuota": "2 siswa/tahun",
+        "fokus": "AWS/Azure, Docker/Kubernetes, CI/CD Pipeline",
+        "kontak": "talent@solusicloud.co.id"
+      }
+    ],
+    "prosedur": [
+      "Siswa mendaftar PKL via aplikasi sekolah / wali kelas",
+      "Koordinator PKL (Budi Santoso) matching siswa ke mitra sesuai minat/kompetensi",
+      "Surat resmi dikirim ke mitra industri",
+      "Wawancara & seleksi oleh mitra",
+      "Surat diterima PKL diterbitkan",
+      "PKL berlangsung 6 bulan dengan bimbingan pembina sekolah & mentor industri",
+      "Laporan PKL & presentasi akhir wajib",
+      "Sertifikat PKL dari mitra + sekolah diterbitkan"
+    ],
+    "persyaratan_siswa": [
+      "Kelas XI semester 2 / XII semester 1",
+      "Nilai rata-rata mata pelajaran RPL minimal 80",
+      "Lulus tes kemampuan teknis (coding test / practical test)",
+      "Surat izin orang tua/wali",
+      "Kartu Pelajar & KTP still valid",
+      "Asuransi kesehatan (BPJS Kesehatan/Kartu Indonesia Sehat)"
+    ],
+    "manfaat": [
+      "Pengalaman kerja nyata sebelum lulus",
+      "Portfolio project riil untuk lamaran kerja",
+      "Jaringan profesional (networking) dengan industri",
+      "Potensi direkrut jadi karyawan tetap di tempat PKL",
+      "SKPI (Surat Keterangan Pendamping Ijazah) lebih kaya",
+      "Bebas biaya PKL (dibiayai sekolah/mitra)"
+    ]
+  }
+}

@@ -73,6 +73,7 @@
                     <th>Nominal</th>
                     <th>Sisa</th>
                     <th>Catat Pembayaran</th>
+                    <th>Link Ortu</th>
                 </tr>
             </thead>
             <tbody>
@@ -100,6 +101,9 @@
                             <input type="number" name="amount" min="1" max="{{ $sisa }}" value="{{ $sisa }}" inputmode="numeric" required />
                             <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Bayar</button>
                         </form>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="generateOrtuLink({{ $bill->user->id }}, this)" style="white-space:nowrap;">Generate Link</button>
                     </td>
                 </tr>
                 @endforeach
@@ -139,3 +143,36 @@
     .sk-pay-form select, .sk-pay-form input[type="number"] { width: 100%; }
 }
 </style>
+
+<script>
+function generateOrtuLink(userId, btn) {
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+
+    fetch(`{{ route('spp.ortu-link', ['user' => ':userId']) }}`.replace(':userId', userId), {
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.url) {
+            navigator.clipboard.writeText(data.url).then(() => {
+                btn.textContent = 'Tersalin!';
+                setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 1500);
+            });
+        } else {
+            alert('Gagal generate link');
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(() => {
+        alert('Error generate link');
+        btn.textContent = originalText;
+        btn.disabled = false;
+    });
+}
+</script>

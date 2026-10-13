@@ -1,0 +1,59 @@
+﻿{
+  "keywords": ["faq", "pertanyaan", "sering", "tanya", "jawab", "panduan", "cara", "bagaimana", "apa", "mengapa"],
+  "priority": 95,
+  "data": {
+    "nama": "FAQ - Pertanyaan Sering Diajukan",
+    "faq": [
+      {
+        "pertanyaan": "Biaya pendaftaran SPMB berapa?",
+        "jawaban": "Biaya pendaftaran SPMB SMK Bahrul Ulum Surabaya gratis (Rp 0). Biaya sekolah (SPP, seragam, buku, dll) akan diinformasikan saat PPDB dibuka melalui website resmi.",
+        "kategori": "Biaya"
+      },
+      {
+        "pertanyaan": "Kapan jadwal PPDB dibuka?",
+        "jawaban": "Jadwal PPDB biasanya dibuka Juni-Juli setiap tahun. Informasi resmi tanggal pembukaan, pendaftaran, dan pengumuman selalu diumumkan di website sekolah dan Instagram @smkbu.sby.",
+        "kategori": "Jadwal"
+      },
+      {
+        "pertanyaan": "Syarat pendaftaran apa saja?",
+        "jawaban": "Syarat umum: (1) Lulusan SMP/MTs atau sederajat, (2) Fotokopi ijazah/SKL, (3) Fotokopi akta kelahiran, (4) Fotokopi KTP/KK, (5) Pas foto 3x4 (4 lembar), (6) Nilai raport semester 1-5. Syarat khusus RPL: minat di bidang IT/teknologi.",
+        "kategori": "Syarat"
+      },
+      {
+        "pertanyaan": "Bagaimana cara daftar online?",
+        "jawaban": "Cara daftar: (1) Buka website spmb.smkbu-sby.my.id atau smkbu-sby.vercel.app, (2) Klik tombol SPMB/Daftar, (3) Isi formulir data diri & orang tua, (4) Upload dokumen syarat, (5) Submit & simpan bukti pendaftaran.",
+        "kategori": "Cara Daftar"
+      },
+      {
+        "pertanyaan": "Apakah ada beasiswa/biaya terjangkau?",
+        "jawaban": "Ya, tersedia beasiswa prestasi akademik & non-akademik, beasiswa afirmasi untuk keluarga kurang mampu, serta kemitraan industri untuk program magang. Info detail hubungi bagian PPDB saat pembukaan.",
+        "kategori": "Beasiswa"
+      },
+      {
+        "pertanyaan": "Jurusan apa saja yang tersedia?",
+        "jawaban": "SMK Bahrul Ulum Surabaya fokus pada satu jurusan unggulan: RPL (Rekayasa Perangkat Lunak) dengan kompetensi pemrograman, web development, mobile development, database, dan UI/UX design.",
+        "kategori": "Jurusan"
+      },
+      {
+        "pertanyaan": "Jam sekolah & kegiatan ekstrakurikuler?",
+        "jawaban": "Jam sekolah Senin-Jumat 07.00-15.00 WIB, Sabtu kegiatan ekstrakurikuler. Ekskul: Pramuka, PMR, Robotik, Coding Club, Multimedia, Olahraga (Futsal, Basket, Voli), Seni Tari, Karawitan.",
+        "kategori": "Aktivitas"
+      },
+      {
+        "pertanyaan": "Fasilitas apa saja yang tersedia?",
+        "jawaban": "Lab Komputer, Lab Jaringan, Studio Multimedia, Perpustakaan Digital, Aula Serba Guna, Lapangan Olahraga, Koperasi Sekolah, Kantin, Mushola, Parkir Motor.",
+        "kategori": "Fasilitas"
+      },
+      {
+        "pertanyaan": "Alamat & kontak sekolah?",
+        "jawaban": "Jl. Banyu Urip Kidul Molin IIB/69, Putat Jaya, Sawahan, Surabaya. Telp: (031) 9953 9925. Email: smk.bahrululum@gmail.com. Instagram: @smkbu.sby. Maps: https://maps.app.goo.gl/EiMXnGQWQCSyBTof8",
+        "kategori": "Kontak"
+      },
+      {
+        "pertanyaan": "Bagaimana sistem pembayaran SPP & tabungan?",
+        "jawaban": "SPP dibayar bulanan via aplikasi/kasir sekolah. Tabungan siswa dikelola koperasi, bisa setor/tarik via aplikasi. Orang tua bisa cek tagihan SPP via link khusus tanpa login.",
+        "kategori": "Keuangan"
+      }
+    ]
+  }
+}

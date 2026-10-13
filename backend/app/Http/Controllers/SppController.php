@@ -6,6 +6,7 @@ use App\Models\SppBill;
 use App\Models\SppPayment;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class SppController extends Controller
 {
@@ -48,9 +49,7 @@ class SppController extends Controller
         $bill = SppBill::findOrFail($data['bill_id']);
 
         if ($bill->user->role !== 'siswa') {
-            return $request->expectsJson()
-                ? response()->json(['message' => 'Tagihan SPP hanya untuk akun siswa.'], 422)
-                : back()->withErrors(['bill_id' => 'Tagihan SPP hanya untuk akun siswa.']);
+            abort(404);
         }
 
         SppPayment::create([
@@ -61,7 +60,7 @@ class SppController extends Controller
             'input_by' => $request->user()->id,
         ]);
 
-        $terbayar = $bill->payments()->sum('amount');
+        $terbayar = $bill->payments->sum('amount') + $data['amount'];
         if ($terbayar >= $bill->nominal) {
             $bill->update(['status' => 'lunas']);
         }
@@ -130,7 +129,7 @@ class SppController extends Controller
     public function adminIndex()
     {
         $siswa = User::where('role', 'siswa')
-            ->with(['sppBills' => fn ($q) => $q->orderBy('periode')])
+            ->with(['sppBills' => fn ($q) => $q->with('payments')->orderBy('periode')])
             ->orderBy('name')
             ->get();
 
@@ -146,5 +145,14 @@ class SppController extends Controller
                 'status' => $b->status,
             ]),
         ]));
+    }
+
+    public function generateOrtuLink(User $user)
+    {
+        abort_if($user->role !== 'siswa', 404);
+
+        $url = URL::signedRoute('spp.ortu', ['user' => $user->id]);
+
+        return response()->json(['url' => $url]);
     }
 }

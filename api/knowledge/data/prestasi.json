@@ -1,0 +1,72 @@
+﻿{
+  "keywords": ["prestasi", "juara", "lomba", "kompetisi", "penghargaan", "gemastik", "olimpiade", "lks", "pkkmb", "pencapaian"],
+  "priority": 80,
+  "data": {
+    "nama": "Prestasi Siswa & Sekolah",
+    "prestasi": [
+      {
+        "tahun": 2026,
+        "nama": "Juara III Sketch Competition UKDC",
+        "tingkat": "Nasional",
+        "kategori": "Desain & Kreatif",
+        "siswa": "Muhammad Rizki (XII RPL)",
+        "penyelenggara": "UKDC (Universitas Komputer Indonesia)",
+        "deskripsi": "Siswa SMK Bahrul Ulum meraih juara 3 lomba sketch UI/UX design tingkat nasional"
+      },
+      {
+        "tahun": 2025,
+        "nama": "Juara I Lomba Cepat Tepat IT Tingkat Kota Surabaya",
+        "tingkat": "Kota",
+        "kategori": "Teknologi Informasi",
+        "siswa": "Tim RPL (Ahmad, Budi, Citra)",
+        "penyelenggara": "Dinas Pendidikan Kota Surabaya",
+        "deskripsi": "Tim 3 orang siswa RPL juara 1 lomba IT (programming, networking, troubleshooting)"
+      },
+      {
+        "tahun": 2025,
+        "nama": "Juara II Lomba Web Development SMK Se-Jawa Timur",
+        "tingkat": "Provinsi",
+        "kategori": "Web Development",
+        "siswa": "Siti Aisyah (XII RPL)",
+        "penyelenggara": "Dinas Pendidikan Provinsi Jawa Timur",
+        "deskripsi": "Lomba pembuatan website company profile dengan React + Laravel"
+      },
+      {
+        "tahun": 2024,
+        "nama": "Juara Harapan Gemastik SMA/SMK",
+        "tingkat": "Nasional",
+        "kategori": "Komputasi",
+        "siswa": "Tim Gemastik SMK Bahrul Ulum",
+        "penyelenggara": "Kemendikbudristek",
+        "deskripsi": "Mewakili Jawa Timur di ajang Gemastik bidang kecerdasan buatan & data science"
+      },
+      {
+        "tahun": 2024,
+        "nama": "Juara I LKS (Lomba Kompetensi Siswa) Bidang IT Networking",
+        "tingkat": "Kabupaten/Kota",
+        "kategori": "Jaringan",
+        "siswa": "Fajar Nugroho (XI RPL)",
+        "penyelenggara": "Dinas Tenaga Kerja Kota Surabaya",
+        "deskripsi": "Lomba konfigurasi router, switching, troubleshooting jaringan"
+      },
+      {
+        "tahun": 2023,
+        "nama": "Sekolah Rujukan PKKMB Nasional",
+        "tingkat": "Nasional",
+        "kategori": "Penghargaan Sekolah",
+        "siswa": "SMK Bahrul Ulum Surabaya",
+        "penyelenggara": "Kemendikbudristek",
+        "deskripsi": "Diakui sebagai sekolah rujukan Pengenalan Kehidupan Kampus Mahasiswa Baru (PKKMB) tingkat nasional"
+      },
+      {
+        "tahun": 2023,
+        "nama": "Akreditasi A (Unggul)",
+        "tingkat": "Nasional",
+        "kategori": "Akreditasi",
+        "siswa": "SMK Bahrul Ulum Surabaya",
+        "penyelenggara": "BAN-SM",
+        "deskripsi": "Memperoleh akreditasi A dengan skor tinggi, menunjukkan mutu pendidikan unggul"
+      }
+    ]
+  }
+}

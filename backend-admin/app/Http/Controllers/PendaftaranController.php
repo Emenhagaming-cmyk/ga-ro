@@ -6,6 +6,7 @@ use App\Models\Pendaftaran;
 use App\Models\User;
 use App\Services\RegistrationInsightService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PendaftaranController extends Controller
 {
@@ -212,7 +213,7 @@ public function dashboard(RegistrationInsightService $insightService)
     {
         abort_if($user->role === 'admin', 403);
 
-        $plain = strtoupper(substr(uniqid(), -8));
+        $plain = Str::password(12);
         $user->update(['password' => bcrypt($plain)]);
 
         return redirect()->route('admin.dashboard')->with('reset_password', [

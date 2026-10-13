@@ -1,0 +1,54 @@
+﻿{
+  "keywords": ["berita", "pengumuman", "informasi", "artikel", "update", "terbaru", "baru", "posting"],
+  "priority": 85,
+  "data": {
+    "nama": "Berita & Pengumuman",
+    "artikel": [
+      {
+        "slug": "mpday-4-2026-2027",
+        "judul": "MPLS Day 4 SMK Bahrul Ulum 2026/2027",
+        "ringkasan": "Hari keempat Masa Pengenalan Lingkungan Sekolah (MPLS) berlangsung meriah dengan berbagai kegiatan seru dan edukatif.",
+        "kategori": "Kegiatan Sekolah",
+        "tanggal": "2026-07-15",
+        "penulis": "Admin SPMB",
+        "gambar": "/images/berita/mpls-day4.jpg"
+      },
+      {
+        "slug": "mpday-3-2026-2027",
+        "judul": "MPLS Day 3 SMK Bahrul Ulum 2026/2027",
+        "ringkasan": "Hari ketiga MPLS diisi dengan pengenalan ekstra kurikuler, tour kampus, dan games edukatif untuk siswa baru.",
+        "kategori": "Kegiatan Sekolah",
+        "tanggal": "2026-07-14",
+        "penulis": "Admin SPMB",
+        "gambar": "/images/berita/mpls-day3.jpg"
+      },
+      {
+        "slug": "mpday-2-2026-2027",
+        "judul": "MPLS Day 2 SMK Bahrul Ulum 2026/2027",
+        "ringkasan": "Hari kedua MPLS fokus pada orientasi akademik, pengenalan kurikulum RPL, dan aturan sekolah.",
+        "kategori": "Kegiatan Sekolah",
+        "tanggal": "2026-07-13",
+        "penulis": "Admin SPMB",
+        "gambar": "/images/berita/mpls-day2.jpg"
+      },
+      {
+        "slug": "pembukaan-ppdb-2026",
+        "judul": "Pembukaan PPDB SMK Bahrul Ulum Tahun Ajaran 2026/2027",
+        "ringkasan": "Pendaftaran PPDB tahun ajaran 2026/2027 resmi dibuka. Proses pendaftaran melalui sistem online SPMB.",
+        "kategori": "Pendaftaran",
+        "tanggal": "2026-06-01",
+        "penulis": "Tim PPDB",
+        "gambar": "/images/berita/ppdb-buka.jpg"
+      },
+      {
+        "slug": "juara-sketch-competition",
+        "judul": "Siswa SMP Bahrul Ulum Raih Juara III Sketch Competition UKDC",
+        "ringkasan": "Prestasi membanggakan diraih siswa SMP Bahrul Ulum Surabaya di ajang UKDC Sketch Competition tingkat nasional.",
+        "kategori": "Prestasi",
+        "tanggal": "2026-05-20",
+        "penulis": "Admin Prestasi",
+        "gambar": "/images/berita/juara-sketch.jpg"
+      }
+    ]
+  }
+}

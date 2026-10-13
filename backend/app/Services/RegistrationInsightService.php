@@ -75,8 +75,8 @@ TEXT;
 
         $max = max($jurusan);
         $top = array_filter($jurusan, fn ($value) => $value === $max);
-        $name = array_key_first($top);
+        ksort($top); // deterministic tie-breaking: AKL < RPL < TKJ
 
-        return $name ?? 'belum ada data';
+        return array_key_first($top) ?? 'belum ada data';
     }
 }

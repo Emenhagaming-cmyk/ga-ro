@@ -611,7 +611,7 @@ async function confirmPayment() {
         "X-CSRF-TOKEN": csrf,
         "X-Requested-With": "XMLHttpRequest",
       },
-      credentials: "same-origin",
+      credentials: "include",
       body: JSON.stringify({
         items: cart.value.map((i) => ({
           id: i.product.id,

@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:kasir,admin'])->group(function () {
     Route::get('/spp/kasir', [SppController::class, 'kasirIndex'])->name('spp.kasir');
     Route::post('/spp/pay', [SppController::class, 'store'])->name('spp.pay');
+    Route::get('/spp/ortu-link/{user}', [SppController::class, 'generateOrtuLink'])->name('spp.ortu-link');
 });
 
 // SPP (admin & guru) rekap semua (read-only untuk guru)
