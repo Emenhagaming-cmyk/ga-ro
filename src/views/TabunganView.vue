@@ -111,19 +111,6 @@ onUnmounted(() => {
       <div v-if="toast.show" class="tab-toast">{{ toast.message }}</div>
     </Transition>
 
-    <header class="tab-topbar">
-      <div class="tab-topbar-left">
-        <button class="tab-back" @click="goBack" aria-label="Kembali">
-          <ChevronLeft :size="18" :stroke-width="2.5" />
-        </button>
-        <img src="/logo.webp" alt="Logo Sekolah" class="tab-logo" />
-        <span class="tab-brand">Tabungan Siswa</span>
-      </div>
-      <button class="tab-refresh" @click="loadData" aria-label="Muat ulang">
-        <RefreshCw :size="17" :stroke-width="2" />
-      </button>
-    </header>
-
     <main class="tab-main">
       <!-- ═══ Kartu Saldo ═══ -->
       <div class="saldo-card">

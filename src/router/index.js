@@ -34,17 +34,28 @@ const routes = [
     component: () => import("../views/ChatView.vue"),
   },
   {
-    path: "/career-center",
-    component: () => import("../views/CareerCenterView.vue"),
-    redirect: "/career-center/search",
+    path: "/panel-siswa",
+    component: () => import("../layouts/SiswaLayout.vue"),
+    redirect: "/tabungan",
+    meta: { requiresSiswa: true },
     children: [
-      { path: "search", name: "career-search", component: () => import("../views/career/CariLowonganView.vue") },
-      { path: "dashboard", name: "career-dashboard", component: () => import("../views/career/DashboardView.vue") },
-      { path: "applications", name: "career-applications", component: () => import("../views/career/LamaranSayaView.vue"), meta: { requiresSiswa: true } },
-      { path: "messages", name: "career-messages", component: () => import("../views/career/PesanView.vue") },
-      { path: "statistics", name: "career-statistics", component: () => import("../views/career/StatistikView.vue") },
-      { path: "news", name: "career-news", component: () => import("../views/career/BeritaKarirView.vue") },
-    ]
+      { path: "/tabungan", name: "tabungan", component: () => import("../views/TabunganView.vue") },
+      { path: "/spp", name: "spp", component: () => import("../views/SppView.vue") },
+      { path: "/koperasi", name: "koperasi", component: () => import("../views/KoperasiView.vue") },
+      {
+        path: "/career-center",
+        component: () => import("../views/CareerCenterView.vue"),
+        redirect: "/career-center/search",
+        children: [
+          { path: "search", name: "career-search", component: () => import("../views/career/CariLowonganView.vue") },
+          { path: "dashboard", name: "career-dashboard", component: () => import("../views/career/DashboardView.vue") },
+          { path: "applications", name: "career-applications", component: () => import("../views/career/LamaranSayaView.vue") },
+          { path: "messages", name: "career-messages", component: () => import("../views/career/PesanView.vue") },
+          { path: "statistics", name: "career-statistics", component: () => import("../views/career/StatistikView.vue") },
+          { path: "news", name: "career-news", component: () => import("../views/career/BeritaKarirView.vue") },
+        ],
+      },
+    ],
   },
   {
     path: "/berita",
@@ -54,21 +65,6 @@ const routes = [
     path: "/berita/:slug",
     name: "berita-detail",
     component: () => import("../views/NewsDetail.vue"),
-  },
-  {
-    path: "/koperasi",
-    component: () => import("../views/KoperasiView.vue"),
-    meta: { requiresSiswa: true }
-  },
-  {
-    path: "/tabungan",
-    component: () => import("../views/TabunganView.vue"),
-    meta: { requiresSiswa: true }
-  },
-  {
-    path: "/spp",
-    component: () => import("../views/SppView.vue"),
-    meta: { requiresSiswa: true }
   },
   {
     path: "/produk-siswa",

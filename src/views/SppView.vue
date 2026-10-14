@@ -53,19 +53,6 @@ onMounted(loadData);
 
 <template>
   <section class="spp-page">
-    <header class="spp-topbar">
-      <div class="spp-topbar-left">
-        <button class="spp-back" @click="goBack" aria-label="Kembali">
-          <ChevronLeft :size="18" :stroke-width="2.5" />
-        </button>
-        <img src="/logo.webp" alt="Logo Sekolah" class="spp-logo" />
-        <span class="spp-brand">SPP</span>
-      </div>
-      <button class="spp-refresh" @click="loadData" aria-label="Muat ulang">
-        <RefreshCw :size="17" :stroke-width="2" />
-      </button>
-    </header>
-
     <main class="spp-main">
       <div class="spp-card">
         <div class="spp-card-head">
