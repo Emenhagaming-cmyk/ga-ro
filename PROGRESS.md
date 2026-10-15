@@ -2,7 +2,36 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
-## STATUS TERAKHIR (2026-10-14) — PANEL SISWA VUE (LAYOUT SIDEBAR)
+## STATUS TERAKHIR (2026-10-14) — TOP UP TABUNGAN VIA MIDTRANS SNAP
+
+- **Backend**
+  - Migration `2026_10_14_120000_create_tabungan_topups_table` (order_id unik, midtrans_order_id, snap_token, amount, method, status pending/paid/expired/failed, paid_at).
+  - `app/Models/TabunganTopup.php`.
+  - `app/Http/Controllers/TabunganTopupController.php` — `create` (Snap `/snap/v1/transactions` via Laravel `Http`, basic auth server key), `status` (polling, scoped per user), `notification` (webhook: verifikasi `sha512(order_id+status_code+gross_amount+server_key)`, cek gross amount, `lockForUpdate` + status check = idempotent, kredit saldo `Tabungan` type setor).
+  - `config/services.php` — blok `midtrans` (server_key, production, base_url).
+  - `routes/web.php` — `POST /tabungan/topup`, `GET /tabungan/topup/{orderId}` (auth), `POST /midtrans/notification` (throttle 120/menit).
+  - `bootstrap/app.php` — `midtrans/notification` dikecualikan dari CSRF.
+  - `.env.example` — `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_BASE_URL`.
+- **Frontend** `src/views/TabunganView.vue`
+  - Submit → `POST /tabungan/topup` (pakai `getCsrfToken`) → dapat `redirect_url` → `window.location.assign` ke halaman pembayaran Midtrans (Snap **redirect**, bukan popup JS). Kembali dari Midtrans lewat `finish_url`/`cancel_url` (`?midtrans=finish&order=…`), dicek di `onMounted` → langsung polling.
+  - **Kenapa bukan snap.js popup:** `https://app.sandbox.midtrans.com/snap/v1/snap.js` membalas 404 + halaman HTML (halaman splash SNAP), jadi popup tidak bisa dimuat. Redirect tidak butuh JS pihak ketiga sama sekali.
+  - `app/helpers.php` — helper baru `frontendBaseUrl()`; `frontendAuthUrl()` sekarang memakainya (hemat duplikasi logika local/prod).
+- **Verifikasi tanpa webhook** (sandbox tidak bisa menjangkau `localhost:8000`, jadi credit mustahil masuk lewat notifikasi saat dev):
+  - `POST /tabungan/topup/{orderId}/verify` — server menanyakan status ke Midtrans (`GET /snap/v1/transactions/{midtrans_order_id}`) lalu applying lewat `applyRemoteStatus()` yang sama dengan webhook, jadi tidak mungkin credet ganda.
+  - Logika credet dipindah ke satu method `applyRemoteStatus()`; webhook dan verify sama-sama memakainya.
+  - Frontend: order disimpan di `sessionStorage` sebelum pindah ke Midtrans, jadi siswa yang menutup halaman / tekan "back" tetap bisa lanjut verifikasi saat buka `/tabungan`.
+  - Uji: `POST /tabungan/topup/TOPUP-BL74IUDIHNI0/verify` → `pending` (status truthfully dibaca dari Midtrans, tanpa credet). Jalur credet settlement sudah terbukti lewat uji webhook sebelumnya.
+  - **Perbaikan halaman nyangkut di "verifikasi":** order di `sessionStorage` dulu dipakai selamanya, jadi tiap buka `/tabungan` langsung masuk spinner verifikasi dan menu tak terjangkau. Sekarang: hanya `?midtrans=finish` yang memakai `goVerify({blocking:true})`; order dari storage diverifikasi di belakang layar (`blocking:false`) dan dibuang bila tidak terbayar / lebih tua dari 30 menit. Semua jalur keluar (paid, failed, batal, timeout, reset) membersihkan `PENDING_KEY`.
+- **Temuan dari probe API Midtrans sandbox (penting):**
+  - Akun ini memakai **Snap redirect v4**: `POST /snap/v1/transactions` hanya mengembalikan `token` + `redirect_url`, **tanpa `order_id`** → kolom `tabungan_topups.midtrans_order_id` kosong. Endpoint status `GET /snap/v1/transactions/{order_id}` membalas `token not found`; yang diterima adalah **snap token**. `verify` kini memakai `midtrans_order_id ?: snap_token`, dan hanya menerapkan status bila `transaction_details.order_id` cocok (anti salah order).
+  - `finish_url`/`cancel_url` per-request **diabaikan** akun ini: respons `callbacks.finish` tetap default akun. Arah balik student harus diatur dari **dashboard Midtrans (Settings → Snap)**, bukan dari kode.
+  - **Alur tanpa setting dashboard sama sekali (final):** `payAtMidtrans()` membuka `redirect_url` di **tab baru** (`window.open`), halaman tetap di aplikasi, lalu `goVerify({blocking:false})` memantau status dari server ke Midtrans (90×2 detik = 3 menit) dan credet saldo otomatis begitu `settlement`. Tidak butuh Notification URL, Finish Redirect, maupun Cancel Redirect. `finish_url` tetap dikirim sebagai cadangan bila suatu saat callback diaktifkan.
+  - Endpoint status legacy (`api.sandbox.midtrans.com/v1/{order}/status`) → 404 pada akun ini. Sumber kebenaran settlement tetap **webhook notifikasi**; untuk dev lokal butuh URL publik (tunnel) karena sandbox tidak bisa menjangkau `localhost:8000`.
+  - Verifikasi = polling `GET /tabungan/topup/{orderId}` maks 30×2 detik; saldo **tidak pernah** ditambah dari frontend, hanya dari webhook.
+  - Chip metode + QR/VA palsu **dihapus** (VA palsu = risiko transfer ke nomor salah); Midtrans Snap yang|Method|ibi.
+- **Verifikasi:** `npm run build` sukses, `php -l` bersih, `route:list` benar. Uji integrasi lewat `php artisan tinker` (semua di-rollback): webhook settlement → 200, topup `paid`, baris `tabungans` terbentuk; retry webhook → tetap 1 baris (idempoten); signature salah → 403; `amount` < 10000 → 422; role selain siswa → 422; `status` order milik siswa lain → 404. Jalur `create` (panggilan API Midtrans) belum diuji — butuh server key asli.
+
+## SEBELUMNYA (2026-10-14) — PANEL SISWA VUE (LAYOUT SIDEBAR)
 
 - **Panel siswa frontend** (permintaan user; siswa-only, tak tampil ke publik):
   - **Baru** `src/layouts/SiswaLayout.vue` — sidebar gelap (Status Pendaftaran, Tabungan, SPP, Koperasi, Career Center + submenu, Profil, Bukti Diterima) + `<RouterView />`. Off-canvas di mobile (FAB kiri-bawah), backdrop, divider.

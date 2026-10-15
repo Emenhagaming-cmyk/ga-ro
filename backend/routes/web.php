@@ -7,6 +7,7 @@ use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\LamaranController;
 use App\Http\Controllers\TabunganController;
+use App\Http\Controllers\TabunganTopupController;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\KoperasiController;
 
@@ -68,7 +69,15 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/tabungan', [TabunganController::class, 'index'])->name('tabungan.index');
     Route::post('/tabungan', [TabunganController::class, 'store'])->name('tabungan.store');
+    Route::post('/tabungan/topup', [TabunganTopupController::class, 'create'])->name('tabungan.topup');
+    Route::get('/tabungan/topup/{orderId}', [TabunganTopupController::class, 'status'])->name('tabungan.topup.status');
+    Route::post('/tabungan/topup/{orderId}/verify', [TabunganTopupController::class, 'verify'])->name('tabungan.topup.verify');
 });
+
+// Webhook Midtrans — tanpa auth/CSRF, signature diverifikasi di controller
+Route::post('/midtrans/notification', [TabunganTopupController::class, 'notification'])
+    ->middleware('throttle:120,1')
+    ->name('midtrans.notification');
 
 // Tabungan (admin)
 Route::middleware(['auth', 'role:admin'])->group(function () {

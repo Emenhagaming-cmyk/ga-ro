@@ -25,20 +25,25 @@ function formatPeriodeShort(string $periode): string
 }
 
 /**
+ * Base URL frontend (tanpa query). Default produksi = Vercel; lokal pakai dev Vite.
+ */
+function frontendBaseUrl(): string
+{
+    $localHosts = ['localhost', '127.0.0.1', '::1'];
+    $isLocal = in_array(request()->getHost(), $localHosts, true) || app()->isLocal();
+    $default = $isLocal ? 'http://localhost:5174' : 'https://smkbu-sby.vercel.app';
+
+    return rtrim(env('FRONTEND_URL', $default), '/');
+}
+
+/**
  * URL halaman frontend + payload status login (?auth=...) supaya frontend tahu
  * status auth TANPA cookie third-party (diblokir browser mobile).
  * $path: rute di frontend (mis. '/tabungan'); default '/' = landing.
  */
 function frontendAuthUrl(string $path = '/'): string
 {
-    // ponytail: default = domain frontend produksi (Vercel, HTTPS). Nilai lama
-    // http://smkbu-sby.my.id = HTTP tanpa TLS dan domain yang sudah diaudit bermasalah.
-    // Di lokal (host request localhost ATAU APP_ENV=local) pakai dev server Vite —
-    // tanpa ini login lokal selalu melompat ke production Vercel.
-    $localHosts = ['localhost', '127.0.0.1', '::1'];
-    $isLocal = in_array(request()->getHost(), $localHosts, true) || app()->isLocal();
-    $default = $isLocal ? 'http://localhost:5174' : 'https://smkbu-sby.vercel.app';
-    $frontend = rtrim(env("FRONTEND_URL", $default), '/');
+    $frontend = frontendBaseUrl();
     $payload = ["logged_in" => false, "role" => null, "name" => null, "avatar" => null, "has_pendaftaran" => false, "status" => null];
 
     if (auth()->check()) {

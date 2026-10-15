@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             // CLOSED: lamaran/tabungan/spp pakai X-CSRF-TOKEN header (same-site *.vercel.app → wajib)
+            'midtrans/notification',
         ]);
 
         $middleware->alias([
