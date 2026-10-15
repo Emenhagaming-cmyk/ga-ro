@@ -50,10 +50,21 @@ class SppControllerTest extends TestCase
             $table->string('status')->default('baru');
             $table->timestamps();
         });
+
+        Schema::create('tabungans', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->enum('type', ['setor', 'tarik']);
+            $table->unsignedBigInteger('amount');
+            $table->string('description')->nullable();
+            $table->foreignId('input_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
     }
 
     protected function tearDown(): void
     {
+        Schema::dropIfExists('tabungans');
         Schema::dropIfExists('pendaftarans');
         Schema::dropIfExists('spp_payments');
         Schema::dropIfExists('spp_bills');
@@ -236,5 +247,108 @@ class SppControllerTest extends TestCase
         $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
 
         $this->get('/spp/ortu/' . $siswa->id)->assertStatus(403);
+    }
+
+    private function topup(User $siswa, int $amount): void
+    {
+        \App\Models\Tabungan::create([
+            'user_id' => $siswa->id,
+            'type' => 'setor',
+            'amount' => $amount,
+            'description' => 'Top Up Online',
+        ]);
+    }
+
+    public function test_siswa_bayar_spp_dari_saldo_tabungan(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $bill = $this->makeBill($siswa, 150000);
+        $this->topup($siswa, 200000);
+
+        $this->actingAs($siswa)->postJson('/spp/pay-tabungan', [
+            'bill_id' => $bill->id,
+            'amount' => 150000,
+        ])->assertStatus(201)
+            ->assertJsonPath('bill.status', 'lunas')
+            ->assertJsonPath('bill.sisa', 0)
+            ->assertJsonPath('saldo', 50000);
+
+        $this->assertSame('tarik', \App\Models\Tabungan::latest('id')->first()->type);
+        $this->assertSame('tabungan', $bill->fresh()->payments()->first()->metode);
+    }
+
+    public function test_bayar_sebagian_dari_tabungan_tidak_langsung_lunas(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $bill = $this->makeBill($siswa, 150000);
+        $this->topup($siswa, 200000);
+
+        $this->actingAs($siswa)->postJson('/spp/pay-tabungan', [
+            'bill_id' => $bill->id,
+            'amount' => 50000,
+        ])->assertStatus(201)
+            ->assertJsonPath('bill.status', 'belum')
+            ->assertJsonPath('bill.sisa', 100000)
+            ->assertJsonPath('saldo', 150000);
+    }
+
+    public function test_bayar_dari_tabungan_gagal_kalau_saldo_kurang(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $bill = $this->makeBill($siswa, 150000);
+        $this->topup($siswa, 10000);
+
+        $this->actingAs($siswa)->postJson('/spp/pay-tabungan', [
+            'bill_id' => $bill->id,
+            'amount' => 150000,
+        ])->assertStatus(422);
+
+        // Tidak ada debit palsu: saldo utuh, tidak ada baris tarik, bill belum
+        $this->assertSame(10000, (int) \App\Models\Tabungan::where('user_id', $siswa->id)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'setor' THEN amount ELSE -amount END), 0) as saldo")
+            ->value('saldo'));
+        $this->assertSame(0, \App\Models\Tabungan::where('user_id', $siswa->id)->where('type', 'tarik')->count());
+        $this->assertSame('belum', $bill->fresh()->status);
+    }
+
+    public function test_bayar_melebihi_sisa_tagihan_ditolak(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $bill = $this->makeBill($siswa, 150000);
+        $this->topup($siswa, 500000);
+
+        $this->actingAs($siswa)->postJson('/spp/pay-tabungan', [
+            'bill_id' => $bill->id,
+            'amount' => 200000,
+        ])->assertStatus(422);
+    }
+
+    public function test_siswa_tidak_bisa_bayar_tagihan_orang_lain(): void
+    {
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $korban = $this->makeUser('siswa', 'Siswa Dua', 'siswa2');
+        $billKorban = $this->makeBill($korban, 150000);
+        $this->topup($siswa, 500000);
+
+        $this->actingAs($siswa)->postJson('/spp/pay-tabungan', [
+            'bill_id' => $billKorban->id,
+            'amount' => 150000,
+        ])->assertStatus(404);
+
+        $this->assertSame(500000, (int) \App\Models\Tabungan::where('user_id', $siswa->id)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'setor' THEN amount ELSE -amount END), 0) as saldo")
+            ->value('saldo'));
+    }
+
+    public function test_admin_tidak_bisa_bayar_dari_tabungan(): void
+    {
+        $admin = $this->makeUser('admin', 'Admin', 'admin');
+        $siswa = $this->makeUser('siswa', 'Siswa Satu', 'siswa1');
+        $bill = $this->makeBill($siswa);
+
+        $this->actingAs($admin)->postJson('/spp/pay-tabungan', [
+            'bill_id' => $bill->id,
+            'amount' => 150000,
+        ])->assertStatus(403);
     }
 }

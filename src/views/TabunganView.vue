@@ -1,6 +1,6 @@
 <template>
   <div class="tabungan-root">
-    <div class="toast" :class="{ show: toastShow }">{{ toastMsg }}</div>
+    <ToastStack />
 
     <div class="wrap">
       <div class="layout">
@@ -91,9 +91,9 @@
             <div class="pay-panel">
               <div class="ewallet-ico snap"><i class="fas fa-shield-halved"></i></div>
               <h3>Selesaikan pembayaran</h3>
-              <p class="pay-hint">Halaman Midtrans terbuka di tab baru: QRIS, Virtual Account, e-wallet, atau kartu. Tutup tab itu setelah bayar — saldo di sini bertambah otomatis.</p>
-              <button class="btn-copy" type="button" @click="payAtMidtrans(redirectUrl)">
-                <i class="fas fa-arrow-up-right-from-square"></i> Buka Halaman Pembayaran
+              <p class="pay-hint">Pembayaran dibuka di popup Midtrans dalam halaman ini: QRIS, Virtual Account, e-wallet, atau kartu. Selesai bayar — kamu kembali ke Tabungan otomatis.</p>
+              <button class="btn-copy" type="button" @click="openPayment">
+                <i class="fas fa-arrow-up-right-from-square"></i> Buka Popup Pembayaran
               </button>
             </div>
 
@@ -186,6 +186,8 @@ import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 import { fetchJson } from "@/services/fetchJson";
 import { getCsrfToken } from "@/services/csrf";
+import { useToast } from "@/composable/useToast";
+import ToastStack from "@/components/ToastStack.vue";
 
 const { session, BACKEND } = useAuthSession();
 
@@ -208,13 +210,12 @@ const amount = ref(0);
 const orderId = ref("-");
 const redirectUrl = ref("");
 const paidMethod = ref("");
+const snapToken = ref("");              // bayar via popup Snap (tetap di halaman ini)
+const snapClientKey = ref("");
+const snapScriptUrl = ref("");
 
 const submitBusy = ref(false);
 const verifyBusy = ref(false);
-
-const toastMsg = ref("");
-const toastShow = ref(false);
-let toastTimer = null;
 
 const timerLeft = ref(15 * 60);
 let timerInt = null;
@@ -236,13 +237,7 @@ const timerText = computed(() => {
 const timerUrgent = computed(() => timerLeft.value > 0 && timerLeft.value <= 60);
 const timerExpired = computed(() => timerLeft.value <= 0);
 
-/* ═══════════ TOAST ═══════════ */
-function showToast(msg) {
-  toastMsg.value = msg;
-  toastShow.value = true;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (toastShow.value = false), 2600);
-}
+const { showToast } = useToast();
 
 /* ═══════════ SALDO (count-up) ═══════════ */
 function setSaldo(v) {
@@ -285,27 +280,82 @@ async function submitPay() {
     orderId.value = d.order_id;
     amount.value = d.amount;
     redirectUrl.value = d.redirect_url;
+    snapToken.value = d.snap_token || "";
+    snapClientKey.value = d.client_key || "";
+    snapScriptUrl.value = d.snap_script_url || "";
     // Disimpan dulu: kalau siswa menutup halaman Midtrans atau menekan "back",
     // order tetap bisa diverifikasi saat buka /tabungan lagi.
     sessionStorage.setItem(PENDING_KEY, JSON.stringify({ orderId: d.order_id, amount: d.amount, at: Date.now() }));
-    payAtMidtrans(d.redirect_url);
+    // Popup Snap = selesai bayar langsung balik ke /tabungan (tanpa tab baru).
+    // Kalau Snap tak bisa dimuat → alur lama: buka halaman pembayaran di tab baru.
+    if (!(await openSnap())) payAtMidtrans(d.redirect_url);
   } catch (e) {
-    showToast(e.message || "Gagal membuat transaksi top up.");
+    showToast(e.message || "Gagal membuat transaksi top up.", "error");
   } finally {
     submitBusy.value = false;
   }
 }
 
+/* ═══════════ SNAP POPUP (bayar tanpa pindah tab) ═══════════ */
+const SNAP_SCRIPT_ID = "midtrans-snap-js";
+let snapDone = false; // popup sudah selesai (sukses/pending) → onClose jangan dianggap batal
+
+function loadSnapScript() {
+  return new Promise((resolve, reject) => {
+    if (window.snap?.pay) return resolve();
+    if (!snapScriptUrl.value || !snapClientKey.value) return reject(new Error("Snap tidak siap"));
+
+    let s = document.getElementById(SNAP_SCRIPT_ID);
+    if (!s) {
+      s = document.createElement("script");
+      s.id = SNAP_SCRIPT_ID;
+      s.src = snapScriptUrl.value;
+      s.setAttribute("data-client-key", snapClientKey.value);
+      s.onerror = () => reject(new Error("Gagal memuat Midtrans Snap"));
+      document.head.appendChild(s);
+    }
+    s.addEventListener("load", () => (window.snap?.pay ? resolve() : reject(new Error("Snap tidak siap"))), { once: true });
+  });
+}
+
+// Popup pembayaran Midtrans dirender di halaman ini: siswa tak pindah tab, dan begitu
+// popup selesai kita verifikasi + tampilkan kartu sukses (kembali otomatis ke /tabungan).
+async function openSnap() {
+  if (!snapToken.value || verifyBusy.value) return false;
+  try {
+    await loadSnapScript();
+  } catch {
+    return false;
+  }
+
+  snapDone = false;
+  view.value = "pay";
+  window.snap.pay(snapToken.value, {
+    onSuccess: () => { snapDone = true; goVerify({ blocking: true }); },
+    onPending: () => { snapDone = true; goVerify({ blocking: false }); },
+    onError: () => { snapDone = true; showToast("Pembayaran gagal. Coba lagi.", "error"); },
+    onClose: () => {
+      if (!snapDone) showToast("Pembayaran belum diselesaikan.", "info");
+    },
+  });
+  return true;
+}
+
+// Tombol di kartu pembayaran: popup dulu, tab baru hanya kalau popup tak tersedia.
+async function openPayment() {
+  if (!(await openSnap())) payAtMidtrans(redirectUrl.value);
+}
+
 function payAtMidtrans(url) {
   if (!url) {
-    showToast("URL pembayaran tidak tersedia.");
+    showToast("URL pembayaran tidak tersedia.", "warning");
     return;
   }
   // Jangan pakai "noopener": fitur itu membuat window.open SELALU return null →
   // toast "popup diblokir" palsu tiap kali + tab tak bisa ditutup otomatis saat lunas.
   const win = window.open(url, "_blank");
   if (!win) {
-    showToast("Popup diblokir browser. Izinkan popup untuk membayar.");
+    showToast("Popup diblokir browser. Izinkan popup untuk membayar.", "warning");
     return;
   }
   win.opener = null; // page Midtrans tidak perlu akses window asal
@@ -323,7 +373,7 @@ function startTimer() {
     timerLeft.value--;
     if (timerLeft.value <= 0) {
       stopTimer();
-      showToast("Waktu pembayaran habis.");
+      showToast("Waktu pembayaran habis.", "warning");
     }
   }, 1000);
 }
@@ -331,13 +381,17 @@ function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null;
 function restartTimer() {
   timerLeft.value = 15 * 60;
   startTimer();
-  showToast("Waktu diperpanjang 15 menit.");
+  showToast("Waktu diperpanjang 15 menit.", "success");
 }
 
 /* ═══════════ VIEW 3-4: VERIFIKASI & SUKSES ═══════════ */
 const POLL_TRIES = 30;
-const POLL_TRIES_BACKGROUND = 90;
+// Latar belakang ≈15 menit (sama dengan timer bayar): cepat 1 menit pertama (30×2 dtk),
+// lalu pelan (10 dtk) — sisanya ≈84 percobaan. Cukup untuk menangkap pembayaran apa pun
+// yang lunas selama halaman masih terbuka, tanpa perlu Notification/Finish URL di dashboard.
+const POLL_TRIES_BACKGROUND = 115;
 const POLL_GAP = 2000;
+const POLL_GAP_SLOW = 10000;
 
 async function goVerify(opts = {}) {
   const blocking = opts.blocking !== false;
@@ -348,9 +402,9 @@ async function goVerify(opts = {}) {
   if (blocking) view.value = "verify";
 
   // Server yang menanyakan status ke Midtrans (webhook bisa belum sampai, terutama di
-  // dev lokal) dan yangcredited saldo. Frontend cuma menunggu jawaban.
+  // dev lokal) dan yang credited saldo. Frontend cuma menunggu jawaban.
   for (let i = 0; i < tries; i++) {
-    await new Promise((r) => setTimeout(r, POLL_GAP));
+    await new Promise((r) => setTimeout(r, blocking || i < 30 ? POLL_GAP : POLL_GAP_SLOW));
     try {
       const token = await getCsrfToken();
       const res = await fetchJson(`${BACKEND}/tabungan/topup/${orderId.value}/verify`, {
@@ -365,7 +419,7 @@ async function goVerify(opts = {}) {
         verifyBusy.value = false;
         sessionStorage.removeItem(PENDING_KEY);
         view.value = "form";
-        showToast("Pembayaran gagal atau kedaluwarsa.");
+        showToast("Pembayaran gagal atau kedaluwarsa.", "error");
         loadData();
         return;
       }
@@ -373,12 +427,15 @@ async function goVerify(opts = {}) {
   }
 
   verifyBusy.value = false;
-  // Order yang tak pernah dibayar dibuang dari storage, supaya buka /tabungan lagi
-  // tidak langsung terjebak di mode verifikasi.
-  sessionStorage.removeItem(PENDING_KEY);
+  // Jangan buang order dari storage saat polling habis: "belum terkonfirmasi" ≠ "tak
+  // pernah dibayar" (bisa jadi siswa bayar lebih lama dari jendela polling). Order tetap
+  // tersimpan; handleMidtransReturn memverifikasi ulang order <24 jam saat buka /tabungan.
   view.value = blocking ? "pay" : "form";
   if (blocking) startTimer();
-  showToast(blocking ? "Status belum terkonfirmasi. Coba cek lagi." : "Transaksi sebelumnya belum terbayar.");
+  showToast(
+    blocking ? "Status belum terkonfirmasi. Coba cek lagi." : "Belum terkonfirmasi — akan dicek lagi saat kamu buka Tabungan.",
+    "info"
+  );
 }
 
 function completeFlow(d) {
@@ -390,7 +447,7 @@ function completeFlow(d) {
   try { midtransWin?.close(); } catch {}
   midtransWin = null;
   view.value = "success";
-  showToast("Saldo berhasil ditambahkan 🎉");
+  showToast("Saldo berhasil ditambahkan", "success", 4200);
   loadData();
 }
 
@@ -399,7 +456,7 @@ function cancelPay() {
   stopTimer();
   sessionStorage.removeItem(PENDING_KEY);
   view.value = "form";
-  showToast("Transaksi dibatalkan.");
+  showToast("Transaksi dibatalkan.", "info");
 }
 
 function resetFlow(scrollRiwayat) {
@@ -408,6 +465,7 @@ function resetFlow(scrollRiwayat) {
   amountStr.value = "";
   redirectUrl.value = "";
   paidMethod.value = "";
+  snapToken.value = "";
   sessionStorage.removeItem(PENDING_KEY);
   view.value = "form";
   if (!scrollRiwayat) {
@@ -456,7 +514,7 @@ function handleMidtransReturn() {
 
   if (mode === "cancel") {
     sessionStorage.removeItem(PENDING_KEY);
-    showToast("Pembayaran dibatalkan.");
+    showToast("Pembayaran dibatalkan.", "info");
     return;
   }
 
@@ -465,8 +523,10 @@ function handleMidtransReturn() {
     saved = JSON.parse(sessionStorage.getItem(PENDING_KEY) || "null");
   } catch {}
 
-  // Hanya order yang masih muda (30 menit) yang dilanjutkan; sisanya dibuang.
-  if (!saved?.orderId || Date.now() - (saved.at || 0) > 30 * 60 * 1000) {
+  // Order lunas tapi belum terverifikasi bisa jadi datang kapan pun (pembayaran lambat,
+  // tab nyangkut). Bertahan 24 jam di storage → buka /tabungan kapan pun hari itu,
+  // langsung diverifikasi otomatis. Tanpa Finish/Notification URL di dashboard Midtrans pun tetap beres.
+  if (!saved?.orderId || Date.now() - (saved.at || 0) > 24 * 60 * 60 * 1000) {
     sessionStorage.removeItem(PENDING_KEY);
     return;
   }
@@ -483,7 +543,6 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   stopTimer();
-  clearTimeout(toastTimer);
   if (saldoRaf) cancelAnimationFrame(saldoRaf);
 });
 </script>
@@ -772,17 +831,4 @@ onBeforeUnmount(() => {
 .tx-empty p { margin: 8px 0 2px; font-weight: 800; font-size: 13.5px; }
 .tx-empty small { font-size: 12px; color: var(--muted); }
 
-/* ═══════════ TOAST ═══════════ */
-.toast {
-  position: fixed; top: 20px; left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  z-index: 3000; opacity: 0; pointer-events: none;
-  padding: 12px 22px; border-radius: 13px;
-  background: var(--ink); color: #fff;
-  font-size: 14px; font-weight: 700;
-  box-shadow: 0 14px 34px rgba(28,42,35,.3);
-  transition: opacity .25s, transform .25s;
-  max-width: 90vw; text-align: center;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>

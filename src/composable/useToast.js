@@ -1,18 +1,20 @@
 import { ref } from "vue";
 
-const message = ref("");
-const visible = ref(false);
-let timer = null;
+// State di modul → satu stack notifikasi dipakai semua view
+const toasts = ref([]);
+let seq = 0;
 
 export function useToast() {
-  function showToast(text, duration = 3000) {
-    message.value = text;
-    visible.value = true;
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      visible.value = false;
-    }, duration);
+  function showToast(msg, type = "info", duration = 3200) {
+    const id = ++seq;
+    toasts.value.push({ id, msg, type, duration });
+    if (toasts.value.length > 3) toasts.value.shift(); // maksimal 3 sekaligus
+    setTimeout(() => dismissToast(id), duration);
   }
 
-  return { message, visible, showToast };
+  function dismissToast(id) {
+    toasts.value = toasts.value.filter((t) => t.id !== id);
+  }
+
+  return { toasts, showToast, dismissToast };
 }

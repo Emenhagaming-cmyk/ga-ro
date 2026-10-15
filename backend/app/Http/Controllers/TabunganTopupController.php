@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tabungan;
 use App\Models\TabunganTopup;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -63,7 +64,34 @@ class TabunganTopupController extends Controller
             'redirect_url' => $response->json('redirect_url'),
             'finish_url' => $finishUrl,
             'amount' => $topup->amount,
+            // Snap.js popup: bayar DI DALAM halaman /tabungan → begitu lunas halaman
+            // kembali sendiri (tanpa tab baru, tanpa depends Finish Redirect URL
+            // dashboard yang masih menunjuk domain mati milik akun ini).
+            'snap_token' => $topup->snap_token,
+            'client_key' => $this->clientKey($topup->snap_token),
+            'snap_script_url' => $this->snapUrl() . '/snap/snap.js',
         ], 201);
+    }
+
+    /**
+     * Client key itu publik (memang dipasang di script Snap di browser) tapi hanya bisa
+     * dibaca pakai server key — endpoint detail Snap mengembalikannya di merchant.client_key.
+     * Gagal ambil = null → frontend otomatis pakai alur tab redirect lama, bukan error.
+     */
+    private function clientKey(?string $snapToken): ?string
+    {
+        if (!$snapToken) {
+            return null;
+        }
+
+        try {
+            $res = Http::withBasicAuth($this->serverKey(), '')
+                ->get($this->snapUrl() . '/snap/v1/transactions/' . $snapToken);
+
+            return $res->ok() ? $res->json('merchant.client_key') : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function status(Request $request, string $orderId)
@@ -81,28 +109,55 @@ class TabunganTopupController extends Controller
     {
         $topup = $this->findOwned($request, $orderId);
 
-        // Akun Snap redirect-v4 tidak mengembalikan order_id dari API create, dan endpoint
-        // status-nya hanya menerima snap token.
-        $lookup = $topup->midtrans_order_id ?: $topup->snap_token;
-
-        if ($topup->status === 'pending' && $lookup) {
-            $remote = Http::withBasicAuth($this->serverKey(), '')
-                ->get($this->snapUrl() . '/snap/v1/transactions/' . $lookup);
-
-            if ($remote->ok()) {
-                if ($remote->json('transaction_details.order_id') === $topup->order_id) {
-                    $this->applyRemoteStatus($topup, $remote->json());
-                }
-            } elseif ($this->isSucceedResponse($remote)) {
-                // Snap redirect-v4 membalas 409 "transaction has been succeed" untuk transaksi
-                // yang sudah lunas (bukan 200 + payload) — tanpa cabang ini transaksi sukses
-                // tak pernah terbaca dan saldo tak pernah credet. Token ini hanya bisa sukses
-                // bila dibayar, dan amount credet tetap dari DB lokal, jadi aman.
-                $this->applyRemoteStatus($topup, ['transaction_status' => 'settlement']);
-            }
+        if ($topup->status === 'pending') {
+            $this->queryAndApply($topup);
         }
 
         return response()->json($this->payload($topup->fresh()));
+    }
+
+    /**
+     * Auto-settle saat siswa load /tabungan: order pending yang ternyata lunas dicredit di
+     * tempat — webhook bisa tak sampai (dev lokal / Notification URL belum diset), jadi
+     * membuka halaman = titik cadangan yang selalu ada. Hanya query remote bila memang ada
+     * order pending <24 jam, jadi aman dipanggil tiap request.
+     */
+    public function settlePendingFor(int $userId): void
+    {
+        TabunganTopup::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->where('created_at', '>=', now()->subDay())
+            ->get()
+            ->each(function ($topup) {
+                if ($topup->status === 'pending') {
+                    $this->queryAndApply($topup);
+                }
+            });
+    }
+
+    /**
+     * Tanya satu order ke Midtrans, lalu apply. Akun Snap redirect-v4: endpoint status hanya
+     * menerima token; transaksi yang SUDAH LUNAS balas 409 "transaction has been succeed"
+     * (bukan 200 + payload), dan Core API v2 tidak mengenal transaksi Snap v4 — jadi 409
+     * itulah sinyal lunas. Tanpa cabang ini transaksi sukses tak pernah terbaca saldo.
+     */
+    private function queryAndApply(TabunganTopup $topup): void
+    {
+        $lookup = $topup->midtrans_order_id ?: $topup->snap_token;
+        if (!$lookup) {
+            return;
+        }
+
+        $remote = Http::withBasicAuth($this->serverKey(), '')
+            ->get($this->snapUrl() . '/snap/v1/transactions/' . $lookup);
+
+        if ($remote->ok()) {
+            if ($remote->json('transaction_details.order_id') === $topup->order_id) {
+                $this->applyRemoteStatus($topup, $remote->json());
+            }
+        } elseif ($this->isSucceedResponse($remote)) {
+            $this->applyRemoteStatus($topup, ['transaction_status' => 'settlement']);
+        }
     }
 
     private function findOwned(Request $request, string $orderId): TabunganTopup
@@ -181,6 +236,12 @@ class TabunganTopupController extends Controller
                 $locked->update(['status' => 'failed']);
             }
         });
+    }
+
+    private function isSucceedResponse(Response $remote): bool
+    {
+        return $remote->status() === 409
+            && str_contains(implode(' ', (array) $remote->json('error_messages', [])), 'transaction has been succeed');
     }
 
     private function serverKey(): string

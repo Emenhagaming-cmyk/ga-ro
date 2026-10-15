@@ -2,31 +2,23 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import {
   Wallet, CheckCircle2, Clock, Receipt, ChevronRight, ArrowLeft,
-  ShieldCheck, Timer, Copy, Check, RefreshCw,
+  ShieldCheck, Check, RefreshCw,
 } from "lucide-vue-next";
 import { useAuthSession } from "@/composable/useAuthSession";
 import { fetchJson } from "@/services/fetchJson";
+import { getCsrfToken } from "@/services/csrf";
+import { useToast } from "@/composable/useToast";
+import ToastStack from "@/components/ToastStack.vue";
 
 const { session, BACKEND } = useAuthSession();
-
-/* ═══════════ KONSTANTA ═══════════ */
-const METHODS = [
-  { id: "qris",      chip: "QRIS",      name: "QRIS" },
-  { id: "gopay",     chip: "GoPay",     name: "GoPay" },
-  { id: "shopeepay", chip: "ShopeePay", name: "ShopeePay" },
-  { id: "bca_va",    chip: "BCA VA",    name: "BCA Virtual Account" },
-  { id: "bni_va",    chip: "BNI VA",    name: "BNI Virtual Account" },
-  { id: "bri_va",    chip: "BRI VA",    name: "BRI Virtual Account" },
-  { id: "card",      chip: "Kartu",     name: "Kartu Kredit / Debit" },
-  { id: "snap",      chip: "Semua",     name: "Semua Metode (Snap)" },
-];
+const { showToast } = useToast();
 
 /* Data contoh — dipakai kalau backend belum siap / gagal */
 const DUMMY_BILLS = [
   { id: 1, periode: "2025-01", nominal: 350000, terbayar: 350000, status: "lunas",
-    payments: [{ id: 101, metode: "Tunai", paid_at: "2025-01-05T09:00:00", amount: 350000 }] },
+    payments: [{ id: 101, metode: "tunai", paid_at: "2025-01-05T09:00:00", amount: 350000 }] },
   { id: 2, periode: "2025-02", nominal: 350000, terbayar: 200000, status: "belum",
-    payments: [{ id: 102, metode: "Midtrans · QRIS", paid_at: "2025-02-08T10:30:00", amount: 200000 }] },
+    payments: [{ id: 102, metode: "tabungan", paid_at: "2025-02-08T10:30:00", amount: 200000 }] },
   { id: 3, periode: "2025-03", nominal: 350000, terbayar: 0, status: "belum", payments: [] },
   { id: 4, periode: "2025-04", nominal: 350000, terbayar: 0, status: "belum", payments: [] },
 ];
@@ -44,24 +36,14 @@ const filter = ref("semua"); // semua | belum | lunas
 const displaySisa = ref(0);
 let sisaRaf = null;
 
-/* Flow pembayaran */
-const view = ref("idle"); // idle | amount | pay | verify | success
+const saldoTabungan = ref(0);
+const saldoBusy = ref(false);
+
+/* Flow pembayaran — hanya via saldo tabungan (tanpa gateway) */
+const view = ref("idle"); // idle | amount | success
 const activeBill = ref(null);
 const amountStr = ref("");
 const amount = ref(0);
-const method = ref("qris");
-const orderId = ref("-");
-const vaNumber = ref("");
-const vaCopied = ref(false);
-const submitBusy = ref(false);
-const verifyBusy = ref(false);
-
-const timerLeft = ref(15 * 60);
-let timerInt = null;
-
-const toastMsg = ref("");
-const toastShow = ref(false);
-let toastTimer = null;
 
 const flowCard = ref(null);
 
@@ -101,39 +83,20 @@ const payPresets = computed(() => {
   const s = activeBill.value.sisa;
   const half = Math.floor(s / 2 / 1000) * 1000;
   const quarter = Math.floor(s / 4 / 1000) * 1000;
-  const opts = [s, half, quarter].filter((v) => v === s || v >= 10000);
+  const opts = [s, half, quarter].filter((v) => v === s || v >= 1000);
   return [...new Set(opts)];
 });
 
-const amountInvalid = computed(
-  () => amount.value > 0 && amount.value !== activeBill.value?.sisa && amount.value < 10000
+/* Bayar dari saldo tabungan — satu-satunya jalur bayar, tanpa gateway */
+const canPaySaldo = computed(() =>
+  !saldoBusy.value && !!activeBill.value && amount.value >= 1 && amount.value <= saldoTabungan.value
 );
-const canSubmit = computed(() => {
-  if (!activeBill.value || submitBusy.value) return false;
-  const s = activeBill.value.sisa;
-  return amount.value === s || amount.value >= 10000;
+const saldoHint = computed(() => {
+  if (!activeBill.value) return "";
+  if (saldoTabungan.value <= 0) return "Saldo tabungan kosong — top up dulu di menu Tabungan.";
+  if (amount.value > saldoTabungan.value) return `Saldo kurang ${fmt(amount.value - saldoTabungan.value)} — top up dulu di menu Tabungan.`;
+  return `Saldo tabungan mencukupi · sisa saldo ${fmt(saldoTabungan.value - amount.value)}`;
 });
-
-const activeMethod = computed(() => METHODS.find((m) => m.id === method.value) || METHODS[0]);
-const activeMethodId = computed(() => activeMethod.value.id);
-const activeMethodChip = computed(() => activeMethod.value.chip);
-const activeMethodName = computed(() => activeMethod.value.name);
-
-const timerText = computed(() => {
-  const m = String(Math.floor(timerLeft.value / 60)).padStart(2, "0");
-  const s = String(timerLeft.value % 60).padStart(2, "0");
-  return `${m}:${s}`;
-});
-const timerUrgent = computed(() => timerLeft.value > 0 && timerLeft.value <= 60);
-const timerExpired = computed(() => timerLeft.value <= 0);
-
-/* ═══════════ TOAST ═══════════ */
-function showToast(msg) {
-  toastMsg.value = msg;
-  toastShow.value = true;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (toastShow.value = false), 2600);
-}
 
 /* ═══════════ ANIMASI SISA (count-down) ═══════════ */
 function animateSisa(to) {
@@ -156,6 +119,7 @@ async function loadData(silent = false) {
     if (!res.ok) throw new Error("Gagal memuat tagihan SPP.");
     const data = await res.json();
     bills.value = withSisa(data.bills || []);
+    if (typeof data.saldo === "number") saldoTabungan.value = data.saldo;
     isDummy.value = false;
   } catch {
     /* Backend belum siap → tampilkan data contoh agar desain tetap bisa dites */
@@ -206,103 +170,41 @@ function setPreset(v) {
   amountStr.value = v.toLocaleString("id-ID");
 }
 
-/* ═══════════ FLOW: KE HALAMAN BAYAR ═══════════ */
-function submitPay() {
-  if (!canSubmit.value) return;
-  submitBusy.value = true;
-  // >>> NANTI GANTI: fetch POST /spp/pay → { order_id, snap_token }
-  setTimeout(() => {
-    submitBusy.value = false;
-    openPayView();
-  }, 800);
-}
+/* ═══════════ BAYAR DARI SALDO TABUNGAN ═══════════ */
+async function paySaldo() {
+  if (!canPaySaldo.value || !activeBill.value) return;
+  saldoBusy.value = true;
+  try {
+    const token = await getCsrfToken();
+    const res = await fetchJson(`${BACKEND}/spp/pay-tabungan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": token || "" },
+      body: JSON.stringify({ bill_id: activeBill.value.id, amount: amount.value }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(d.message || "Pembayaran dari tabungan gagal.");
 
-function openPayView() {
-  const b = activeBill.value;
-  orderId.value = "SPP-" + String(b.periode).replace("-", "") + "-" + Date.now().toString().slice(-6);
-  method.value = "qris";
-  generateVA();
-  timerLeft.value = 15 * 60;
-  startTimer();
-  view.value = "pay";
-}
-
-/* ═══════════ HALAMAN BAYAR ═══════════ */
-function pickMethod(id) {
-  method.value = id;
-  vaCopied.value = false;
-  if (isVAMethod(id)) generateVA();
-}
-
-const isVAMethod = (id) => ["bca_va", "bni_va", "bri_va"].includes(id);
-
-function generateVA() {
-  // >>> NANTI: nomor VA asli dari response Midtrans
-  vaNumber.value = "8808 " + String(Date.now()).slice(-8).replace(/(\d{4})(\d{4})/, "$1 $2");
-}
-
-async function copyVA() {
-  try { await navigator.clipboard.writeText(vaNumber.value.replace(/\s/g, "")); } catch {}
-  vaCopied.value = true;
-  showToast("Nomor VA disalin ✓");
-  setTimeout(() => (vaCopied.value = false), 2000);
-}
-
-/* Timer 15 menit */
-function startTimer() {
-  stopTimer();
-  timerInt = setInterval(() => {
-    timerLeft.value--;
-    if (timerLeft.value <= 0) {
-      stopTimer();
-      showToast("Waktu pembayaran habis.");
-    }
-  }, 1000);
-}
-function stopTimer() { if (timerInt) { clearInterval(timerInt); timerInt = null; } }
-function restartTimer() {
-  timerLeft.value = 15 * 60;
-  startTimer();
-  showToast("Waktu diperpanjang 15 menit.");
-}
-
-/* ═══════════ VERIFIKASI & SUKSES ═══════════ */
-function goVerify() {
-  if (timerExpired.value || verifyBusy.value) return;
-  stopTimer();
-  verifyBusy.value = true;
-  view.value = "verify";
-  // >>> NANTI GANTI: polling GET /spp/pay/status?order_id=... sampai settlement
-  setTimeout(completeFlow, 1800);
-}
-
-function completeFlow() {
-  verifyBusy.value = false;
-  const b = activeBill.value;
-  if (b) {
-    // >>> NANTI: JANGAN update di sini — tunggu webhook backend yang mutakhirkan.
-    // (di prototipe ini kita update lokal agar desain terlihat bereaksi)
+    saldoTabungan.value = d.saldo ?? Math.max(saldoTabungan.value - amount.value, 0);
+    const b = activeBill.value;
     b.terbayar = (b.terbayar || 0) + amount.value;
     b.sisa = Math.max(b.nominal - b.terbayar, 0);
-    if (b.sisa === 0) b.status = "lunas";
+    if (d.bill?.status === "lunas" || b.sisa === 0) b.status = "lunas";
     b.payments = b.payments || [];
     b.payments.unshift({
       id: Date.now(),
-      metode: "Midtrans · " + activeMethodName.value,
+      metode: "tabungan",
       paid_at: new Date().toISOString(),
       amount: amount.value,
     });
+    animateSisa(ringkasan.value.sisa);
+    view.value = "success";
+    showToast(b.sisa === 0 ? "Tagihan dilunasi dari tabungan" : "Pembayaran dari tabungan berhasil", "success", 4200);
+    loadData(true);
+  } catch (e) {
+    showToast(e.message || "Pembayaran dari tabungan gagal.", "error");
+  } finally {
+    saldoBusy.value = false;
   }
-  animateSisa(ringkasan.value.sisa);
-  view.value = "success";
-  showToast(b && b.sisa === 0 ? "Tagihan dilunasi! 🎉" : "Pembayaran berhasil 🎉");
-  loadData(true); // sinkron ulang di background, tanpa skeleton
-}
-
-function cancelPay() {
-  stopTimer();
-  view.value = "amount";
-  showToast("Transaksi dibatalkan.");
 }
 
 function payNext() {
@@ -311,7 +213,6 @@ function payNext() {
 }
 
 function resetToIdle() {
-  stopTimer();
   activeBill.value = null;
   amount.value = 0;
   amountStr.value = "";
@@ -321,15 +222,13 @@ function resetToIdle() {
 /* ═══════════ LIFECYCLE ═══════════ */
 onMounted(() => loadData());
 onBeforeUnmount(() => {
-  stopTimer();
-  clearTimeout(toastTimer);
   if (sisaRaf) cancelAnimationFrame(sisaRaf);
 });
 </script>
 
 <template>
   <section class="spp-page">
-    <div class="toast" :class="{ show: toastShow }">{{ toastMsg }}</div>
+    <ToastStack />
 
     <div class="wrap">
       <div class="layout">
@@ -371,10 +270,10 @@ onBeforeUnmount(() => {
           <div v-if="view === 'idle'">
             <div class="flow-head">
               <h2>Pembayaran SPP</h2>
-              <span class="secure"><ShieldCheck :size="12" :stroke-width="2.5" /> MIDTRANS</span>
+              <span class="secure"><ShieldCheck :size="12" :stroke-width="2.5" /> SALDO TABUNGAN</span>
             </div>
             <div class="steps">
-              <span class="step-dot on"></span><span class="step-dot"></span><span class="step-dot"></span>
+              <span class="step-dot on"></span><span class="step-dot"></span>
               <span class="step-label">Siap Bayar</span>
             </div>
 
@@ -406,7 +305,7 @@ onBeforeUnmount(() => {
 
             <div class="secure-note">
               <ShieldCheck :size="13" :stroke-width="2.5" />
-              Bisa bayar penuh atau parsial · QRIS, e-wallet, VA bank & kartu
+              Bayar langsung dari saldo tabungan · penuh atau parsial
             </div>
           </div>
 
@@ -419,7 +318,7 @@ onBeforeUnmount(() => {
               <h2>Bayar SPP — {{ activeBill ? periodeLabel(activeBill.periode) : "" }}</h2>
             </div>
             <div class="steps">
-              <span class="step-dot on"></span><span class="step-dot"></span><span class="step-dot"></span>
+              <span class="step-dot on"></span><span class="step-dot"></span>
               <span class="step-label">1 · Nominal</span>
             </div>
 
@@ -429,8 +328,8 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="field">
-              <label>Nominal Bayar (minimal Rp10.000 atau lunas penuh)</label>
-              <div class="amount-wrap" :class="{ invalid: amountInvalid }">
+              <label>Nominal Bayar</label>
+              <div class="amount-wrap">
                 <span class="amount-prefix">Rp</span>
                 <input
                   v-model="amountStr"
@@ -438,7 +337,6 @@ onBeforeUnmount(() => {
                   @input="onAmountInput"
                 />
               </div>
-              <span class="field-error" :class="{ show: amountInvalid }">Minimal Rp10.000 atau lunaskan penuh</span>
             </div>
 
             <div class="presets">
@@ -458,142 +356,34 @@ onBeforeUnmount(() => {
               </b></div>
             </div>
 
-            <button class="btn-primary" :disabled="!canSubmit" @click="submitPay">
-              {{ submitBusy ? "Memproses…" : "Lanjutkan" }}
-            </button>
-            <p class="btn-hint">{{ canSubmit ? "Lanjut ke halaman pembayaran →" : "Pilih nominal untuk melanjutkan" }}</p>
-          </div>
-
-          <!-- VIEW · PEMBAYARAN -->
-          <div v-else-if="view === 'pay'">
-            <div class="flow-head"><h2>Selesaikan Pembayaran</h2></div>
-            <div class="steps">
-              <span class="step-dot on"></span><span class="step-dot on"></span><span class="step-dot"></span>
-              <span class="step-label">2 · Bayar</span>
-            </div>
-
-            <div class="pay-timer" :class="{ urgent: timerUrgent, expired: timerExpired }">
-              <Timer :size="15" :stroke-width="2.5" />
-              {{ timerExpired ? "Waktu pembayaran habis" : "Selesaikan dalam" }}
-              <span v-if="!timerExpired">{{ timerText }}</span>
-            </div>
-
-            <div class="order-meta">
-              <span>Order ID <b>{{ orderId }}</b></span>
-              <span>Total <b>{{ fmt(amount) }}</b></span>
-            </div>
-
-            <span class="sec-label">Metode Pembayaran</span>
-            <div class="method-chips">
+            <!-- Pembayaran hanya dari saldo tabungan (tanpa gateway) -->
+            <div class="saldo-box">
+              <div class="saldo-top">
+                <span>Saldo Tabungan</span>
+                <strong>{{ fmt(saldoTabungan) }}</strong>
+              </div>
               <button
-                v-for="m in METHODS" :key="m.id"
-                class="mchip" :class="{ active: method === m.id }"
-                @click="pickMethod(m.id)"
-              >{{ m.chip }}</button>
+                class="btn-saldo"
+                :disabled="!canPaySaldo || saldoBusy"
+                @click="paySaldo"
+              >
+                <Wallet :size="15" :stroke-width="2.5" />
+                {{ saldoBusy ? "Memproses…" : "Bayar dari Saldo Tabungan" }}
+              </button>
+              <p class="saldo-hint" :class="{ warn: amount > saldoTabungan || saldoTabungan <= 0 }">{{ saldoHint }}</p>
             </div>
-
-            <!-- QRIS / Snap -->
-            <div v-if="activeMethodId === 'qris' || activeMethodId === 'snap'" class="pay-panel">
-              <h3>Scan QRIS</h3>
-              <p class="pay-hint">Gunakan GoPay, OVO, DANA, ShopeePay, atau m-banking</p>
-              <div class="qr-box">
-                <svg viewBox="0 0 100 100" fill="#1c2a23">
-                  <rect x="2" y="2" width="26" height="26" rx="4" fill="none" stroke="#1c2a23" stroke-width="6"/>
-                  <rect x="10" y="10" width="10" height="10"/>
-                  <rect x="72" y="2" width="26" height="26" rx="4" fill="none" stroke="#1c2a23" stroke-width="6"/>
-                  <rect x="80" y="10" width="10" height="10"/>
-                  <rect x="2" y="72" width="26" height="26" rx="4" fill="none" stroke="#1c2a23" stroke-width="6"/>
-                  <rect x="10" y="80" width="10" height="10"/>
-                  <rect x="38" y="4" width="8" height="8"/><rect x="52" y="4" width="8" height="8"/>
-                  <rect x="40" y="18" width="6" height="6"/><rect x="56" y="20" width="8" height="8"/>
-                  <rect x="4" y="38" width="8" height="8"/><rect x="18" y="40" width="8" height="8"/>
-                  <rect x="34" y="36" width="10" height="10"/><rect x="50" y="38" width="8" height="8"/>
-                  <rect x="64" y="36" width="8" height="6"/><rect x="78" y="38" width="8" height="8"/>
-                  <rect x="90" y="38" width="6" height="8"/><rect x="38" y="52" width="8" height="8"/>
-                  <rect x="52" y="54" width="10" height="6"/><rect x="68" y="52" width="8" height="8"/>
-                  <rect x="82" y="54" width="6" height="6"/><rect x="38" y="66" width="6" height="6"/>
-                  <rect x="50" y="68" width="8" height="8"/><rect x="64" y="66" width="6" height="8"/>
-                  <rect x="76" y="68" width="10" height="6"/><rect x="90" y="66" width="6" height="10"/>
-                  <rect x="40" y="82" width="8" height="8"/><rect x="54" y="84" width="6" height="6"/>
-                  <rect x="66" y="80" width="8" height="8"/><rect x="80" y="84" width="8" height="6"/>
-                </svg>
-              </div>
-              <p class="pay-hint">QR hanya berlaku selama waktu tersedia</p>
-            </div>
-
-            <!-- GoPay / ShopeePay -->
-            <div v-else-if="activeMethodId === 'gopay' || activeMethodId === 'shopeepay'" class="pay-panel">
-              <div class="ewallet-ico" :class="activeMethodId">{{ activeMethodChip.toUpperCase() }}</div>
-              <h3>Bayar via {{ activeMethodId === "gopay" ? "Gojek" : "Shopee" }}</h3>
-              <p class="pay-hint">Notifikasi pembayaran akan muncul di aplikasimu</p>
-              <ol class="pay-steps">
-                <li>Buka aplikasi {{ activeMethodId === "gopay" ? "Gojek" : "Shopee" }} di HP-mu</li>
-                <li>Cek notifikasi permintaan pembayaran</li>
-                <li>Verifikasi dengan PIN / biometrik</li>
-              </ol>
-            </div>
-
-            <!-- Kartu -->
-            <div v-else-if="activeMethodId === 'card'" class="pay-panel">
-              <h3>Kartu Kredit / Debit</h3>
-              <p class="pay-hint">Isi data kartu di halaman pembayaran aman Midtrans</p>
-              <ol class="pay-steps" style="text-align:left">
-                <li>Klik tombol <b>Saya Sudah Bayar</b> setelah data kartu diisi</li>
-                <li>Masukkan OTP / 3D Secure dari bank kamu</li>
-                <li>Saldo masuk setelah terverifikasi</li>
-              </ol>
-            </div>
-
-            <!-- Virtual Account -->
-            <div v-else class="pay-panel">
-              <h3>{{ activeMethodChip }} Virtual Account</h3>
-              <p class="pay-hint">Nomor Virtual Account kamu</p>
-              <div class="va-number">
-                <code>{{ vaNumber }}</code>
-                <button class="btn-copy" :class="{ copied: vaCopied }" @click="copyVA">
-                  <Check v-if="vaCopied" :size="13" :stroke-width="2.5" />
-                  <Copy v-else :size="13" :stroke-width="2.5" />
-                  {{ vaCopied ? "Tersalin" : "Salin" }}
-                </button>
-              </div>
-              <ol class="pay-steps">
-                <li>Buka m-banking / ATM, pilih <b>Transfer Virtual Account</b></li>
-                <li>Masukkan nomor VA di atas</li>
-                <li>Periksa nominal <b>{{ fmt(amount) }}</b> lalu konfirmasi</li>
-              </ol>
-            </div>
-
-            <p class="expired-note" :class="{ show: timerExpired }">⌛ Perpanjang waktu untuk melanjutkan pembayaran.</p>
-            <button class="btn-primary" :disabled="timerExpired || verifyBusy" @click="goVerify">
-              {{ verifyBusy ? "Memproses…" : "Saya Sudah Bayar" }}
-            </button>
-            <button v-if="timerExpired" class="btn-ghost warn" @click="restartTimer">Perpanjang Waktu 15 Menit</button>
-            <button class="btn-ghost" @click="cancelPay">Batalkan Transaksi</button>
 
             <div class="secure-note">
               <ShieldCheck :size="13" :stroke-width="2.5" />
-              Status tagihan diperbarui otomatis setelah pembayaran terverifikasi
-            </div>
-          </div>
-
-          <!-- VIEW · VERIFIKASI -->
-          <div v-else-if="view === 'verify'">
-            <div class="steps">
-              <span class="step-dot on"></span><span class="step-dot on"></span><span class="step-dot on"></span>
-              <span class="step-label">3 · Selesai</span>
-            </div>
-            <div class="verify-wrap">
-              <div class="spinner"></div>
-              <h3>Memverifikasi Pembayaran…</h3>
-              <p>Mohon tunggu, jangan tutup halaman ini</p>
+              Saldo langsung terpotong · tagihan diperbarui seketika
             </div>
           </div>
 
           <!-- VIEW · SUKSES -->
           <div v-else-if="view === 'success' && activeBill">
             <div class="steps">
-              <span class="step-dot on"></span><span class="step-dot on"></span><span class="step-dot on"></span>
-              <span class="step-label">3 · Selesai</span>
+              <span class="step-dot on"></span><span class="step-dot on"></span>
+              <span class="step-label">2 · Selesai</span>
             </div>
             <div class="success-wrap">
               <div class="success-ico"><Check :size="30" :stroke-width="3" /></div>
@@ -602,8 +392,8 @@ onBeforeUnmount(() => {
               <div class="success-detail">
                 <div><span>Periode</span><b>{{ periodeLabel(activeBill.periode) }}</b></div>
                 <div><span>Pembayaran ini</span><b>{{ fmt(amount) }}</b></div>
-                <div><span>Metode</span><b>{{ activeMethodName }}</b></div>
-                <div><span>Order ID</span><b class="small">{{ orderId }}</b></div>
+                <div><span>Metode</span><b>Saldo Tabungan</b></div>
+                <div><span>Sisa saldo tabungan</span><b class="ok">{{ fmt(saldoTabungan) }}</b></div>
                 <div><span>Sisa tagihan</span>
                   <b :class="activeBill.sisa === 0 ? 'ok' : 'warn'">
                     {{ activeBill.sisa === 0 ? "Lunas 🎉" : fmt(activeBill.sisa) }}
@@ -851,15 +641,12 @@ onBeforeUnmount(() => {
   border: 1.5px solid #dfe5df; border-radius: 12px; transition: border-color .2s;
 }
 .amount-wrap:focus-within { border-color: var(--green-700); }
-.amount-wrap.invalid { border-color: var(--red); }
 .amount-prefix { padding: 0 2px 0 15px; font-weight: 800; color: #6b7a6e; font-size: 15px; }
 .amount-wrap input {
   flex: 1; min-width: 0; border: none; outline: none; background: transparent;
   padding: 14px 15px 14px 4px;
   font-family: "Quicksand", sans-serif; font-size: 17px; font-weight: 800; color: var(--ink);
 }
-.field-error { font-size: 11.5px; font-weight: 700; color: var(--red); display: none; }
-.field-error.show { display: block; }
 
 .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
 .preset {
@@ -879,6 +666,27 @@ onBeforeUnmount(() => {
 .summary-box b.ok { color: var(--green-700); }
 .summary-box b.warn { color: var(--red); }
 
+/* Panel bayar dari saldo tabungan */
+.saldo-box {
+  margin-top: 14px; padding: 14px 15px;
+  border: 1.5px solid #cfe0d5; border-radius: 14px; background: #f6faf6;
+}
+.saldo-top {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+}
+.saldo-top span { font-size: 12.5px; font-weight: 700; color: #6b7a6e; }
+.saldo-top strong { font-size: 15px; font-weight: 800; color: var(--green-700); }
+.btn-saldo {
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px; border: 1.5px solid var(--green-700); border-radius: 12px;
+  background: #fff; color: var(--green-700);
+  font-size: 14px; font-weight: 800; transition: all .15s;
+}
+.btn-saldo:hover:not(:disabled) { background: var(--green-100); }
+.btn-saldo:disabled { opacity: .45; }
+.saldo-hint { margin: 8px 0 0; font-size: 11.5px; font-weight: 600; color: var(--muted); text-align: center; }
+.saldo-hint.warn { color: var(--amber); }
+
 .btn-primary {
   width: 100%; padding: 15px; border: none; border-radius: 13px;
   background: var(--green-700); color: #fff;
@@ -887,7 +695,6 @@ onBeforeUnmount(() => {
 .btn-primary:hover:not(:disabled) { opacity: .9; }
 .btn-primary:active:not(:disabled) { transform: scale(.985); }
 .btn-primary:disabled { opacity: .45; }
-.btn-hint { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 9px; }
 .btn-ghost {
   width: 100%; padding: 12px; margin-top: 8px;
   border: none; border-radius: 13px; background: transparent;
@@ -908,9 +715,8 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-/* Chip metode & filter */
-.sec-label { display: block; font-size: 12px; font-weight: 700; color: #6b7a6e; margin-bottom: 8px; }
-.method-chips, .filter-chips {
+/* Chip filter */
+.filter-chips {
   display: flex; gap: 8px; overflow-x: auto;
   padding-bottom: 6px; margin-bottom: 14px; scrollbar-width: thin;
 }
@@ -921,67 +727,7 @@ onBeforeUnmount(() => {
 }
 .mchip.active { border-color: var(--green-700); background: var(--green-100); color: var(--green-700); }
 
-/* Halaman bayar */
-.pay-timer {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 11px; border-radius: 12px;
-  background: var(--amber-bg); color: var(--amber);
-  font-size: 13px; font-weight: 800; margin-bottom: 14px;
-}
-.pay-timer.urgent { animation: blink 1s infinite; }
-.pay-timer.expired { background: var(--red-bg); color: var(--red); animation: none; }
-@keyframes blink { 50% { opacity: .55; } }
-.order-meta {
-  display: flex; justify-content: space-between;
-  font-size: 12px; font-weight: 600; color: var(--muted);
-  background: #f7f9f7; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
-}
-.order-meta b { color: var(--ink); }
-.pay-panel {
-  border: 1.5px solid var(--line); border-radius: 16px;
-  padding: 18px; text-align: center; margin-bottom: 14px;
-}
-.pay-panel h3 { font-size: 15px; font-weight: 800; margin: 0 0 4px; }
-.pay-hint { font-size: 12px; color: var(--muted); font-weight: 500; margin: 0; }
-.qr-box {
-  width: 190px; height: 190px; margin: 14px auto 10px;
-  border: 1.5px solid var(--line); border-radius: 14px;
-  display: grid; place-items: center; background: #fff;
-}
-.qr-box svg { width: 160px; height: 160px; }
-.va-number {
-  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-  margin: 14px 0 12px; padding: 13px; border-radius: 12px; background: #f2f6f2;
-}
-.va-number code { font-family: inherit; font-size: 18px; font-weight: 800; letter-spacing: 1.5px; }
-.btn-copy {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border: none; border-radius: 999px;
-  background: var(--green-700); color: #fff; font-size: 12px; font-weight: 800;
-}
-.btn-copy.copied { background: var(--green-500); }
-.pay-steps { text-align: left; margin: 12px 0 0; padding-left: 18px; }
-.pay-steps li { font-size: 12.5px; font-weight: 600; color: #55645a; margin-bottom: 7px; line-height: 1.45; }
-.ewallet-ico {
-  width: 60px; height: 60px; margin: 14px auto 12px; border-radius: 17px;
-  display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff;
-}
-.ewallet-ico.gopay { background: #00aed6; }
-.ewallet-ico.shopeepay { background: #ee4d2d; }
-.expired-note { display: none; text-align: center; font-size: 12.5px; font-weight: 700; color: var(--red); margin-bottom: 10px; }
-.expired-note.show { display: block; }
-
 /* Verifikasi & sukses */
-.verify-wrap { text-align: center; padding: 30px 0; }
-.spinner {
-  width: 48px; height: 48px; margin: 0 auto 16px;
-  border-radius: 50%; border: 4px solid var(--green-100); border-top-color: var(--green-700);
-  animation: spin .8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.verify-wrap h3 { font-size: 16px; font-weight: 800; margin: 0; }
-.verify-wrap p { font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 6px 0 0; }
-
 .success-wrap { text-align: center; padding: 10px 0 4px; }
 .success-ico {
   width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%;
@@ -1086,20 +832,6 @@ onBeforeUnmount(() => {
 }
 .bill-pay-date { flex: 1; color: #9aa79e; }
 .bill-pay-amount { font-weight: 800; }
-
-/* Toast */
-.toast {
-  position: fixed; top: 20px; left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  z-index: 3000; opacity: 0; pointer-events: none;
-  padding: 12px 22px; border-radius: 13px;
-  background: var(--ink); color: #fff;
-  font-size: 14px; font-weight: 700;
-  box-shadow: 0 14px 34px rgba(28, 42, 35, .3);
-  transition: opacity .25s, transform .25s;
-  max-width: 90vw; text-align: center;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @keyframes pulse {
   0%, 100% { opacity: 0.8; }
