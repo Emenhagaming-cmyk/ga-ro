@@ -166,12 +166,12 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 - **Layout**: Navbar.vue, Footer.vue
 - **Sections**: Hero.vue, AboutSchool.vue, SpmbBanner.vue, BeritaPreview.vue, CareerPreview.vue, KoperasiPreview.vue, ProdukPreview.vue, TabunganBanner.vue
 - **Chatbot**: ChatHeader.vue, ChatInput.vue, ChatMessages.vue, FloatingAi.vue, TypingIndicator.vue
-- **Common**: CursorGlow.vue, BackgroundFX.vue, LazyMount.vue, ContactModal.vue
+- **Common**: CursorGlow.vue, BackgroundFX.vue, LazyMount.vue, ContactModal.vue, ToastStack.vue (toast notifikasi bersama Tabungan/SPP, ikon lucide per tipe)
 - **Loading**: LoadingScreen.vue
 
 ### Vue Composables
 - `useAuthSession.js` — session-based via /auth-status polling + ?auth= URL payload
-- `useToast.js` — toast notifications
+- `useToast.js` — state toast di modul-level (stack maks 3, `showToast(msg, type, duration)`) dipakai TabunganView & SppView via ToastStack.vue
 
 ### Laravel Controllers (Backend)
 - `AuthController.php` — register, login, logout, authStatus, forgotPassword, resetPassword, profile
@@ -289,6 +289,27 @@ cd C:\Users\LENOVO\lomba\ga-ro
 - Endpoint baru `GET /siswa/data` (auth + `role:siswa,pendaftar`) mengembalikan `{user, pendaftaran, can_edit, deadline}` — sumber data kedua view. `update()`/`logout()`/`updateAvatar()`/`destroyAvatar()` punya branch `$request->expectsJson()` (422/success JSON) supaya bisa dipanggil fetch dari Vue dengan CSRF token.
 - `avatar` **hidden** di serialisasi `User` (lihat `ProfileAvatarTest`) → endpoint membangun array `user` eksplisit (pola `authStatus`).
 - Form pendaftaran (create/update) masih Blade di backend; setelah submit → redirect `route('dashboard.siswa')` → bridge → halaman Vue.
+
+## Update 2026-10-15 — Fix Verifikasi Top Up Midtrans (Snap v4)
+
+- **Temuan API (uji langsung ke sandbox):** Snap redirect-v4 (`app.sandbox.midtrans.com/snap/v1/transactions/{token}`) membalas **HTTP 409** `"transaction has been succeed"` untuk transaksi yang sudah lunas — bukan 200 + payload. Core API v2 (`api.sandbox.../v2/{order_id}/status`) tidak mengenali transaksi Snap v4 (`"Transaction doesn't exist"`), jadi bukan alternatif.
+- `TabunganTopupController@verify` kini menangani 409 + pesan persis itu sebagai settlement (`applyRemoteStatus`, idempoten; amount credet dari DB lokal). Sebelumnya `$remote->ok()` gagal untuk 409 → transaksi lunas tak pernah credet di dev lokal (webhook tak terjangkau localhost).
+- `TabunganView.vue` — `window.open(..., "noopener")` selalu return null (toast "popup diblokir" palsu + tab tak bisa ditutup); kini tanpa `noopener` + `win.opener = null` + `midtransWin.close()` best-effort saat lunas. Arah-balik tab bayar tetap ditentukan **Finish Redirect URL di dashboard Midtrans** (finish_url per-request diabaikan akun Snap v4).
+
+## Update 2026-10-15 — Top Up Balik Otomatis ke `/tabungan` (Snap Popup)
+
+- **Akar masalah "tak kembali otomatis":** `GET /snap/v1/transactions/{token}` membalas `callbacks.finish` + `merchant.preference.finish_url` = `https://wisataku.com` (domain lama expired) → arah balik halaman Midtrans datang dari **dashboard akun**; `finish_url` per-request diabaikan.
+- **Koreksi catatan lama:** URL Snap.js yang benar **`{base}/snap/snap.js`** (diuji 200 `application/javascript`); yang dicoba dulu `/snap/v1/snap.js` (404) → popup salah dinyatakan tak mungkin.
+- `TabunganTopupController::create` menambah `snap_token`, `snap_script_url`, dan `client_key` (dibaca via server key dari `merchant.client_key`; `null` bila gagal → frontend fallback, bukan error).
+- `TabunganView.vue` — bayar lewat popup Snap **di halaman ini** (`loadSnapScript()` + `openSnap()`): `onSuccess`/`onPending` → verifikasi, `onError`/`onClose` → toast + kartu pembayaran. Fallback `window.open` + polling tetap utuh bila Snap gagal dimuat.
+
+## Update 2026-10-15 — Bayar SPP dari Saldo Tabungan
+
+- Endpoint baru `POST /spp/pay-tabungan` (`auth` + `role:siswa`) → `SppController@payWithTabungan`: dalam satu `DB::transaction` kunci baris `users` (`lockForUpdate` — anti double-spend karena saldo dihitung agregat), validasi (bill milik sendiri → 404, sudah lunas / melebihi sisa / melebihi saldo → 422), tulis ledger `tabungans` (`tarik`, "Pembayaran SPP {periode}") + `spp_payments` (`metode='tabungan'`) + auto-`lunas`. Parsial didukung.
+- `GET /spp` menyertakan `saldo` untuk ditampilkan frontend.
+- Migration `2026_10_15_100000_add_tabungan_to_spp_payments_metode` — `spp_payments.metode` = **enum('tunai','transfer')** → tambah `'tabungan'` (guard mysql-only, sudah jalan di DB dev + disalin ke `backend-admin`).
+- `SppView.vue` — panel "Saldo Tabungan" di view nominal (saldo + hint + tombol bayar, CSRF via `getCsrfToken`); view success terpisah via flag `paidViaSaldo`. Alur Midtrans tidak berubah.
+- Test `SppControllerTest` +6 kasus bayar-dari-tabungan (belum bisa dijalankan di mesin Linux ini: PHP tanpa `pdo_sqlite`; verifikasi via tinker + rollback di MySQL dev, semua jalur benar).
 
 ---
 

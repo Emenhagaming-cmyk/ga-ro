@@ -93,6 +93,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 // SPP Siswa
 Route::middleware('auth')->group(function () {
     Route::get('/spp', [SppController::class, 'index'])->name('spp.index');
+    Route::post('/spp/pay-tabungan', [SppController::class, 'payWithTabungan'])
+        ->middleware('role:siswa')
+        ->name('spp.pay-tabungan');
 });
 
 // SPP (kasir / admin) input pembayaran

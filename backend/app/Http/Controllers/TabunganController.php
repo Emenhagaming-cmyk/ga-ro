@@ -11,6 +11,12 @@ class TabunganController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+
+        // Auto-settle: order pending yang sudah lunas di Midtrans dicredit saat halaman dibuka.
+        // Webhook bisa tak sampai (dev lokal / Notification URL belum diset), jadi load
+        // /tabungan = titik cadangan yang selalu ada tanpa depends JS frontend.
+        app(TabunganTopupController::class)->settlePendingFor($user->id);
+
         $tabungans = Tabungan::where('user_id', $user->id)->latest()->get();
 
         return response()->json([
