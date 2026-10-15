@@ -40,8 +40,12 @@ Route::post('/pendaftaran', [PendaftaranController::class, 'store'])->name('pend
 
 // Login siswa & admin: dashboard siswa + update form sendiri
 Route::middleware('auth')->group(function () {
+    // /dashboard-siswa & /profil kini jembatan redirect ke halaman Vue di frontend;
+    // data halaman itu diambil via /siswa/data (JSON, dipakai view dashboard + profil)
     Route::get('/dashboard-siswa', [PendaftaranController::class, 'myDashboard'])->name('dashboard.siswa');
     Route::get('/dashboard-siswa/snapshot', [PendaftaranController::class, 'myDashboardSnapshot'])->name('dashboard.siswa.snapshot');
+    Route::get('/siswa/data', [PendaftaranController::class, 'myDashboardData'])
+        ->name('siswa.data')->middleware('role:siswa,pendaftar');
     Route::put('/pendaftaran/{pendaftaran}', [PendaftaranController::class, 'update'])->name('pendaftaran.update');
     // "pendaftar" (belum dinyatakan diterima) juga boleh buka profil agar link dari topbar tidak error
     Route::get('/profil', [AuthController::class, 'showProfile'])->name('profil')->middleware('role:siswa,pendaftar');

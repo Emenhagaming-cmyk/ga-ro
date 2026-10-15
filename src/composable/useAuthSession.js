@@ -106,6 +106,12 @@ export function useAuthSession() {
   const isSiswaLoggedIn = () =>
     session.value.logged_in && session.value.role === "siswa";
 
+  // Logout dari Vue (Profil): bersihkan cache lokal supaya guard & UI langsung tahu sesi tamat
+  const clearSession = () => {
+    session.value = { ...GUEST };
+    persist(session.value);
+  };
+
   const spmbTarget = () => {
     // Sudah punya akun (pendaftar ATAU siswa) → dashboard, jangan lempar ke form pendaftaran lagi.
     if (session.value.logged_in) {
@@ -125,7 +131,7 @@ export function useAuthSession() {
     bfcacheBound = true;
   }
 
-  return { session, loaded, fetchStatus, isSiswaLoggedIn, spmbTarget, BACKEND };
+  return { session, loaded, fetchStatus, isSiswaLoggedIn, spmbTarget, clearSession, BACKEND };
 }
 
 export { BACKEND };

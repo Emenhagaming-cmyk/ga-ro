@@ -121,86 +121,83 @@ class DashboardSiswaHierarchyTest extends TestCase
         ]);
     }
 
-    private function assertAnnounceAfterBanner(string $content): void
-    {
-        $banner = strpos($content, 'class="ds-banner"');
-        $announce = strpos($content, 'class="ds-announce');
-
-        $this->assertNotFalse($announce, 'Card pengumuman (ds-announce) harus ada');
-        $this->assertNotFalse($banner, 'Banner sambutan harus ada');
-        $this->assertLessThan($announce, $banner, 'Pengumuman harus tampil TEPAT SETELAH banner sambutan');
-    }
-
-    public function test_pengumuman_diterima_tampil_paling_atas_dengan_tombol_unduh()
+    public function test_dashboard_siswa_redirect_ke_halaman_vue()
     {
         $user = $this->makeUser('siswa', 'ds_siswa1');
         $this->makePendaftaran($user, 'diterima');
 
         $response = $this->actingAs($user)->get('/dashboard-siswa');
-        $response->assertOk();
-        $content = $response->getContent();
 
-        $this->assertAnnounceAfterBanner($content);
-        $response->assertSee('ds-announce--diterima');
-        $response->assertSee('Pengumuman Hasil Seleksi');
-        $response->assertSee('Unduh Bukti Diterima', false);
+        $response->assertRedirect();
+        $this->assertStringContainsString('/dashboard-siswa', (string) $response->headers->get('Location'));
     }
 
-    public function test_pengumuman_ditolak_tampil_atas_dan_teks_menyampaikan_penolakan()
+    public function test_data_status_diterima_tidak_bisa_diedit()
     {
         $user = $this->makeUser('siswa', 'ds_siswa2');
-        $this->makePendaftaran($user, 'ditolak');
+        $this->makePendaftaran($user, 'diterima');
 
-        $response = $this->actingAs($user)->get('/dashboard-siswa');
-        $response->assertOk();
-        $content = $response->getContent();
-
-        $this->assertAnnounceAfterBanner($content);
-        $response->assertSee('ds-announce--ditolak');
-        $response->assertSee('tidak diterima');
-        $response->assertDontSee('Unduh Bukti Diterima');
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('pendaftaran.status', 'diterima')
+            ->assertJsonPath('pendaftaran.jurusan_pilihan', 'RPL')
+            ->assertJsonPath('can_edit', false)
+            ->assertJsonPath('deadline', null);
     }
 
-    public function test_status_diproses_naik_ke_atas()
+    public function test_data_status_ditolak_tidak_bisa_diedit()
     {
         $user = $this->makeUser('siswa', 'ds_siswa3');
-        $this->makePendaftaran($user, 'diproses');
+        $this->makePendaftaran($user, 'ditolak');
 
-        $response = $this->actingAs($user)->get('/dashboard-siswa');
-        $response->assertOk();
-        $content = $response->getContent();
-
-        $this->assertAnnounceAfterBanner($content);
-        $response->assertSee('ds-announce--diproses');
-        $response->assertSee('sedang diproses');
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('pendaftaran.status', 'ditolak')
+            ->assertJsonPath('can_edit', false);
     }
 
-    public function test_status_baru_lewat_deadline_tampil_informasi_penting_di_atas()
+    public function test_data_status_diproses_tidak_bisa_diedit()
     {
         $user = $this->makeUser('siswa', 'ds_siswa4');
+        $this->makePendaftaran($user, 'diproses');
+
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('pendaftaran.status', 'diproses')
+            ->assertJsonPath('can_edit', false);
+    }
+
+    public function test_data_status_baru_lewat_deadline_tidak_bisa_diedit()
+    {
+        $user = $this->makeUser('siswa', 'ds_siswa5');
         $p = $this->makePendaftaran($user, 'baru');
         $p->forceFill(['created_at' => now()->subDays(4)])->save();
 
-        $response = $this->actingAs($user)->get('/dashboard-siswa');
-        $response->assertOk();
-        $content = $response->getContent();
-
-        $this->assertAnnounceAfterBanner($content);
-        $response->assertSee('ds-announce--baru');
-        $response->assertSee('Informasi Penting');
-        $response->assertSee('Batas waktu edit telah berakhir');
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('can_edit', false)
+            ->assertJsonPath('deadline', null);
     }
 
-    public function test_baru_yang_masih_bisa_diedit_tidak_menampilkan_pengumuman()
+    public function test_data_status_baru_masih_bisa_diedit()
     {
-        $user = $this->makeUser('siswa', 'ds_siswa5');
+        $user = $this->makeUser('siswa', 'ds_siswa6');
         $this->makePendaftaran($user, 'baru');
 
-        $response = $this->actingAs($user)->get('/dashboard-siswa');
-        $response->assertOk();
+        $response = $this->actingAs($user)->getJson('/siswa/data');
 
-        $response->assertDontSee('class="ds-announce', false);
-        $response->assertSee('Edit Formulir');
-        $response->assertSee('id="edit-section"', false);
+        $response->assertOk()
+            ->assertJsonPath('can_edit', true)
+            ->assertJsonPath('pendaftaran.status', 'baru');
+        $this->assertNotNull($response->json('deadline'), 'Deadline edit harus terisi saat masih bisa diedit');
+    }
+
+    public function test_admin_ditolak_ambil_data_siswa()
+    {
+        $this->makeUser('admin', 'ds_admin1');
+
+        $this->actingAs(User::where('username', 'ds_admin1')->first())
+            ->getJson('/siswa/data')
+            ->assertForbidden();
     }
 }
