@@ -107,7 +107,8 @@ export function useAuthSession() {
     session.value.logged_in && session.value.role === "siswa";
 
   const spmbTarget = () => {
-    if (isSiswaLoggedIn() && session.value.has_pendaftaran) {
+    // Sudah punya akun (pendaftar ATAU siswa) → dashboard, jangan lempar ke form pendaftaran lagi.
+    if (session.value.logged_in) {
       return `${BACKEND}/dashboard-siswa`;
     }
     return `${BACKEND}/pendaftaran`;

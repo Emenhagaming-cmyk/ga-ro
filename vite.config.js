@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5174,
       strictPort: true,
+      // Midtrans hanya mau finish redirect ke URL publik → dev lewat tunnel
+      // (localtunnel/cloudflared) harus diizinkan sebagai host.
+      allowedHosts: [".loca.lt", ".trycloudflare.com"],
     },
 
     resolve: {

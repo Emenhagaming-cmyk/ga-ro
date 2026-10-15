@@ -8,7 +8,10 @@ use App\Models\Pendaftaran;
  */
 function frontendAuthUrl(): string
 {
-    $frontend = env('FRONTEND_URL', 'https://smkbu-sby.vercel.app');
+    $localHosts = ['localhost', '127.0.0.1', '::1'];
+    $isLocal = in_array(request()->getHost(), $localHosts, true) || app()->isLocal();
+    $default = $isLocal ? 'http://localhost:5174' : 'https://smkbu-sby.vercel.app';
+    $frontend = rtrim(env('FRONTEND_URL', $default), '/');
     $payload = ['logged_in' => false, 'role' => null, 'name' => null, 'has_pendaftaran' => false, 'status' => null];
 
     if (auth()->check()) {

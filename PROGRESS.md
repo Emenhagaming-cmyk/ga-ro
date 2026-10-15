@@ -2,7 +2,89 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
-## STATUS TERAKHIR (2026-10-10) — RATE LIMIT LOGIN (LARAVEL) + TEMUAN STACK VPS
+## STATUS TERAKHIR (2026-10-14) — TOP UP TABUNGAN VIA MIDTRANS SNAP
+
+- **Backend**
+  - Migration `2026_10_14_120000_create_tabungan_topups_table` (order_id unik, midtrans_order_id, snap_token, amount, method, status pending/paid/expired/failed, paid_at).
+  - `app/Models/TabunganTopup.php`.
+  - `app/Http/Controllers/TabunganTopupController.php` — `create` (Snap `/snap/v1/transactions` via Laravel `Http`, basic auth server key), `status` (polling, scoped per user), `notification` (webhook: verifikasi `sha512(order_id+status_code+gross_amount+server_key)`, cek gross amount, `lockForUpdate` + status check = idempotent, kredit saldo `Tabungan` type setor).
+  - `config/services.php` — blok `midtrans` (server_key, production, base_url).
+  - `routes/web.php` — `POST /tabungan/topup`, `GET /tabungan/topup/{orderId}` (auth), `POST /midtrans/notification` (throttle 120/menit).
+  - `bootstrap/app.php` — `midtrans/notification` dikecualikan dari CSRF.
+  - `.env.example` — `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_BASE_URL`.
+- **Frontend** `src/views/TabunganView.vue`
+  - Submit → `POST /tabungan/topup` (pakai `getCsrfToken`) → dapat `redirect_url` → `window.location.assign` ke halaman pembayaran Midtrans (Snap **redirect**, bukan popup JS). Kembali dari Midtrans lewat `finish_url`/`cancel_url` (`?midtrans=finish&order=…`), dicek di `onMounted` → langsung polling.
+  - **Kenapa bukan snap.js popup:** `https://app.sandbox.midtrans.com/snap/v1/snap.js` membalas 404 + halaman HTML (halaman splash SNAP), jadi popup tidak bisa dimuat. Redirect tidak butuh JS pihak ketiga sama sekali.
+  - `app/helpers.php` — helper baru `frontendBaseUrl()`; `frontendAuthUrl()` sekarang memakainya (hemat duplikasi logika local/prod).
+- **Verifikasi tanpa webhook** (sandbox tidak bisa menjangkau `localhost:8000`, jadi credit mustahil masuk lewat notifikasi saat dev):
+  - `POST /tabungan/topup/{orderId}/verify` — server menanyakan status ke Midtrans (`GET /snap/v1/transactions/{midtrans_order_id}`) lalu applying lewat `applyRemoteStatus()` yang sama dengan webhook, jadi tidak mungkin credet ganda.
+  - Logika credet dipindah ke satu method `applyRemoteStatus()`; webhook dan verify sama-sama memakainya.
+  - Frontend: order disimpan di `sessionStorage` sebelum pindah ke Midtrans, jadi siswa yang menutup halaman / tekan "back" tetap bisa lanjut verifikasi saat buka `/tabungan`.
+  - Uji: `POST /tabungan/topup/TOPUP-BL74IUDIHNI0/verify` → `pending` (status truthfully dibaca dari Midtrans, tanpa credet). Jalur credet settlement sudah terbukti lewat uji webhook sebelumnya.
+  - **Perbaikan halaman nyangkut di "verifikasi":** order di `sessionStorage` dulu dipakai selamanya, jadi tiap buka `/tabungan` langsung masuk spinner verifikasi dan menu tak terjangkau. Sekarang: hanya `?midtrans=finish` yang memakai `goVerify({blocking:true})`; order dari storage diverifikasi di belakang layar (`blocking:false`) dan dibuang bila tidak terbayar / lebih tua dari 30 menit. Semua jalur keluar (paid, failed, batal, timeout, reset) membersihkan `PENDING_KEY`.
+- **Temuan dari probe API Midtrans sandbox (penting):**
+  - Akun ini memakai **Snap redirect v4**: `POST /snap/v1/transactions` hanya mengembalikan `token` + `redirect_url`, **tanpa `order_id`** → kolom `tabungan_topups.midtrans_order_id` kosong. Endpoint status `GET /snap/v1/transactions/{order_id}` membalas `token not found`; yang diterima adalah **snap token**. `verify` kini memakai `midtrans_order_id ?: snap_token`, dan hanya menerapkan status bila `transaction_details.order_id` cocok (anti salah order).
+  - `finish_url`/`cancel_url` per-request **diabaikan** akun ini: respons `callbacks.finish` tetap default akun. Arah balik student harus diatur dari **dashboard Midtrans (Settings → Snap)**, bukan dari kode.
+  - **Alur tanpa setting dashboard sama sekali (final):** `payAtMidtrans()` membuka `redirect_url` di **tab baru** (`window.open`), halaman tetap di aplikasi, lalu `goVerify({blocking:false})` memantau status dari server ke Midtrans (90×2 detik = 3 menit) dan credet saldo otomatis begitu `settlement`. Tidak butuh Notification URL, Finish Redirect, maupun Cancel Redirect. `finish_url` tetap dikirim sebagai cadangan bila suatu saat callback diaktifkan.
+  - Endpoint status legacy (`api.sandbox.midtrans.com/v1/{order}/status`) → 404 pada akun ini. Sumber kebenaran settlement tetap **webhook notifikasi**; untuk dev lokal butuh URL publik (tunnel) karena sandbox tidak bisa menjangkau `localhost:8000`.
+  - Verifikasi = polling `GET /tabungan/topup/{orderId}` maks 30×2 detik; saldo **tidak pernah** ditambah dari frontend, hanya dari webhook.
+  - Chip metode + QR/VA palsu **dihapus** (VA palsu = risiko transfer ke nomor salah); Midtrans Snap yang|Method|ibi.
+- **Verifikasi:** `npm run build` sukses, `php -l` bersih, `route:list` benar. Uji integrasi lewat `php artisan tinker` (semua di-rollback): webhook settlement → 200, topup `paid`, baris `tabungans` terbentuk; retry webhook → tetap 1 baris (idempoten); signature salah → 403; `amount` < 10000 → 422; role selain siswa → 422; `status` order milik siswa lain → 404. Jalur `create` (panggilan API Midtrans) belum diuji — butuh server key asli.
+
+## SEBELUMNYA (2026-10-14) — PANEL SISWA VUE (LAYOUT SIDEBAR)
+
+- **Panel siswa frontend** (permintaan user; siswa-only, tak tampil ke publik):
+  - **Baru** `src/layouts/SiswaLayout.vue` — sidebar gelap (Status Pendaftaran, Tabungan, SPP, Koperasi, Career Center + submenu, Profil, Bukti Diterima) + `<RouterView />`. Off-canvas di mobile (FAB kiri-bawah), backdrop, divider.
+  - `src/router/index.js` — rute siswa dibungkus parent `/panel-siswa` (`SiswaLayout`, `meta.requiresSiswa`, redirect `/tabungan`); anak pakai path absolut agar URL lama tetap: `/tabungan`, `/spp`, `/koperasi`, `/career-center` (+ anak career). `requiresSiswa` di parent berlaku ke semua anak.
+  - `src/views/CareerCenterView.vue` — dijadikan tipis (`<RouterView />` saja); sidebar career lama dihapus supaya tidak dobel (submenu career pindah ke `SiswaLayout`).
+  - `src/components/layout/Navbar.vue` — item siswa (Koperasi/SPP/Tabungan/Career Center) **dihapus dari menu publik**; diganti satu item **"Panel Siswa"** (`v-if="isSiswa"`, → `/tabungan`). `guardSiswa`, `showToast`, `useToast`, `fetchStatus` yang jadi mati ikut dibuang.
+- **Catatan:** topbar internal `TabunganView`/`SppView` stripped (sticky back/logo gone). `KoperasiView` topbar dipertahankan untuk tombol keranjang (back/logo dibuang). Chrome tunggal kini dari `SiswaLayout` (sidebar penuh, FAB mobile). Import lucide yang jadi mati dibiarkan (build lolos). Seksi landing `KoperasiPreview`/`TabunganBanner`/`CareerPreview` masih tampil publik tapi kliknya dijaga guard → redirect `/` bila bukan siswa.
+- **Verifikasi:** `npm run build` sukses.
+
+## SEBELUMNYA (2026-10-14) — MENU FITUR DI PANEL SISWA
+
+- **Panel siswa (blade) dapat menu fitur** (permintaan user; "navbar siswa" = nav panel setelah login):
+  - `backend/app/helpers.php` — `frontendAuthUrl()` sekarang terima argumen `$path` (default `'/'`), jadi bisa menautkan rute frontend sambil tetap membawa payload `?auth=` (handoff auth lintas-origin). Kompatibel dengan pemanggil lama.
+  - `backend/resources/views/pendaftaran/dashboard-siswa.blade.php` — sidebar ditambah (khusus siswa efektif: role `siswa`, atau `pendaftar` + status `diterima`): **Tabungan, SPP, Koperasi, Career Center** (→ frontend Vue via `frontendAuthUrl('/...')`), plus **Profil** (`route('profil')`) dan **Bukti Diterima** (`route('pendaftaran.bukti')`, bila status `diterima`).
+- **Catatan sinkronisasi:** `frontendAuthUrl()` di `backend-admin/app/helpers.php` **belum** diikutkan paritas argumen `$path` (backend-admin tak punya panel siswa). Perlu dimirror kalau nanti dipakai di sana.
+- **Verifikasi:** `php -l app/helpers.php` bersih; Blade `dashboard-siswa` berhasil dikompilasi.
+
+## SEBELUMNYA (2026-10-14) — HAPUS TOMBOL DASHBOARD + AUDIT FITUR SISWA
+
+- **Hapus tombol Dashboard** (permintaan user): `src/components/layout/Navbar.vue` (tombol desktop, tombol mobile, item dropdown) + sidebar `backend/resources/views/pendaftaran/dashboard-siswa.blade.php` (link "Dashboard" dihapus, "Status Pendaftaran" jadi `active`). Navbar tetap tampil chip profil untuk user login.
+- **Audit fitur siswa** (temuan, belum dikerjakan):
+  - Tabungan sudah ada (Vue `/tabungan` + seksi landing `TabunganBanner`) tapi **tidak ada entri di navbar/dashboard**.
+  - Dashboard siswa (blade) **tanpa link** ke Tabungan/SPP/Koperasi/Career/Profil/Bukti — hanya status + edit.
+  - `/kelulusan` di navbar dropdown = **dead link** (tidak ada route di `src/router/index.js`).
+  - Career `DashboardView/PesanView/StatistikView/BeritaKarirView`, E-Learning, E-Tracer, Produk Siswa, SPMB-Info = **statis/mock** (0 panggilan backend).
+- **Tabungan masuk navbar** (lanjutan): `src/components/layout/Navbar.vue` — item "Tabungan" (`/tabungan`, guard siswa) ditambah ke dropdown "Layanan" desktop + mobile, sejajar SPP.
+- **Verifikasi:** `npm run build` sukses.
+
+## SEBELUMNYA (2026-10-14) — SEEDER USER ANJAR
+
+- **Permintaan:** seeder user `Anjar Wicaksono` / `sampbernad@gmail.com` / password `12345678` + data diri (pendaftaran), untuk tes login.
+- **File baru:** `backend/database/seeders/AnjarSeeder.php` — `User::updateOrCreate(['username' => 'anjar'], … role 'siswa')` + `Pendaftaran::updateOrCreate(['user_id' => …], … status 'diterima')`.
+- **Kunci by `username`, bukan email** (idempoten): di DB lokal sudah ada user lama dengan `username = 'Anjar'` **dan email typo** `sampbernad@gmaill.com` (double-L) — kunci by email bikin bentrok unique `users_username_unique`, sekaligus tidak menambal typo.
+- **Jalankan:** `cd backend; php artisan db:seed --class=AnjarSeeder`.
+- **Verifikasi (dijalankan):** `email=sampbernad@gmail.com`, `Hash::check('12345678')` = yes, `role=siswa`, pendaftaran `RPL`/`status=diterima`.
+
+## SEBELUMNYA (2026-10-14) — FIX UI STATUS LOGIN (NAVBAR/BANNER)
+
+- **Masalah:** user yang sudah login/didaftar tetap disuruh daftar/login, dan tombol Dashboard tak pernah muncul di menu utama.
+- **Akar masalah:** frontend menyamakan "sudah login" dengan `role === 'siswa'` (murid yang sudah **DITERIMA**). Pendaftar (role `pendaftar`, sudah punya akun) dianggap guest → `Navbar.vue` tampilkan tombol "SPMB" (`!isSiswa`) dan `goSPMB()` selalu ke `${BACKEND}/login`; chip profil & dashboard ikut digate `isSiswa`. `spmbTarget()` mengembalikan form `/pendaftaran` untuk pendaftar yang sudah punya pendaftaran.
+- **Fix:**
+  - `src/composable/useAuthSession.js` — `spmbTarget()`: kalau `session.logged_in` → `${BACKEND}/dashboard-siswa` (route hanya butuh `auth`, punya empty-state), selain itu → `/pendaftaran`.
+  - `src/components/layout/Navbar.vue` — gate pakai `isLoggedIn` (`session.logged_in`) bukan `isSiswa`; tombol **Dashboard** (`${BACKEND}/dashboard-siswa`) di nav-right + mobile; label role dinamis (`Siswa`/`Pendaftar`); item dropdown "SPMB Online" → "Dashboard" saat login; CSS `.ppdb` difix agar `<a>` tampil benar.
+- **Verifikasi:** `npm run build` sukses.
+
+## SEBELUMNYA (2026-10-14) — FIX LOGIN LOKAL LARI KE VERCEL
+
+- **Masalah:** login lokal (dari frontend dev) selalu redirect ke `https://smkbu-sby.vercel.app/`.
+- **Akar masalah:** `frontendAuthUrl()` memakai `env('FRONTEND_URL', 'https://smkbu-sby.vercel.app')`. `.env` lokal **tidak** menyetel `FRONTEND_URL` (hanya ada `APP_ENV=local`) → fallback hardcoded ke domain produksi Vercel.
+- **Fix:** `backend/app/helpers.php` + `backend-admin/app/helpers.php` — default kini deteksi lokal dari **host request** (`localhost`/`127.0.0.1`/`::1`) **atau** `app()->isLocal()` → `http://localhost:5174`, selain itu tetap `https://smkbu-sby.vercel.app`. Produksi tidak berubah; dev lokal otomatis ke Vite walau `APP_ENV`/`.env` salah set. Terbukti: request `localhost:8000` → `http://localhost:5174`, `APP_ENV=production` + host vercel → tetap vercel.
+- Catatan: test suite `backend` tidak bisa dijalankan di mesin ini (`pdo_sqlite` tidak terpasang) — kegagalan env, bukan regresi.
+
+## STATUS SEBELUMNYA (2026-10-10) — RATE LIMIT LOGIN (LARAVEL) + TEMUAN STACK VPS
 
 Fokus permintaan user: pasang proteksi brute-force `POST /login` saja (panduan "Penanganan Spam Login"). Poin #1/#2 (pulihkan MariaDB, session) & #5-#7 **tidak** dikerjakan sesi ini.
 

@@ -7,13 +7,6 @@
     <!-- ═══ SHOP VIEW ═══ -->
     <div v-if="view === 'shop'">
       <header class="kop-topbar">
-        <div class="kop-topbar-left">
-          <button class="kop-back" @click="goBack" aria-label="Kembali">
-            <ChevronLeft :size="18" :stroke-width="2.5" />
-          </button>
-          <img src="/logo.webp" alt="Logo Sekolah" class="kop-logo" />
-          <span class="kop-brand">Koperasi</span>
-        </div>
         <button class="kop-cart-btn" @click="openCart" aria-label="Buka keranjang">
           <ShoppingBag :size="18" :stroke-width="2" />
           <span>Keranjang</span>

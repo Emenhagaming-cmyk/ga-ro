@@ -17,14 +17,9 @@
           <svg class="chevron" :class="{ open: dropdownOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="dropdown-panel" :class="{ open: dropdownOpen }">
-          <a v-if="!isSiswa" :href="spmbTarget()" class="dropdown-item">
+          <a v-if="!isLoggedIn" :href="spmbTarget()" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">SPMB Online</span>
-            </span>
-          </a>
-          <a href="/koperasi" class="dropdown-item" @click="guardSiswa">
-            <span class="di-text">
-              <span class="di-title">Koperasi</span>
             </span>
           </a>
           <a href="/produk-siswa" class="dropdown-item">
@@ -32,14 +27,9 @@
               <span class="di-title">Karya Siswa</span>
             </span>
           </a>
-          <a href="/spp" class="dropdown-item" @click="guardSiswa">
+          <a v-if="isSiswa" href="/tabungan" class="dropdown-item">
             <span class="di-text">
-              <span class="di-title">SPP</span>
-            </span>
-          </a>
-          <a href="/career-center" class="dropdown-item" @click="guardSiswa">
-            <span class="di-text">
-              <span class="di-title">Career Center</span>
+              <span class="di-title">Panel Siswa</span>
             </span>
           </a>
         </div>
@@ -105,8 +95,8 @@
 
       <div class="nav-right">
         <a
-          v-if="isSiswa"
-          href="/profil"
+          v-if="isLoggedIn"
+          :href="`${BACKEND}/profil`"
           class="nav-profile-link"
           :title="'Profil ' + session.name"
         >
@@ -121,10 +111,10 @@
           </span>
           <span class="nav-profile-text">
             <span class="nav-profile-name">{{ session.name }}</span>
-            <span class="nav-profile-role">Siswa</span>
+            <span class="nav-profile-role">{{ roleLabel }}</span>
           </span>
         </a>
-        <button v-if="!isSiswa" class="ppdb" type="button" @click="goSPMB">SPMB</button>
+        <button v-if="!isLoggedIn" class="ppdb" type="button" @click="goSPMB">SPMB</button>
       </div>
     <button
       class="menu"
@@ -148,11 +138,9 @@
             <svg class="chevron" :class="{ open: layananOpen }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
-            <a v-if="!isSiswa" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
-            <a href="/koperasi" @click="guardSiswa(); closeMenu()">Koperasi</a>
+            <a v-if="!isLoggedIn" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
             <a href="/produk-siswa" @click="closeMenu()">Karya Siswa</a>
-            <a href="/spp" @click="guardSiswa(); closeMenu()">SPP</a>
-            <a href="/career-center" @click="guardSiswa(); closeMenu()">Career Center</a>
+            <a v-if="isSiswa" href="/tabungan" @click="closeMenu()">Panel Siswa</a>
           </div>
         </div>
         <div class="mobile-dropdown">
@@ -182,8 +170,8 @@
 	
 	        <div class="mobile-bottom">
           <a
-            v-if="isSiswa"
-            href="/profil"
+            v-if="isLoggedIn"
+            :href="`${BACKEND}/profil`"
             class="mobile-profile"
             @click="closeMenu"
           >
@@ -198,7 +186,7 @@
             </span>
             <span class="mobile-profile-text">
               <span class="mobile-profile-name">{{ session.name }}</span>
-              <span class="mobile-profile-role">Siswa</span>
+              <span class="mobile-profile-role">{{ roleLabel }}</span>
             </span>
           </a>
         </div>
@@ -211,10 +199,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
-import { useToast } from "@/composable/useToast";
 
-const { session, spmbTarget, fetchStatus, BACKEND } = useAuthSession();
-const { showToast } = useToast();
+const { session, spmbTarget, BACKEND } = useAuthSession();
 
 const scrolled = ref(false);
 let scrollSentinel = null;
@@ -230,7 +216,9 @@ const dropdownRef = ref(null);
 const informasiDropdownRef = ref(null);
 const tentangDropdownRef = ref(null);
 
+const isLoggedIn = computed(() => !!session.value.logged_in);
 const isSiswa = computed(() => session.value.role === "siswa");
+const roleLabel = computed(() => (isSiswa.value ? "Siswa" : "Pendaftar"));
 const initial = computed(() => (session.value.name || "?").trim().charAt(0).toUpperCase());
 const avatarBroken = ref(false);
 const avatarBrokenMobile = ref(false);
@@ -257,16 +245,6 @@ const closeTentangDropdown = () => {
 const goSPMB = () => {
   window.location.href = `${BACKEND}/login`;
   closeMenu();
-};
-
-const guardSiswa = async (event) => {
-  if (session.value.role !== "siswa") {
-    await fetchStatus();
-    if (session.value.role !== "siswa") {
-      event.preventDefault();
-      showToast("Khusus siswa, silakan login terlebih dahulu");
-    }
-  }
 };
 
 const scrollToSection = (id) => {
