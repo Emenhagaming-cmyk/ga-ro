@@ -61,7 +61,7 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 | 8 | Chat (BISA) | `/chat` | Public | AI chatbot Groq-powered |
 | 9 | Login | `/login` | Guest | Redirect ke backend |
 | 10 | Register | `/register` | Guest | Redirect ke backend |
-| 11 | Dashboard Siswa | `/dashboard-siswa` | Login Siswa | Blade backend |
+| 11 | Dashboard Siswa | `/dashboard-siswa` | Login Siswa | Vue (route backend = bridge redirect) |
 | 12 | Dashboard Admin | `/dashboard-admin` | Login Admin | Blade panel admin |
 
 ---
@@ -95,9 +95,9 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 | Method | URI | Description |
 |--------|-----|-------------|
 | POST | `/logout` | Logout |
-| GET | `/dashboard-siswa` | Student dashboard |
-| PUT | `/pendaftaran/{id}` | Edit own pendaftaran |
-| GET | `/profil` | Student profile |
+| GET | `/dashboard-siswa` | Bridge redirect ke halaman Vue |
+| PUT | `/pendaftaran/{id}` | Edit own pendaftaran (JSON bila Accept: json) |
+| GET | `/profil` | Bridge redirect ke halaman Vue |
 | GET | `/spp` | SPP bills siswa |
 | GET | `/tabungan` | Tabungan siswa |
 | POST | `/tabungan` | Setor/tarik tabungan |
@@ -105,6 +105,7 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 | GET | `/lamaran/saya` | List lamaran saya |
 | DELETE | `/lamaran/{lamaran}` | Cancel lamaran |
 | GET | `/dashboard-siswa/snapshot` | Status snapshot (JSON) |
+| GET | `/siswa/data` | Data dashboard+profil siswa (JSON, dipakai 2 view Vue) |
 | GET | `/pendaftaran/bukti` | Download bukti diterima (PDF) |
 
 ### Auth (kasir/guru/admin)
@@ -282,4 +283,13 @@ cd C:\Users\LENOVO\lomba\ga-ro
 
 ---
 
-## Last Updated: 2026-10-10
+## Update 2026-10-15 — Dashboard & Profil Siswa Pindah ke Vue
+
+- Halaman `/dashboard-siswa` dan `/profil` (dulu Blade) kini **view Vue** (`DashboardSiswaView.vue`, `ProfilView.vue`) dibungkus `SiswaLayout`. Route backend tetap ada sebagai **bridge redirect** ke `frontendAuthUrl(...)`.
+- Endpoint baru `GET /siswa/data` (auth + `role:siswa,pendaftar`) mengembalikan `{user, pendaftaran, can_edit, deadline}` — sumber data kedua view. `update()`/`logout()`/`updateAvatar()`/`destroyAvatar()` punya branch `$request->expectsJson()` (422/success JSON) supaya bisa dipanggil fetch dari Vue dengan CSRF token.
+- `avatar` **hidden** di serialisasi `User` (lihat `ProfileAvatarTest`) → endpoint membangun array `user` eksplisit (pola `authStatus`).
+- Form pendaftaran (create/update) masih Blade di backend; setelah submit → redirect `route('dashboard.siswa')` → bridge → halaman Vue.
+
+---
+
+## Last Updated: 2026-10-15

@@ -192,6 +192,8 @@ const { session, BACKEND } = useAuthSession();
 /* ═══════════ KONSTANTA ═══════════ */
 const PRESETS = [10000, 25000, 50000, 100000, 250000, 500000];
 const PENDING_KEY = "tabungan_pending_order";
+// Tab pembayaran dari window.open — ditutup otomatis saat lunas (best-effort).
+let midtransWin = null;
 
 /* ═══════════ STATE ═══════════ */
 const namaSiswa = computed(() => session.value.name || "Siswa");
@@ -299,11 +301,15 @@ function payAtMidtrans(url) {
     showToast("URL pembayaran tidak tersedia.");
     return;
   }
-  const win = window.open(url, "_blank", "noopener");
+  // Jangan pakai "noopener": fitur itu membuat window.open SELALU return null →
+  // toast "popup diblokir" palsu tiap kali + tab tak bisa ditutup otomatis saat lunas.
+  const win = window.open(url, "_blank");
   if (!win) {
     showToast("Popup diblokir browser. Izinkan popup untuk membayar.");
     return;
   }
+  win.opener = null; // page Midtrans tidak perlu akses window asal
+  midtransWin = win;
   // Halaman tetap di sini; server terus menanyakan status ke Midtrans sampai lunas.
   goVerify({ blocking: false });
 }
@@ -379,6 +385,10 @@ function completeFlow(d) {
   verifyBusy.value = false;
   paidMethod.value = d.method || "Midtrans";
   sessionStorage.removeItem(PENDING_KEY);
+  // Arah-balik tab pembayaran diatur dashboard Midtrans (finish_url per-request diabaikan
+  // akun Snap v4 ini) → setidaknya tabnya ditutup otomatis begitu lunas. Best-effort.
+  try { midtransWin?.close(); } catch {}
+  midtransWin = null;
   view.value = "success";
   showToast("Saldo berhasil ditambahkan 🎉");
   loadData();

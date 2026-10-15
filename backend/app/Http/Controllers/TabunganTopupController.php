@@ -89,8 +89,16 @@ class TabunganTopupController extends Controller
             $remote = Http::withBasicAuth($this->serverKey(), '')
                 ->get($this->snapUrl() . '/snap/v1/transactions/' . $lookup);
 
-            if ($remote->ok() && $remote->json('transaction_details.order_id') === $topup->order_id) {
-                $this->applyRemoteStatus($topup, $remote->json());
+            if ($remote->ok()) {
+                if ($remote->json('transaction_details.order_id') === $topup->order_id) {
+                    $this->applyRemoteStatus($topup, $remote->json());
+                }
+            } elseif ($this->isSucceedResponse($remote)) {
+                // Snap redirect-v4 membalas 409 "transaction has been succeed" untuk transaksi
+                // yang sudah lunas (bukan 200 + payload) — tanpa cabang ini transaksi sukses
+                // tak pernah terbaca dan saldo tak pernah credet. Token ini hanya bisa sukses
+                // bila dibayar, dan amount credet tetap dari DB lokal, jadi aman.
+                $this->applyRemoteStatus($topup, ['transaction_status' => 'settlement']);
             }
         }
 
