@@ -37,13 +37,6 @@ npm install
 npm run dev
 ```
 
-## Credentials
-
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | `admin` | `admin123` |
-| Siswa demo | `siswa` | `siswa123` |
-
 ## Documentation
 
 - `AGENTS.md` — Konteks permanen proyek (dibaca AI agent)
