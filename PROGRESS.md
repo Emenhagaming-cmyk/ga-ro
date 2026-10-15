@@ -2,6 +2,23 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-15) — DASHBOARD + PROFIL SISWA PINDAH KE VUE
+
+- **Permintaan user:** dashboard siswa (`/dashboard-siswa`) dan profil (`/profil`) yang masih Blade dipindah ke Vue, dibungkus `SiswaLayout` seperti menu siswa lain (halaman isi tetap sama, tidak ada redesign).
+- **Backend (`backend/` saja — `backend-admin` tidak punya route siswa):**
+  - `routes/web.php` — baru `GET /siswa/data` (auth + `role:siswa,pendaftar`, nama `siswa.data`) → JSON `{user, pendaftaran, can_edit, deadline}`; satu endpoint dipakai dua view Vue.
+  - `PendaftaranController` — `myDashboard()` kini **jembatan redirect** ke `frontendAuthUrl('/dashboard-siswa')` (admin tetap ke dashboard admin); baru `myDashboardData()` (hitung `can_edit` = status `baru` + <3 hari; array `user` dibangun eksplisit karena `avatar` hidden di serialisasi User); `update()` punya branch `expectsJson()` (lewat deadline → 422 JSON; sukses → JSON `pendaftaran` fresh).
+  - `AuthController` — `showProfile()` jembatan redirect ke `frontendAuthUrl('/profil')`; `logout()`, `updateAvatar()`, `destroyAvatar()` punya branch `expectsJson()` supaya bisa dipanggil fetch dari Vue.
+  - Efek samping positif: submit form Blade pendaftaran (masih di backend) → `redirect(route('dashboard.siswa'))` otomatis mendarat di halaman Vue via bridge.
+- **Frontend:**
+  - Baru `src/views/DashboardSiswaView.vue` — port penuh dari Blade: banner+greeting, announce per status (diterima/ditolak/diproses/baru; ikon statis),3 kartu statistik, kartu detail, form edit13 field (`PUT /pendaftaran/{id}` JSON + CSRF, error validasi → toast), poll `snapshot` tiap15 dtk (refetch, pengganti `location.reload`), empty-state → form pendaftaran backend. CSS di-port ke scoped (`:root` → `.ds-root`); doodle via `${BACKEND}/images/` (rewrite vercel.json, verified200 di prod).
+  - Baru `src/views/ProfilView.vue` — port penuh: avatar upload (FormData, JPG/PNG/WebP512KB) + hapus (DELETE), tabs Profil/Pendaftaran/Keluarga (aria + arrow-key), seluruh row data + berkas4 row, formatter `toLocaleDateString('id-ID')` (pola codebase), footer logout SPA.
+  - `useAuthSession.js` — baru `clearSession()` (reset ke GUEST + persist) agar guard/polling tahu sesi tamat setelah logout SPA. `router/index.js` — `/dashboard-siswa` + `/profil` anak `/panel-siswa` (auto `requiresSiswa`). `SiswaLayout.vue` — dua item external diganti `router-link` + `isActive()` (active state benar saat refresh/URL langsung).
+- **Perilaku berubah:** pendaftar **belum** diterima tidak bisa buka `/profil` Vue (guard `requiresSiswa`; dulu Blade izinkan via topbar) — konsisten desain panel siswa. Backend route tetap izinkan `pendaftar` (bridge + `/siswa/data`).
+- **Test di-update ke perilaku baru (coverage dipertahankan, tidak ada yang dilemahkan):** `DashboardSiswaHierarchyTest` —5 test tampilan announce → redirect bridge + JSON `can_edit`/status/deadline per skenario + admin dilarang (`/siswa/data` 403); `ProfileAvatarTest` —5 test view → redirect + JSON (avatar, pendaftar akses, empty state, topbar link).
+- **Verifikasi:** `npm run build` sukses; `php -l` semua file berubah bersih; `route:list` benar; **E2E curl**: login siswa demo → `GET /siswa/data` JSON benar, `GET /dashboard-siswa` + `/profil` = 302 → `localhost:5174/...?auth=...`.
+- **BLOCKED (limitasi mesin Linux ini):** `php artisan test` **tidak bisa jalan sama sekali** — PHP8.4 di sini tanpa `pdo_sqlite` (hanya pdo_mysql/pgsql), sudo butuh password → suite sqlite `:memory:` gagal total ("could not find driver"). Test yang di-update sudah `php -l` bersih tapi belum ter-execute. Fix: install `php8.4-sqlite3` / jalankan di mesin lama.
+
 ## STATUS TERAKHIR (2026-10-15) — AUDIT KONSISTENSI SIDEBAR VUE + INSIDENT FILE VIEWS TERHAPUS
 
 - **Audit sidebar Vue (scope ralat user: `src/`, bukan Blade):**
