@@ -2,6 +2,35 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-15) — AUDIT KONSISTENSI SIDEBAR VUE + INSIDENT FILE VIEWS TERHAPUS
+
+- **Audit sidebar Vue (scope ralat user: `src/`, bukan Blade):**
+  - Semua halaman dashboard siswa Vue (`/tabungan`, `/spp`, `/koperasi`, `/career-center/*`) dibungkus **satu layout bersama `src/layouts/SiswaLayout.vue`** (parent `/panel-siswa`, `meta.requiresSiswa`). Tidak ada duplikasi sidebar di view mana pun — sisa topbar internal sudah bersih (komentar CSS saja di Tabungan/SPP; `kop-topbar` Koperasi = toolbar keranjang, by design).
+  - Active state dihitung dari `route.path` (exact + prefix `isActive()`, submenu career exact-match + auto-`careerOpen` saat masuk `/career-center`) → benar saat buka langsung via URL / refresh, satu menu saja yang aktif.
+  - `/e-learning` (`ELearningView.vue`) punya sidebar sendiri (light theme, menu = tab lokal Overview/Materi/Kuis/Pencapaian, route di luar `/panel-siswa`) → **di luar scope, tidak diubah**. Satu-satunya sidebar Vue yang berbeda gaya.
+  - Style global non-scoped `ELearningView` (`.sidebar-brand`, `.sidebar-nav`) **tidak** menimpa SiswaLayout (scoped selector `SiswaLayout` specificity lebih tinggi) → aman.
+- **Root cause "sidebar beda-beda":** `src/layouts/SiswaLayout.vue` **terhapus di working tree** (sisa migrasi Vue→Blade setengah jalan, uncommitted) sementara `router/index.js` masih meng-importnya → `npm run build` gagal, route panel-siswa rusak. **Direstore dari HEAD** → build sukses.
+- **INSIDENT (penting):** `backend/resources/views/` terhapus total dari disk ~12:58 oleh proses **di luar sesi ini** (tidak ada perintah `rm` yang dijalankan; ada sesi **Codex/ChatGPT paralel aktif** di repo ini, branch `update-payment-fix-bugs-anjar`).13 file tracked sudah **direstore via `git checkout`** (kondisi = HEAD). **Hilang permanen** (untracked, tidak ada salinan di editor/tmp):
+  - `backend/resources/views/layouts/siswa.blade.php` (port layout — entri PROGRESS di bawah),
+  - edit uncommitted `profile.blade.php` + `dashboard-siswa.blade.php` (kembali ke versi HEAD / sidebar inline),
+  - `*.bak` ketiga view di folder itu.
+  - ⇒ Dua entri `STATUS TERAKHIR (2026-10-15)` di bawah mendeskripsikan kode yang **sudah tidak ada** — kerja Blade itu harus diulang kalau masih dikehendaki (atau ambil dari sesi Codex/mesin lain).
+- **Verifikasi:** `npm run build` sukses; dev server `localhost:5174` → `/`, `/tabungan`, `/spp`, `/e-learning` = 200; `php artisan view:cache` sukses (Blade restore utuh). Browser tool tidak tersedia di sesi ini — cek visual/interaksi manual masih perlu.
+
+## STATUS TERAKHIR (2026-10-15) — PERBAIKAN LAYOUT SISWA DAN ERROR BLADE
+
+- **Frontend**: Fixed missing `@endauth` in `layouts/siswa.blade.php` causing ParseError. Added missing variable definitions (`$hasData`, `$canEdit`, `$deadline`) in `dashboard-siswa.blade.php` after removing sidebar section. Verified `profile.blade.php` works with passed variables.
+
+- **Verifikasi**: `php artisan view:cache` berhasil tanpa error, `npm run build` sukses.
+
+
+## STATUS TERAKHIR (2026-10-15) — LAYOUT SISWA PERBAIKAN
+
+- **Frontend**: Replaced the incorrect Vue-directive-laden Blade layout with a proper Blade layout (layouts/siswa.blade.php) that uses plain JavaScript for interactivity, ensuring consistency between Vue SiswaLayout and Blade views (dashboard-siswa, profil). Updated dashboard-siswa.blade.php and profile.blade.php to extend the new layout and removed their duplicate sidebar sections.
+
+- **Verifikasi**: `php artisan view:cache` berhasil tanpa error, dan `npm run build` sukses.
+
+
 ## STATUS TERAKHIR (2026-10-14) — TOP UP TABUNGAN VIA MIDTRANS SNAP
 
 - **Backend**

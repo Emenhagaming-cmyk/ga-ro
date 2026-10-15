@@ -12,10 +12,15 @@
       </div>
 
       <nav class="sidebar-nav">
-        <a :href="`${BACKEND}/dashboard-siswa`" class="sidebar-link">
+        <router-link
+          to="/dashboard-siswa"
+          class="sidebar-link"
+          :class="{ active: isActive('/dashboard-siswa') }"
+          @click="sidebarOpen = false"
+        >
           <LayoutDashboard :size="18" :stroke-width="2.2" />
           <span>Status Pendaftaran</span>
-        </a>
+        </router-link>
 
         <router-link
           to="/tabungan"
@@ -70,10 +75,15 @@
 
         <div class="sidebar-divider" />
 
-        <a :href="`${BACKEND}/profil`" class="sidebar-link">
+        <router-link
+          to="/profil"
+          class="sidebar-link"
+          :class="{ active: isActive('/profil') }"
+          @click="sidebarOpen = false"
+        >
           <User :size="18" :stroke-width="2.2" />
           <span>Profil</span>
-        </a>
+        </router-link>
         <a v-if="isDiterima" :href="`${BACKEND}/pendaftaran/bukti`" class="sidebar-link">
           <Download :size="18" :stroke-width="2.2" />
           <span>Bukti Diterima</span>

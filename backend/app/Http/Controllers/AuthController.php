@@ -87,6 +87,10 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Berhasil keluar.']);
+        }
+
         return redirect(frontendAuthUrl());
     }
 
@@ -193,15 +197,8 @@ class AuthController extends Controller
 
     public function showProfile()
     {
-        $user = Auth::user();
-        $pendaftaran = Pendaftaran::where('user_id', $user->id)->first();
-
-        // Aturan bisnis: siswa hanya bisa edit form bila status "baru" dan belum lewat 3 hari
-        $canEdit = (bool) $pendaftaran
-            && $pendaftaran->status === 'baru'
-            && now()->lt($pendaftaran->created_at->copy()->addDays(3));
-
-        return view('auth.profile', compact('user', 'pendaftaran', 'canEdit'));
+        // Halaman profil pindah ke Vue (frontend) — route ini jadi jembatan untuk link lama
+        return redirect(frontendAuthUrl('/profil'));
     }
 
     public function updateAvatar(Request $request)
@@ -219,10 +216,22 @@ class AuthController extends Controller
         $avatar = $this->avatarToDataUri($file->get());
 
         if ($avatar === null) {
-            return back()->with('error', 'Foto gagal diproses. Coba gunakan foto lain.');
+            $message = 'Foto gagal diproses. Coba gunakan foto lain.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
         }
 
         $request->user()->forceFill(['avatar' => $avatar])->save();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Foto profil berhasil diperbarui.',
+                'avatar' => $avatar,
+            ]);
+        }
 
         return redirect()->route('profil')->with('success', 'Foto profil berhasil diperbarui.');
     }
@@ -230,6 +239,10 @@ class AuthController extends Controller
     public function destroyAvatar(Request $request)
     {
         $request->user()->forceFill(['avatar' => null])->save();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Foto profil telah dihapus.', 'avatar' => null]);
+        }
 
         return redirect()->route('profil')->with('success', 'Foto profil telah dihapus.');
     }

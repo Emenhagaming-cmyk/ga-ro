@@ -14,11 +14,36 @@ class PendaftaranController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        // Dapatkan data pendaftaran siswa (bisa null)
+        // Dashboard siswa pindah ke Vue (frontend) — route ini jadi jembatan untuk link lama
+        return redirect(frontendAuthUrl('/dashboard-siswa'));
+    }
+
+    // Data dashboard + profil siswa (JSON untuk view Vue di frontend)
+    public function myDashboardData(Request $request)
+    {
+        if ($request->user()->role === 'admin') {
+            abort(403);
+        }
+
         $pendaftaran = Pendaftaran::where('user_id', $request->user()->id)->first();
 
-        // Selalu render view, view akan menampilkan empty‑state bila null
-        return view('pendaftaran.dashboard-siswa', compact('pendaftaran'));
+        // Aturan bisnis yang sama dengan view lama: edit hanya bila status "baru" dan <3 hari
+        $canEdit = (bool) $pendaftaran
+            && $pendaftaran->status === 'baru'
+            && now()->lt($pendaftaran->created_at->copy()->addDays(3));
+
+        return response()->json([
+            'user' => [
+                'id' => $request->user()->id,
+                'name' => $request->user()->name,
+                'username' => $request->user()->username,
+                'email' => $request->user()->email,
+                'avatar' => $request->user()->avatar,
+            ],
+            'pendaftaran' => $pendaftaran,
+            'can_edit' => $canEdit,
+            'deadline' => $canEdit ? $pendaftaran->created_at->copy()->addDays(3)->toIso8601String() : null,
+        ]);
     }
 
     public function myDashboardSnapshot(Request $request)
@@ -175,7 +200,12 @@ class PendaftaranController extends Controller
         $deadline = $pendaftaran->created_at->copy()->addDays(3);
 
         if ($pendaftaran->status !== 'baru' || !now()->lt($deadline)) {
-            return back()->with('error', 'Batas waktu edit formulir kamu udah abis nih. Hubungi admin jika ingin mengubah data ya.');
+            $message = 'Batas waktu edit formulir kamu udah abis nih. Hubungi admin jika ingin mengubah data ya.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return back()->with('error', $message);
         }
 
         $data = $request->validate($this->rules());
@@ -192,6 +222,13 @@ class PendaftaranController extends Controller
         unset($data['status']);
 
         $pendaftaran->update($data);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Data pendaftaran berhasil diperbarui.',
+                'pendaftaran' => $pendaftaran->fresh(),
+            ]);
+        }
 
         return redirect()->route('dashboard.siswa')->with('success', 'Data pendaftaran berhasil diperbarui.');
     }

@@ -151,18 +151,17 @@ class ProfileAvatarTest extends TestCase
         $user = $this->makeUser('siswa', 'siswa01');
         $this->makePendaftaran($user, 'diterima');
 
-        $response = $this->actingAs($user)->get(route('profil'));
+        // Halaman profil kini di Vue; route backend menjadi jembatan redirect
+        $this->actingAs($user)->get(route('profil'))->assertRedirect();
 
-        $response->assertOk();
-        $response->assertSee('Profil Siswa');
-        $response->assertSee('Zakky Pratama');
-        $response->assertSee('321654879');
-        $response->assertSee('RPL');
-        // Tiga tab sesuai referensi desain
-        $response->assertSee('data-pf-tab="profil"', false);
-        $response->assertSee('data-pf-tab="pendaftaran"', false);
-        $response->assertSee('data-pf-tab="keluarga"', false);
-        $response->assertSee('Informasi Akademik', false);
+        // Data halaman profil (3 tab) diambil via JSON
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('user.name', 'Zakky Pratama')
+            ->assertJsonPath('pendaftaran.nama_lengkap', 'Zakky Pratama')
+            ->assertJsonPath('pendaftaran.nisn', '321654879')
+            ->assertJsonPath('pendaftaran.jurusan_pilihan', 'RPL')
+            ->assertJsonPath('can_edit', false);
     }
 
     public function test_pendaftar_yang_belum_diterima_tetap_bisa_akses_profil()
@@ -170,7 +169,14 @@ class ProfileAvatarTest extends TestCase
         $user = $this->makeUser('pendaftar', 'pendaftar01');
         $this->makePendaftaran($user, 'baru');
 
-        $this->actingAs($user)->get(route('profil'))->assertOk();
+        // Tidak dilempar ke login (role:siswa,pendaftar mengizinkan pendaftar)
+        $response = $this->actingAs($user)->get(route('profil'));
+        $response->assertRedirect();
+        $this->assertStringNotContainsString('/login', (string) $response->headers->get('Location'));
+
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('pendaftaran.status', 'baru');
     }
 
     public function test_role_non_siswa_diarahkan_ke_login()
@@ -187,11 +193,11 @@ class ProfileAvatarTest extends TestCase
     {
         $user = $this->makeUser('siswa', 'siswa02');
 
-        $response = $this->actingAs($user)->get(route('profil'));
-
-        $response->assertOk();
-        $response->assertSee('Belum Mendaftar');
-        $response->assertSee('Isi Formulir Pendaftaran');
+        // Empty state dirender frontend; server memastikan pendaftaran null + can_edit false
+        $this->actingAs($user)->getJson('/siswa/data')
+            ->assertOk()
+            ->assertJsonPath('pendaftaran', null)
+            ->assertJsonPath('can_edit', false);
     }
 
     public function test_upload_foto_profil_disimpan_sebagai_base64_dan_diresize()
@@ -231,10 +237,11 @@ class ProfileAvatarTest extends TestCase
 
         $avatar = $user->fresh()->avatar;
 
+        // Data profil Vue membawa avatar terbaru
         $this->actingAs($user)
-            ->get(route('profil'))
+            ->getJson('/siswa/data')
             ->assertOk()
-            ->assertSee($avatar, false);
+            ->assertJsonPath('user.avatar', $avatar);
     }
 
     public function test_upload_file_terlalu_besar_ditolak()
@@ -350,11 +357,11 @@ class ProfileAvatarTest extends TestCase
         $siswa = $this->makeUser('siswa', 'siswa10');
         $guru = $this->makeUser('guru', 'guru10');
 
-        // Halaman yang memakai topbar: dashboard siswa
+        // Dashboard siswa kini jembatan redirect ke halaman Vue (sidebar profil pindah ke Vue)
         $this->actingAs($siswa)->get(route('dashboard.siswa'))
-            ->assertOk()
-            ->assertSee('href="' . route('profil') . '"', false);
+            ->assertRedirect();
 
+        // Topbar backend (halaman guru) tetap menyembunyikan link profil
         Auth::logout();
         $this->actingAs($guru)->get(route('spp.rekap'))
             ->assertOk()
