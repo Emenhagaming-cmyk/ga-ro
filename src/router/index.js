@@ -51,11 +51,11 @@ const routes = [
         redirect: "/career-center/search",
         children: [
           { path: "search", name: "career-search", component: () => import("../views/career/CariLowonganView.vue") },
+          { path: "bookmark", name: "career-bookmark", component: () => import("../views/career/BookmarkView.vue") },
           { path: "dashboard", name: "career-dashboard", component: () => import("../views/career/DashboardView.vue") },
           { path: "applications", name: "career-applications", component: () => import("../views/career/LamaranSayaView.vue") },
           { path: "messages", name: "career-messages", component: () => import("../views/career/PesanView.vue") },
           { path: "statistics", name: "career-statistics", component: () => import("../views/career/StatistikView.vue") },
-          { path: "news", name: "career-news", component: () => import("../views/career/BeritaKarirView.vue") },
         ],
       },
     ],

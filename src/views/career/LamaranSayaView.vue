@@ -14,24 +14,36 @@
     </div>
 
     <div v-else class="lamaran-list">
-      <div v-for="lamaran in lamarans" :key="lamaran.id" class="lamaran-row">
-        <div class="lamaran-logo" :style="{ background: getColor(lamaran.lowongan?.type) + '15', color: getColor(lamaran.lowongan?.type) }">
-          {{ (lamaran.lowongan?.company || '?').charAt(0) }}
+      <div v-for="lamaran in lamarans" :key="lamaran.id" class="lamaran-card">
+        <div class="lamaran-row" @click="toggleExpand(lamaran.id)">
+          <div class="lamaran-logo" :style="{ background: getColor(lamaran.lowongan?.type) + '15', color: getColor(lamaran.lowongan?.type) }">
+            {{ (lamaran.lowongan?.company || '?').charAt(0) }}
+          </div>
+          <div class="lamaran-info">
+            <h4>{{ lamaran.lowongan?.title || 'Lowongan dihapus' }}</h4>
+            <span class="lamaran-company" :style="{ color: getColor(lamaran.lowongan?.type) }">{{ lamaran.lowongan?.company || '-' }}</span>
+          </div>
+          <div class="lamaran-status">
+            <span class="status-badge" :class="'status-' + lamaran.status">{{ statusLabel(lamaran.status) }}</span>
+          </div>
+          <div class="lamaran-date">
+            {{ formatDate(lamaran.created_at) }}
+          </div>
+          <div class="lamaran-actions" @click.stop>
+            <button v-if="lamaran.status === 'pending'" class="btn-cancel" @click="cancelLamaran(lamaran)">
+              <i class="fas fa-xmark"></i> Batalkan
+            </button>
+            <button class="btn-expand" :class="{ open: expandedId === lamaran.id }" type="button">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
         </div>
-        <div class="lamaran-info">
-          <h4>{{ lamaran.lowongan?.title || 'Lowongan dihapus' }}</h4>
-          <span class="lamaran-company" :style="{ color: getColor(lamaran.lowongan?.type) }">{{ lamaran.lowongan?.company || '-' }}</span>
-        </div>
-        <div class="lamaran-status">
-          <span class="status-badge" :class="'status-' + lamaran.status">{{ statusLabel(lamaran.status) }}</span>
-        </div>
-        <div class="lamaran-date">
-          {{ new Date(lamaran.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
-        </div>
-        <div class="lamaran-actions">
-          <button v-if="lamaran.status === 'pending'" class="btn-cancel" @click="cancelLamaran(lamaran)">
-            <i class="fas fa-xmark"></i> Batalkan
-          </button>
+
+        <div v-if="expandedId === lamaran.id" class="lamaran-detail">
+          <LamaranTimeline :histories="lamaran.status_histories || []" />
+          <div v-if="lamaran.catatan_admin" class="admin-note">
+            <strong>Catatan Admin:</strong> {{ lamaran.catatan_admin }}
+          </div>
         </div>
       </div>
     </div>
@@ -43,16 +55,22 @@ import { ref, onMounted } from 'vue'
 import { useAuthSession } from '@/composable/useAuthSession'
 import { getCsrfToken } from '@/services/csrf'
 import { fetchJson } from '@/services/fetchJson'
+import LamaranTimeline from '@/components/career/LamaranTimeline.vue'
 
 const { BACKEND } = useAuthSession()
 const lamarans = ref([])
 const loading = ref(true)
+const expandedId = ref(null)
 
 async function fetchLamarans() {
   loading.value = true
   try {
     const res = await fetchJson(`${BACKEND}/lamaran/saya`)
-    lamarans.value = await res.json()
+    const data = await res.json()
+    lamarans.value = data.map(l => ({
+      ...l,
+      status_histories: l.status_histories || []
+    }))
   } catch (e) {
     lamarans.value = []
   } finally {
@@ -69,6 +87,15 @@ function getColor(type) {
 
 function statusLabel(s) {
   return { pending: 'Diproses', diterima: 'Diterima', ditolak: 'Ditolak', dibatalkan: 'Dibatalkan' }[s] || s
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function toggleExpand(id) {
+  expandedId.value = expandedId.value === id ? null : id
 }
 
 async function cancelLamaran(lamaran) {
@@ -92,15 +119,25 @@ onMounted(fetchLamarans)
   gap: 12px;
 }
 
+.lamaran-card {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
 .lamaran-row {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 18px 22px;
-  background: #fff;
-  border-radius: 20px;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.lamaran-row:hover {
+  background: #f8faf6;
 }
 
 .lamaran-logo {
@@ -167,9 +204,13 @@ onMounted(fetchLamarans)
   font-size: 13px;
   color: var(--color-text-secondary);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .lamaran-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -182,10 +223,50 @@ onMounted(fetchLamarans)
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .btn-cancel:hover {
   background: rgba(220, 38, 38, 0.05);
+}
+
+.btn-expand {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: #647067;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-expand:hover {
+  background: #f0f4ef;
+}
+
+.btn-expand.open {
+  color: #3a6450;
+  transform: rotate(180deg);
+}
+
+.lamaran-detail {
+  padding: 16px 22px;
+  border-top: 1px solid #e5e7e6;
+}
+
+.admin-note {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde6a1;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #92400e;
 }
 
 .empty-state {
@@ -222,5 +303,21 @@ onMounted(fetchLamarans)
   text-align: center;
   padding: 60px;
   color: var(--color-text-secondary);
+}
+
+@media (max-width: 600px) {
+  .lamaran-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .lamaran-date {
+    display: none;
+  }
+
+  .lamaran-info {
+    flex: 1 0 100%;
+  }
 }
 </style>

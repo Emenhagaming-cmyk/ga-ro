@@ -6,6 +6,8 @@ use App\Http\Controllers\BeritaApiController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\LamaranController;
+use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\CareerMessageController;
 use App\Http\Controllers\TabunganController;
 use App\Http\Controllers\TabunganTopupController;
 use App\Http\Controllers\SppController;
@@ -63,10 +65,20 @@ Route::get('/lowongan', [LowonganController::class, 'index']);
 Route::get('/lowongan/{lowongan}', [LowonganController::class, 'show']);
 
 Route::middleware('auth')->group(function () {
+    Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/bookmarks', [BookmarkController::class, 'store'])->name('bookmarks.store');
+    Route::delete('/bookmarks/{lowongan}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
+});
+
+Route::middleware('auth')->group(function () {
     Route::post('/lamaran', [LamaranController::class, 'store']);
     Route::get('/lamaran/saya', [LamaranController::class, 'myApplications']);
     Route::get('/lamaran/{lamaran}', [LamaranController::class, 'show']);
     Route::delete('/lamaran/{lamaran}', [LamaranController::class, 'cancel']);
+    Route::get('/career/dashboard', [LamaranController::class, 'dashboard'])->name('career.dashboard');
+    Route::get('/career/statistik', [LamaranController::class, 'statistik'])->name('career.statistik');
+    Route::get('/career/pesan', [CareerMessageController::class, 'index'])->name('career.pesan');
+    Route::post('/career/pesan', [CareerMessageController::class, 'store'])->name('career.pesan.store');
 });
 
 // Tabungan Siswa

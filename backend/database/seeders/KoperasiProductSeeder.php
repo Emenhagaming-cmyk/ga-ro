@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\KoperasiProduct;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class KoperasiProductSeeder extends Seeder
 {
@@ -26,10 +27,12 @@ class KoperasiProductSeeder extends Seeder
             ['name' => 'Roti Sekolah', 'category' => 'Makanan', 'price' => 6000, 'stock' => 60, 'emoji' => '🍞', 'image' => '/produk/roti.jpeg', 'description' => 'Roti isi praktis untuk bekal istirahat, tersedia aneka rasa.'],
         ];
 
+        // DatabaseSeeder pakai WithoutModelEvents → hook `saving` model tidak jalan,
+        // jadi slug diisi manual (kalau kosong, MySQL strict menolak: slug tanpa default).
         foreach ($products as $product) {
             KoperasiProduct::updateOrCreate(
                 ['name' => $product['name']],
-                $product + ['is_active' => true]
+                $product + ['slug' => Str::slug($product['name']), 'is_active' => true]
             );
         }
 

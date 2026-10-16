@@ -12,7 +12,7 @@ class Lowongan extends Model
 
     protected $fillable = [
         'title', 'company', 'location', 'jurusan',
-        'type', 'description', 'deadline', 'is_active',
+        'type', 'work_arrangement', 'description', 'deadline', 'is_active',
     ];
 
     protected $casts = [
@@ -23,5 +23,10 @@ class Lowongan extends Model
     public function lamarans(): HasMany
     {
         return $this->hasMany(Lamaran::class);
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
     }
 }

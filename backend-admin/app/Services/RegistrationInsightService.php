@@ -22,7 +22,7 @@ class RegistrationInsightService
 
         $max = max($jurusan);
         $top = array_filter($jurusan, fn ($value) => $value === $max);
-        ksort($top); // deterministic tie-breaking: AKL < RPL < TKJ
+        ksort($top); // deterministic tie-breaking
 
         return array_key_first($top) ?? 'belum ada data';
     }

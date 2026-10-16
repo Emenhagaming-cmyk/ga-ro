@@ -4,14 +4,22 @@
 @section('page-title', 'Produk Koperasi')
 
 @section('content')
-<div class="dashboard-shell">
-    <div class="dashboard-header">
+<div class="kop-page">
+    @include('koperasi._kop-style')
+
+    {{-- Header --}}
+    <div class="kop-header">
         <div>
-            <p class="dashboard-kicker">Koperasi Sekolah</p>
-            <h1 class="form-title" fetchpriority="high">Produk Koperasi</h1>
-            <p class="form-subtitle">Kelola katalog, harga, dan stok barang koperasi.</p>
+            <p class="kop-kicker">Koperasi Sekolah</p>
+            <h1 class="kop-title">Produk Koperasi</h1>
+            <p class="kop-subtitle">Kelola katalog, harga, dan stok barang koperasi.</p>
         </div>
-        <a href="{{ route('koperasi.product.create') }}" class="btn btn-primary" style="text-decoration:none;">+ Tambah Produk</a>
+        <div class="kop-header-actions">
+            <a href="{{ route('koperasi.product.create') }}" class="kop-btn kop-btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Produk
+            </a>
+        </div>
     </div>
 
     @include('koperasi._tabs', ['active' => 'products'])
@@ -23,17 +31,27 @@
         <div class="alert alert-error">{{ session('error') }}</div>
     @endif
 
-    <div class="form-section" style="padding:0;overflow:hidden;">
-        <div class="table-wrap">
-            <table>
+    {{-- Tabel produk --}}
+    <div class="kop-panel">
+        <div class="kop-panel-head">
+            <div>
+                <h2 class="kop-panel-title">Daftar Produk</h2>
+                <p class="kop-panel-sub">
+                    Menampilkan {{ $products->firstItem() ?? 0 }}–{{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} produk
+                </p>
+            </div>
+        </div>
+
+        <div class="kop-table-wrap">
+            <table class="kop-table">
                 <thead>
                     <tr>
-                        <th>Produk</th>
-                        <th class="hide-sm">Kategori</th>
-                        <th>Harga</th>
-                        <th>Stok</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
+                        <th scope="col">Produk</th>
+                        <th scope="col" class="kop-hide-sm">Kategori</th>
+                        <th scope="col" class="kop-nowrap">Harga</th>
+                        <th scope="col" class="kop-nowrap">Stok</th>
+                        <th scope="col" class="kop-nowrap">Status</th>
+                        <th scope="col" class="kop-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,48 +59,60 @@
                         @php
                             $img = $product->image;
                             $url = $img ? (str_starts_with($img, 'http') || str_starts_with($img, '/') ? $img : asset('storage/' . $img)) : null;
+                            $stockTone = $product->stock <= 0 ? 'expired' : ($product->stock <= 5 ? 'pending' : 'batal');
+                            $stockTitle = $product->stock <= 0 ? 'Stok habis' : ($product->stock <= 5 ? 'Stok menipis' : 'Stok tersedia');
                         @endphp
                         <tr>
-                            <td>
-                                <div style="display:flex;align-items:center;gap:12px;">
-                                    <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;background:#eef2ef;display:grid;place-items:center;flex-shrink:0;font-size:22px;">
+                            <td style="min-width:220px;">
+                                <div class="kop-user">
+                                    <div class="kop-thumb">
                                         @if ($url)
-                                            <img src="{{ $url }}" alt="" style="width:100%;height:100%;object-fit:cover;">
+                                            <img src="{{ $url }}" alt="">
                                         @else
                                             {{ $product->emoji ?: '📦' }}
                                         @endif
                                     </div>
-                                    <div>
-                                        <strong>{{ $product->name }}</strong>
+                                    <div class="kop-user-text">
+                                        <span class="kop-user-name">{{ $product->name }}</span>
                                         @if ($product->description)
-                                            <div style="font-size:12px;color:#8a9890;">{{ \Illuminate\Support\Str::limit($product->description, 50) }}</div>
+                                            <span class="kop-user-sub">{{ \Illuminate\Support\Str::limit($product->description, 50) }}</span>
                                         @endif
                                     </div>
                                 </div>
                             </td>
-                            <td class="hide-sm">{{ $product->category }}</td>
-                            <td><strong>Rp {{ number_format($product->price, 0, ',', '.') }}</strong></td>
+                            <td class="kop-hide-sm"><span class="kop-cat">{{ $product->category }}</span></td>
+                            <td><strong class="kop-total">Rp {{ number_format($product->price, 0, ',', '.') }}</strong></td>
                             <td>
-                                <span class="badge {{ $product->stock > 0 ? 'badge-neutral' : 'badge-danger' }}">{{ $product->stock }}</span>
+                                <span class="kop-badge kop-badge--{{ $stockTone }}" title="{{ $stockTitle }}"><i></i>{{ $product->stock }}</span>
                             </td>
-                            <td><span class="badge {{ $product->is_active ? 'badge-success' : 'badge-neutral' }}">{{ $product->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
                             <td>
-                                <div class="btn-group">
-                                    <a href="{{ route('koperasi.product.edit', $product->id) }}" class="action-btn action-btn-edit">Edit</a>
-                                    <form action="{{ route('koperasi.product.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Hapus produk {{ $product->name }}?')">
+                                <span class="kop-badge {{ $product->is_active ? 'kop-badge--diambil' : 'kop-badge--batal' }}">
+                                    <i></i>{{ $product->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="kop-act">
+                                    <a href="{{ route('koperasi.product.edit', $product->id) }}" class="kop-act-btn kop-act--edit">Edit</a>
+                                    <form action="{{ route('koperasi.product.destroy', $product->id) }}" method="POST"
+                                          onsubmit="return confirm('Hapus produk {{ $product->name }}?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="action-btn action-btn-delete">Hapus</button>
+                                        <button type="submit" class="kop-act-btn kop-act--danger">Hapus</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="empty-state" style="padding:60px 20px;">
-                                <div style="font-size:40px;margin-bottom:12px;">📦</div>
-                                <div style="font-weight:700;">Belum ada produk</div>
-                                <div style="margin-top:12px;"><a href="{{ route('koperasi.product.create') }}" class="btn btn-primary" style="text-decoration:none;">+ Tambah Produk</a></div>
+                            <td colspan="6">
+                                <div class="kop-empty">
+                                    <div class="kop-empty-icon">
+                                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                                    </div>
+                                    <h3>Belum ada produk</h3>
+                                    <p>Tambahkan produk pertama agar bisa dibeli siswa di katalog.</p>
+                                    <a href="{{ route('koperasi.product.create') }}" class="kop-btn kop-btn-primary">Tambah Produk</a>
+                                </div>
                             </td>
                         </tr>
                     @endforelse
@@ -91,9 +121,9 @@
         </div>
 
         @if ($products->hasPages())
-        <div style="padding:16px 20px;border-top:1px solid #f0f3f0;">
-            {{ $products->links() }}
-        </div>
+            <div class="kop-panel-foot">
+                {{ $products->links() }}
+            </div>
         @endif
     </div>
 </div>

@@ -72,14 +72,37 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.2 1.2 3 3 3.5 1.5.5 3 1.5 3 3.5 0 2.5-2 4.5-4.5 4.5S3 18 3 15.5c0-2 1.5-3 3-3.5"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path><path d="M19 11h.01"></path></svg>
                 Kelola Tabungan
             </a>
-            <a href="{{ route('koperasi.index') }}" class="sidebar-link {{ request()->is('koperasi*') ? 'active' : '' }}">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                Kelola Koperasi
-            </a>
+            @php $kopOpen = request()->is('koperasi*'); @endphp
+            <div class="sidebar-group {{ $kopOpen ? 'open' : '' }}" id="koperasiGroup">
+                <button type="button" class="sidebar-link sidebar-toggle" onclick="toggleKoperasi()" aria-expanded="{{ $kopOpen ? 'true' : 'false' }}" aria-controls="koperasiSub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <span>Kelola Koperasi</span>
+                    <svg class="sidebar-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="sidebar-sub" id="koperasiSub">
+                    <a href="{{ route('koperasi.index') }}" class="sidebar-sub-link {{ request()->is('koperasi') ? 'active' : '' }}">Pesanan</a>
+                    <a href="{{ route('koperasi.products') }}" class="sidebar-sub-link {{ request()->is('koperasi/produk*') ? 'active' : '' }}">Produk</a>
+                    <a href="{{ route('koperasi.laporan') }}" class="sidebar-sub-link {{ request()->is('koperasi/laporan') ? 'active' : '' }}">Laporan</a>
+                </div>
+            </div>
             <a href="{{ route('berita.index') }}" class="sidebar-link {{ request()->is('berita*') ? 'active' : '' }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
                 Kelola Berita
             </a>
+            @php $careerOpen = request()->is('lowongan*') || request()->is('lamaran*') || request()->is('career-pesan*') || request()->is('career-statistik'); @endphp
+            <div class="sidebar-group {{ $careerOpen ? 'open' : '' }}" id="careerGroup">
+                <button type="button" class="sidebar-link sidebar-toggle" onclick="toggleSidebarGroup('careerGroup')" aria-expanded="{{ $careerOpen ? 'true' : 'false' }}" aria-controls="careerSub">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path></svg>
+                    <span>Career Center</span>
+                    <svg class="sidebar-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="sidebar-sub" id="careerSub">
+                    <a href="{{ route('lowongan.index') }}" class="sidebar-sub-link {{ request()->is('lowongan*') ? 'active' : '' }}">Lowongan</a>
+                    <a href="{{ route('lamaran.index') }}" class="sidebar-sub-link {{ request()->is('lamaran*') ? 'active' : '' }}">Pelamar</a>
+                    <a href="{{ route('career.statistik') }}" class="sidebar-sub-link {{ request()->is('career-statistik') ? 'active' : '' }}">Statistik</a>
+                    <a href="{{ route('career.pesan.index') }}" class="sidebar-sub-link {{ request()->is('career-pesan*') ? 'active' : '' }}">Pesan</a>
+                </div>
+            </div>
             @else
             <span style="font-size:13px;font-weight:700;color:rgba(232,240,230,0.7);padding:0 10px;line-height:1.7;">Akses terbatas untuk admin sekolah.</span>
             @endauth
@@ -120,6 +143,21 @@
     function toggleSidebar(open) {
         document.getElementById('sidebar').classList.toggle('open', open);
         document.getElementById('sidebarBackdrop').classList.toggle('open', open);
+    }
+
+    function toggleKoperasi() {
+        var group = document.getElementById('koperasiGroup');
+        var open = group.classList.toggle('open');
+        var btn = group.querySelector('.sidebar-toggle');
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function toggleSidebarGroup(id) {
+        var group = document.getElementById(id);
+        if (!group) return;
+        var open = group.classList.toggle('open');
+        var btn = group.querySelector('.sidebar-toggle');
+        if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
 
     function togglePw(btn) {

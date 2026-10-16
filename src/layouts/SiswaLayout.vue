@@ -151,10 +151,10 @@ const careerOpen = ref(route.path.startsWith("/career-center"));
 const careerMenu = [
   { path: "/career-center/dashboard", label: "Dashboard" },
   { path: "/career-center/search", label: "Cari Lowongan" },
+  { path: "/career-center/bookmark", label: "Lowongan Tersimpan" },
   { path: "/career-center/applications", label: "Lamaran Saya" },
   { path: "/career-center/messages", label: "Pesan" },
   { path: "/career-center/statistics", label: "Statistik" },
-  { path: "/career-center/news", label: "Berita Karir" },
 ];
 
 const isDiterima = computed(() => session.value.status === "diterima");

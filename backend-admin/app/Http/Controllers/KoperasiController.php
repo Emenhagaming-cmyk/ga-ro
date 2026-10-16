@@ -11,20 +11,7 @@ class KoperasiController extends Controller
 {
     public function adminIndex(Request $request)
     {
-        $status = $request->query('status');
-        $q = trim((string) $request->query('q'));
-
-        $orders = KoperasiOrder::with('user:id,name,username')
-            ->when($status, fn ($query) => $query->where('status', $status))
-            ->when($q !== '', fn ($query) => $query->where(function ($w) use ($q) {
-                $w->where('kode', 'like', "%{$q}%")
-                    ->orWhere('pickup_code', 'like', "%{$q}%")
-                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%")
-                        ->orWhere('username', 'like', "%{$q}%"));
-            }))
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
+        $orders = $this->filteredOrders($request)->latest()->paginate(20)->withQueryString();
 
         $stats = [
             'omzet' => (int) KoperasiOrder::whereIn('status', KoperasiOrder::PAID_STATUSES)->sum('total'),
@@ -33,7 +20,70 @@ class KoperasiController extends Controller
             'diambil' => KoperasiOrder::where('status', 'diambil')->count(),
         ];
 
-        return view('koperasi.index', compact('orders', 'stats', 'status', 'q'));
+        return view('koperasi.index', [
+            'orders' => $orders,
+            'stats' => $stats,
+            'status' => $request->query('status'),
+            'q' => trim((string) $request->query('q')),
+        ]);
+    }
+
+    /** Filter pesanan dipakai bareng oleh daftar & export CSV. */
+    private function filteredOrders(Request $request)
+    {
+        $status = $request->query('status');
+        $q = trim((string) $request->query('q'));
+
+        return KoperasiOrder::with('user:id,name,username')
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($q !== '', fn ($query) => $query->where(function ($w) use ($q) {
+                $w->where('kode', 'like', "%{$q}%")
+                    ->orWhere('pickup_code', 'like', "%{$q}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$q}%")
+                        ->orWhere('username', 'like', "%{$q}%"));
+            }));
+    }
+
+    /** Unduh pesanan (mengikuti filter aktif) sebagai CSV. */
+    public function exportCsv(Request $request)
+    {
+        $orders = $this->filteredOrders($request)->latest()->get();
+
+        return response()->streamDownload(function () use ($orders) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Kode', 'Kode Ambil', 'Siswa', 'Username', 'Item', 'Total', 'Metode', 'Status', 'Dibuat', 'Dibayar', 'Diambil'], ',', '"', '\\');
+            foreach ($orders as $o) {
+                $items = collect($o->items)->map(fn ($i) => ($i['name'] ?? $i['title'] ?? '-') . ' x' . ($i['qty'] ?? 0))->implode('; ');
+                fputcsv($out, [
+                    $o->kode,
+                    $o->pickup_code,
+                    $o->user->name ?? '-',
+                    $o->user->username ?? '-',
+                    $items,
+                    $o->total,
+                    $o->metode ?? '-',
+                    $o->status,
+                    optional($o->created_at)->format('Y-m-d H:i'),
+                    optional($o->paid_at)->format('Y-m-d H:i'),
+                    optional($o->picked_up_at)->format('Y-m-d H:i'),
+                ], ',', '"', '\\');
+            }
+            fclose($out);
+        }, 'koperasi-' . now()->format('Ymd-His') . '.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    /** Batalkan pesanan yang belum dibayar (stok/belanja belum tersentuh). */
+    public function cancelOrder(int $orderId)
+    {
+        $order = KoperasiOrder::findOrFail($orderId);
+
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'Hanya pesanan yang belum dibayar yang bisa dibatalkan.');
+        }
+
+        $order->update(['status' => 'batal']);
+
+        return back()->with('success', "Pesanan {$order->kode} dibatalkan.");
     }
 
     public function adminShow(int $orderId)

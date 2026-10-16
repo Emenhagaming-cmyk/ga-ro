@@ -33,7 +33,7 @@ class KoperasiController extends Controller
                 'category' => $p->category,
                 'price' => $p->price,
                 'stock' => $p->stock,
-                'image' => $p->image,
+                'image' => self::imageUrl($p->image),
                 'emoji' => $p->emoji,
             ]);
 
@@ -360,6 +360,20 @@ class KoperasiController extends Controller
         return (int) Tabungan::where('user_id', $userId)
             ->selectRaw("COALESCE(SUM(CASE WHEN type = 'setor' THEN amount ELSE -amount END), 0) as saldo")
             ->value('saldo');
+    }
+
+    // Gambar seed berupa path publik ('/produk/...'); gambar upload admin tersimpan di
+    // disk 'public' ('produk/...') → jadikan URL absolut ke origin backend.
+    private static function imageUrl(?string $image): ?string
+    {
+        if (!$image) {
+            return null;
+        }
+        if (str_starts_with($image, 'http') || str_starts_with($image, '/')) {
+            return $image;
+        }
+
+        return url(\Illuminate\Support\Facades\Storage::disk('public')->url($image));
     }
 
     private static function isOpen(): bool

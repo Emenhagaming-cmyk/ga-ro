@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lamaran extends Model
 {
@@ -18,6 +19,8 @@ class Lamaran extends Model
 
     protected $casts = [
         'catatan_admin' => 'nullable',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -28,5 +31,10 @@ class Lamaran extends Model
     public function lowongan(): BelongsTo
     {
         return $this->belongsTo(Lowongan::class);
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(LamaranStatusHistory::class)->orderBy('created_at', 'desc');
     }
 }

@@ -2,7 +2,116 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
-## STATUS TERAKHIR (2026-10-16) — REDESIGN SISTEM KOPERASI (PRODUK DB + BAYAR SALDO/MIDTRANS + AMBIL DI RUANG TU)
+## STATUS TERAKHIR (2026-10-16) — UNIFIKASI STYLE CAREER ADMIN
+
+- Halaman `career-pesan/index` & `career-pesan/show` di backend-admin migrasi dari gaya lama (`dashboard-shell`/`panel`/`badge`) ke design system `kop-*` (via `@include('koperasi._kop-style')`) — sekarang 6 halaman career admin (lowongan index/form/statistik, lamaran index, pesan index/show) konsisten. Bubble chat tetap pakai class global `.bubble-*` dari admin.css; form balas pakai `kop-input` + `kop-btn-primary`.
+- Verifikasi: semua class `kop-*` yang dipakai ada di `_kop-style.blade.php` / admin.css.
+
+## STATUS (2026-10-16) — HAPUS FITUR "BERITA KARIR"
+
+- **Siswa:** item nav `CareerCenterView.vue`, sidebar `SiswaLayout.vue`, dan route `router/index.js` (`/career-center/news`) dihapus; file `src/views/career/BeritaKarirView.vue` dihapus; chip kategori + gradient `Karir` di `NewsView.vue` dihapus.
+- **Panel admin (Kelola Berita):** kategori `Karir` dihapus dari `BeritaController::CATEGORY_COLORS` (otomatis hilang dari select create/edit + filter index) dan dari whitelist validasi `in:...`; `categoryColors` di `berita/create.blade.php` juga dibersihkan.
+- **Data:** 3 artikel kategori `Karir` (id 7-9) dihapus dari `public/data/news.json` (tersisa id 1-6).
+- **Verifikasi:** `npm run build` sukses; `news.json` JSON valid; grep `Berita Karir` / `career-news` / `BeritaKarir` = 0.
+- **Catatan:** bila di DB (lokal/TiDB) sudah ada baris `beritas` kategori `Karir`, baris itu tetap tampil di "Semua" tapi tidak bisa dipilih lagi saat edit — ubah kategori atau hapus manual.
+
+## STATUS TERAKHIR (2026-10-16) — JURUSAN: RPL SAJA
+
+- **Konteks:** sekolah hanya membuka jurusan RPL → semua informasi jurusan lain (TKJ/AKL) dihapus atau disesuaikan.
+- **Frontend:** `SpmbInfoView.vue` (syarat & FAQ → RPL; sisa kartu jurusan TKJ/AKL yang sudah dikomentari dihapus, import `Network` dibuang); `career/CariLowonganView.vue` chip jurusan → RPL; `career/ApplyModal.vue` opsi jurusan → RPL; `ProdukSiswaView.vue` author `Tim TKJ/AKL/Multimedia` → `Tim RPL`; `ETracerView.vue` placeholder "Akuntansi/Staff Accounting" → "Desain/UI-UX Designer".
+- **Backend:** validasi `jurusan_pilihan` `in:RPL,TKJ,AKL` → `in:RPL` (`backend/app/Http/Controllers/PendaftaranController.php`); statistik admin `jurusan` → RPL saja (`backend-admin/.../PendaftaranController.php`); filter jurusan `pendaftaran/index.blade.php` + baris tabel `pendaftaran/laporan.blade.php` → RPL; datalist jurusan `lowongan/form.blade.php` → RPL; prompt NineRouter `RegistrationInsightService` (versi backend) → hanya RPL.
+- **Data:** `public/data/news.json` 3 artikel (MoU mitra, Ekspo UMKM, wisuda) ditulis ulang jadi RPL-only; `LowonganSeeder.php` 17 lowongan non-RPL ditulis ulang jadi posisi IT/RPL-relevan (distribusi Magang/Kerja/BKK & total 25 tetap).
+- **Verifikasi:** `npm run build` sukses; `php -l` OK; `news.json` JSON valid.
+- **Belum dikerjakan (perlu keputusan user):**
+  - DB lokal & TiDB masih memuat baris lama (`pendaftarans.jurusan_pilihan`, `lowongans.jurusan`) → perlu re-seed `LowonganSeeder` / UPDATE data; belum dijalankan (DB bersama produksi).
+  - `src/server/agent/data/news.fallback.json` (data chatbot) masih menyebut TKJ/AKL — **tidak disentuh** (aturan AGENTS: jangan sentuh chatbot).
+  - Migration lama tetap `enum('RPL','TKJ','AKL')` — tidak diubah (mengedit migration yang sudah jalan tidak berpengaruh); validasi sudah menolak non-RPL.
+
+## STATUS TERAKHIR (2026-10-16) — REDESIGN UI CAREER CENTER
+
+- **Audit ulang:** semua tab career center kini FUNGSIONAL (audit doc lama yang bilang Dashboard/Pesan/Statistik/Berita placeholder sudah basi) — endpoint real `/career/dashboard`, `/career/pesan`, `/career/statistik`, bookmark, pagination.
+- **Redesign `CareerCenterView.vue`:** hero header "Career Center" + desc, nav tab jadi pill bar dengan radius/border/shadow token, active tab fill primary (bukan outline), overflow-x scroll di mobile (tidak wrap lagi), sticky top 12px.
+- **Kerapihan:**
+  - Padding ganda dihapus: `DashboardView` & `BookmarkView` `padding:24px` → `0` (wrapper sudah kasih padding).
+  - Link "Lowongan Tersimpan" duplikat di header CariLowonganView dihapus (nav sudah punya tab).
+  - Heading h1 child views (Bookmark/Statistik/Berita/Pesan/Dashboard) diturunkan ke h2 — h1 cuma satu per halaman (hero wrapper).
+- **Verifikasi:** `npm run build` sukses. Tidak ada perubahan backend/logic.
+- **Belum dikerjakan (dari CAREER_CENTER_AUDIT.md bagian F):** keputusan user soal timeline status tambahan, role alumni, backfill work_arrangement, admin CRUD lowongan/lamaran di panel admin.
+
+## STATUS (2026-10-16) — FIX KOPERASI SEEDER ERROR
+
+- **Bug:** `db:seed` gagal `Field 'slug' doesn't have a default value` di `KoperasiProductSeeder`. Penyebab: tabel `koperasi_products` dalam state stale dari run sebelumnya (migrate:fresh gagal sebagian) sehingga model `saving` event tidak trigger dengan benar.
+- **Fix:** rollback + re-migrate `koperasi_products` → jalankan seeder → sukses 14 produk. `updateOrCreate` di seeder bersifat idempotent (slug generated via model `saving` event).
+- **Verifikasi:** `php artisan db:seed` sukses penuh — semua seeder (AnjarSeeder, AdminSeeder, LowonganSeeder, SppAnjarSeeder, KoperasiProductSeeder, CareerCenterSeeder) DONE tanpa error.
+- **Percakapan error ini:** resolved.
+
+## STATUS TERakhir (2026-10-16) — AUDIT & IMPLEMENTASI CAREER CENTER
+
+- **Phase 1 — Audit selesai:** `CAREER_CENTER_AUDIT.md` dibuat — full inventory frontend/backend, teknis debt, security gap. 4/6 tab placeholder, bookmark no-op, dashboard hardcoded, tidak ada admin CRUD.
+- **Phase 2 — Audit & Rencana (dokumen lengkap):** Rencana 4 fitur ditulis di `CAREER_CENTER_AUDIT.md` bagian "Rencana Implementasi".
+- **Phase 3 — Implementasi dimulai (user approved):**
+
+### Feature A: Bookmark Lowongan (SELESAI)
+- **Migration:** `2026_10_16_100000_create_bookmarks_table.php` — table `bookmarks` (user_id FK, lowongan_id FK, unique constraint, timestamps). Sync ke backend-admin.
+- **Model:** `backend/app/Models/Bookmark.php` — relasi ke User dan Lowongan.
+- **Controller:** `backend/app/Http/Controllers/BookmarkController.php` — `index` (list user bookmarks), `store` (toggle), `destroy` (remove). Semua auth-protected, IDOR-safe.
+- **Routes:** `GET/POST /bookmarks`, `DELETE /bookmarks/{lowongan}` (auth middleware).
+- **Frontend:**
+  - `CareerJobCard.vue` — terima prop `bookmarked`, icon toggle (fa-bookmark/far fa-bookmark), emit `toggle-bookmark`.
+  - `CariLowonganView.vue` — fetch bookmarks on mount, toggle handler, `isBookmarked()` computed, link "Lowongan Tersimpan".
+  - `BookmarkView.vue` (BARU) — halaman daftar bookmark dengan empty state, apply button, remove button.
+  - `CareerCenterView.vue` — nav tabs (Cari Lowongan, Lowongan Tersimpan, Dashboard, Lamaran Saya, Pesan, Statistik, Berita Karir).
+  - `SiswaLayout.vue` — tambah menu "Lowongan Tersimpan" di sidebar career center.
+  - `router/index.js` — tambah route `/career-center/bookmark`.
+- **Tests:** `BookmarkControllerTest.php` — 7 kasus (guest tolak, CRUD, duplicate, IDOR, empty state). **Note:** test gagal di mesin Linux (no pdo_sqlite) — bug environment lama, bukan regresi.
+
+### Feature B: Filter Penyempurnaan (SELESAI)
+- **Migration:** `2026_10_16_100001_add_work_arrangement_to_lowongans_table.php` — kolom `work_arrangement` (nullable string: onsite/hybrid/remote). Sync ke backend-admin.
+- **Model:** `backend/app/Models/Lowongan.php` — tambah `work_arrangement` ke fillable.
+- **Seeder:** `LowonganSeeder.php` — semua 25 data lowongan diberi work_arrangement (onsite/hybrid/remote).
+- **Controller:** `LowonganController.php` — `index()` sekarang mengembalikan paginated response (`data`, `meta`, `links`), filter tambahan: `work_arrangement`, `location`. Hapus double filtering di frontend.
+- **Frontend:** `CariLowonganView.vue` — handle paginated response, pagination nav (prev/next), hapus `filteredJobs` computed (filter sudah di backend), fetch bookmarks untuk toggle UX, `watch` reactive pada search & chip.
+- **Compatibility:** `CareerPreview.vue` tidak terdampak — hanya pakai `/lowongan/count` yang tidak berubah.
+- **Tests:** `LowonganControllerTest.php` — 8 kasus (pagination, search, type/jurusan/work_arrangement/location filter, sort, count, show).
+
+### Feature C: Dashboard Dinamis (SELESAI)
+- **Endpoint:** `GET /career/dashboard` (auth) — response: `total_lamaran`, `lamaran_pending`, `lamaran_diterima`, `lamaran_ditolak`, `bookmark_count`, `upcoming_deadline` (dari bookmark lowongan aktif).
+- **Controller:** Ditambahkan method `dashboard()` di `LamaranController.php`.
+- **Frontend:** `DashboardView.vue` — ganti dari hardcoded (12/5/8/3) ke fetch real data dengan `fetchJson`. Loading + error + empty state.
+- **Tests:** `CareerDashboardTest.php` — 3 kasus (statistik real, auth required, empty state).
+
+### Feature D: Timeline Status Lamaran (SELESAI)
+- **Migration:** `2026_10_16_100002_create_lamaran_status_histories_table.php` — table `lamaran_status_histories` (lamaran_id FK, status_from, status_to, action_by FK, catatan, timestamps). Sync ke backend-admin.
+- **Model:** `LamaranStatusHistory.php` — relasi ke Lamaran dan User (action_by).
+- **Model:** `Lamaran.php` — tambah relasi `statusHistories()` + `created_at/updated_at` cast.
+- **Observer:** `LamaranObserver.php` — `created()` buat history otomatis, `updated()` track status changes.
+- **Registrasi:** `AppServiceProvider::boot()` — `Lamaran::observe(LamaranObserver::class)`.
+- **API:** `LamaranController@show` + `myApplications` — eager-load `statusHistories`, `actionBy`.
+- **Frontend:**
+  - `LamaranTimeline.vue` (BARU) — step-by-step timeline (Terkirim → Diproses → Diterima/Ditolak/Dibatalkan).
+  - `LamaranSayaView.vue` — expandable card, timeline di bawah, catatan admin, format tanggal.
+- **Tests:** `LamaranStatusHistoryTest.php` — 4 kasus (auto history on create, on status update, show API include history, myApplications API include history).
+
+### Migration Files (Sync ke backend + backend-admin)
+| File | Table | Deskripsi |
+|------|-------|-----------|
+| `2026_10_16_100000_create_bookmarks_table.php` | bookmarks | user_id, lowongan_id, unique |
+| `2026_10_16_100001_add_work_arrangement_to_lowongans_table.php` | lowongans | work_arrangement (nullable) |
+| `2026_10_16_100002_create_lamaran_status_histories_table.php` | lamaran_status_histories | lamaran_id, status_from/to, action_by, catatan |
+
+### Seeder Career Center
+- `CareerCenterSeeder.php` (BARU) — untuk user `sampbernad@gmail.com` (anjar):
+  - 5 bookmark lowongan
+  - 3 lamaran status `pending`
+  - 1 lamaran status `diterima` + 2 history record (pending→diterima, oleh admin)
+  - Register di `DatabaseSeeder.php` (urutan setelah LowonganSeeder)
+
+### Verifikasi
+- ✅ Semua PHP syntax clean (php -l)
+- ✅ Frontend build sukses (npm run build)
+- ❌ Test suite tidak bisa dijalankan di mesin Linux (no pdo_sqlite) — environment limitation, semua test lama juga gagal sama cara
+
+
 
 - **Konteks:** koperasi sebelumnya prototipe — 12 produk hardcode di `KoperasiView.vue`, harga dipercaya dari client (bisa dikirim 0), pembayaran palsu (QRIS CSS `Math.random()`, rekening hardcode), tidak ada riwayat, admin read-only, status hanya `pending|lunas|batal`.
 - **Keputusan user:** bayar via **saldo tabungan + Midtrans Snap**; produk dikelola **CRUD penuh di panel admin**; alur status **pending → dibayar → diambil**; plus **kurangi stok saat bayar, riwayat pesanan, keranjang persist, jam operasional, laporan/omzet**.
@@ -20,6 +129,41 @@ Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa per
 - **Frontend** — `KoperasiView.vue` ditulis ulang: katalog dari API, keranjang persist `localStorage`, bayar **Saldo Tabungan / Midtrans (popup Snap)**, view sukses menampilkan **kode ambil + instruksi ke ruang TU**, banner tutup. `KoperasiRiwayatView.vue` baru + route `/koperasi-riwayat` + item sidebar `SiswaLayout`. Toast pakai `useToast`+`ToastStack` (bukan `.kop-toast` lama).
 - **Seeder** `KoperasiProductSeeder` (14 produk) + didaftarkan di `DatabaseSeeder`. Salinan ada di `backend-admin/database/seeders/` juga (DB lokal admin terpisah: `.env` admin menunjuk `ga-ro-admin`, sedangkan `backend/` menunjuk `ga-ro`).
 - **Sudah dijalankan (lokal):** `php artisan migrate` + `php artisan db:seed --class=KoperasiProductSeeder` di **kedua** backend → 14 produk di `ga-ro` dan `ga-ro-admin`.
+- **Admin dilengkapi:** tombol **Batalkan** (hanya order `pending`, stok belum tersentuh) di daftar & detail; **Export CSV** mengikuti filter aktif. `fputcsv` diberi argumen `$escape` eksplisit (hapus deprecation PHP 8.4).
+- **DB lokal disamakan:** `backend-admin/.env` `DB_DATABASE` → `ga-ro` (dari `ga-ro-admin`) supaya pesanan siswa muncul di panel admin saat tes lokal. Terverifikasi: order siswa terbaca di `adminIndex`, export CSV jalan.
+- **Perbaikan kecil:** `image` produk upload kini dikembalikan sebagai URL absolut dari `KoperasiController@index` (`imageUrl()`), sebelumnya relatif → tidak tampil.
+- **Bug pra-ada yang ketemu & dibetulkan** (muncul setelah DB admin disamakan ke `ga-ro`, jadi view yang sebelumnya kosong kini ter-render dengan data):
+  - `backend-admin/resources/views/tabungan/index.blade.php` — blok `$siswa->hasPages()` padahal controller kirim Collection (`->get()`) → hapus blok paginasi mati.
+  - `backend-admin/app/Http/Controllers/BeritaController@index` — tidak mengirim `$categories`, padahal `berita/index.blade.php:52` memakainya → 500; kini kirim `array_keys(self::CATEGORY_COLORS)`.
+- **Verifikasi HTTP nyata** (`php artisan serve` :8001, login `admin`): `/admin /tabungan /koperasi /koperasi/produk /koperasi/produk/create /koperasi/laporan /berita /berita/create /pendaftaran /laporan` semua **200**; `/koperasi/export?status=pending` → **200 text/csv** berisi order nyata.
+- **Catatan kosmetik (pra-ada, belum diubah):** waktu di panel admin tampil UTC (`config/app.php` `timezone = 'UTC'`), beda 7 jam dari WIB. Sisi siswa aman (ISO 8601 → dikonversi browser).
+
+## STATUS TERAKHIR (2026-10-16) — PERBAIKAN DESAIN PANEL ADMIN
+
+- **Sidebar sub-menu Koperasi:** `layouts/app.blade.php` — "Kelola Koperasi" jadi grup collapsible (`Pesanan`/`Produk`/`Laporan`), auto-buka saat berada di halaman koperasi (`request()->is('koperasi*')`). CSS: `.sidebar-group/.sidebar-toggle/.sidebar-sub/.sidebar-sub-link`.
+- **Gaya halaman koperasi dirapikan:** inline `style="..."` diganti kelas di `public/css/admin.css` (`.kop-subnav`, `.panel`, `.panel-title`, `.info-grid/.info-item/.info-label/.info-value`, `.pickup-badge`, `.form-grid/.form-field/.form-check/.form-actions`, `.media-preview`, `.prod-cell/.prod-thumb/.prod-name/.prod-sub`, `.stack-2`, `.kop-head-actions`). Berlaku untuk `_tabs`, `index`, `show`, `products`, `product-form`, `laporan`.
+- **Dashboard admin:** tambah blok **Ringkasan Koperasi** (menunggu bayar / siap diambil / omzet hari ini) via `PendaftaranController@dashboard` (`$koperasi`) + view. Kartu memakai palet lokal dashboard (`stat-card-green/blue/gold`).
+- **Zona waktu → WIB:** `config/app.php` `timezone` `UTC` → `Asia/Jakarta` di **kedua** backend. `now()` kini 10:29 WIB.
+  - **PENTING:** baris lama di DB tersimpan sebagai UTC; setelah perubahan, waktu baris lama akan tampil **+7 jam**. Baris baru benar. Kalau riwayat perlu dibetulkan, jalankan sekali: `UPDATE <tabel> SET <kolom> = <kolom> + INTERVAL 7 HOUR` (per kolom timestamp) — belum dijalankan.
+- **Verifikasi:** semua halaman admin **200** (`/admin /tabungan /koperasi /koperasi/produk /koperasi/produk/create /koperasi/laporan /berita /pendaftaran /laporan`); markup memuat `Ringkasan Koperasi` + `sidebar-sub-link` (3) + `kop-subnav`; endpoint siswa `GET /koperasi` tetap 14 produk & `open=true`.
+- **Fix seeder (`migrate:fresh --seed` gagal):** `DatabaseSeeder` memakai trait `WithoutModelEvents` → hook `saving` di `KoperasiProduct` (pembuat `slug`) tidak jalan → MySQL strict menolak `Field 'slug' doesn't have a default value`. `db:seed --class=KoperasiProductSeeder` jalan karena traktir itu tidak aktif di sana — itu sebabnya terlihat "kadang bisa". Fix: `KoperasiProductSeeder` mengisi `slug` manual (`Str::slug($name)`) di kedua backend. `php artisan db:seed` sekarang lolos penuh (termasuk `CareerCenterSeeder`, yang tadinya tidak pernah jalan). DB lokal `ga-ro` = 14 produk, 0 slug kosong.
+- **Fix link Career Center (halaman kosong):** router memakai `/career-center/*` (`SiswaLayout` & `CareerPreview` benar), tapi 8 link di dalam halaman memakai `/panel-siswa/career-center/*` yang **tidak punya route** → halaman blank, bukan error. `/panel-siswa` hanya layout shell (redirect ke `/tabungan`), jadi segmen itu bukan URL nyata. Diperbaiki di `src/views/CareerCenterView.vue` (4 link + 3 menu yang belum ada: Pesan/Statistik/Berita Karir), `career/DashboardView.vue`, `career/CariLowonganView.vue`, `career/LamaranSayaView.vue`, `career/BookmarkView.vue`. `npm run build` lolos.
+- **Status menu Career Center:** ketujuh menu terisi setelah Stage 1–3 (lihat entri di bawah): Cari Lowongan, Lowongan Tersimpan, Dashboard, Lamaran Saya, Pesan, Statistik, Berita Karir.
+- **Verifikasi alur bookmark (nyata, curl + `php artisan serve`):** login siswa → `GET /bookmarks` `[]` → `POST /bookmarks` `{lowongan_id:1}` **201** → `GET` berisi 1 item + relasi `lowongan` → `DELETE` **200**. Catatan: token CSRF **diputar saat login**, jadi `getCsrfToken()` (cache per page-load) aman karena login lewat full page redirect.
+- **Stage 1 selesai — Berita Karir (`/career-center/news`):** `career/BeritaKarirView.vue` ditulis ulang (bukan placeholder lagi): fetch `/berita` → fallback `/data/news.json`, filter kategori `Karir`, pencarian, kartu → `/berita/:slug`. Kategori **`Karir`** ditambahkan di `backend-admin` (`BeritaController::CATEGORY_COLORS` + whitelist validasi `store`/`update`, `berita/create.blade.php` `categoryColors`); opsi di form admin otomatis ikut karena `$categories` dari controller. `NewsView.vue` + chip `Karir`. **Bug pra-ada yang ikut diperbaiki:** `NewsDetail.vue` hanya membaca `/data/news.json` → berita yang diterbitkan admin selalu "tidak ditemukan"; sekarang API `/berita/{slug}` dulu, baru fallback statis. `public/data/news.json` + 3 artikel karir (CV, interview magang, persiapan PKL). Verifikasi: `php -l` ok, `view:cache` ok, `/berita/create` memuat opsi `Karir`, `GET /berita` = `[]`, `GET /berita/{slug}` = 404 JSON (fallback statis jalan), `npm run build` ✓.
+- **Stage 2 selesai — Statistik (`/career-center/statistics`):** endpoint baru `GET /career/statistik` (auth) → `LamaranController@statistik` + route `career.statistik` di `backend/routes/web.php`. Isi: `lowongan` (total/aktif, `per_tipe`, `per_jurusan`, `per_lokasi` top 6, `per_arrangement`) + `saya` (total/pending/diterima/ditolak/dibatalkan/bookmark) + `tren` 6 bulan terakhir (lamaran per bulan, dihitung di PHP bukan `DATE_FORMAT` supaya sqlite-safe). `career/StatistikView.vue` ditulis ulang: kartu ringkasan + bar chart CSS (tanpa library baru) untuk tipe/jurusan/lokasi/model kerja + tren batang 6 bulan. Verifikasi: `php -l` ok, `route:list` memuat `career/statistik`, respons nyata **200** (25 lowongan, per_tipe Magang 10/Kerja 10/BKK 5, jurusan TKJ 9/RPL 8/AKL 8), `npm run build` ✓.
+- **Stage 3 selesai — Pesan (`/career-center/messages`), pilihan user: chat siswa ↔ BKK/admin.** Skema: satu tabel `career_messages` (`user_id`, `sender` enum `siswa|admin`, `body`, `read_at`) — satu siswa = satu thread, tanpa tabel conversations. Migration `2026_10_16_200000_create_career_messages_table` disalin identik ke kedua backend; model `CareerMessage` (konstanta `SISWA`/`ADMIN`) juga di keduanya.
+  - **Siswa (`backend/`):** `CareerMessageController@index` (ambil thread + tandai balasan admin `read_at`) dan `@store` (validasi `body` 1–2000 char); route `GET/POST /career/pesan` (`career.pesan`, `career.pesan.store`). View `career/PesanView.vue` ditulis ulang: bubble chat, composer (Enter kirim / Shift+Enter baris baru), polling 15 detik saat tab terbuka, auto-scroll, error 422 ditampilkan.
+  - **Admin (`backend-admin/`):** `CareerMessageController@index` (daftar percakapan urut terbaru + hitungan belum dibaca), `@show` (thread + tandai pesan siswa terbaca), `@store` (balas); route `GET /career-pesan`, `GET/POST /career-pesan/{user}`; view `career-pesan/index.blade.php` + `show.blade.php`; link sidebar **Pesan Karir** + kelas CSS `.bubble*`/`.form-error` di `admin.css`.
+  - **Verifikasi nyata:** migration lokal DONE; siswa `GET /career/pesan` `{"messages":[]}` **200** → `POST` **201** → body kosong **422**; admin `/career-pesan` **200** (badge "belum dibaca") → `/career-pesan/3` **200** → `POST` balasan **302** → thread memuat `BKK / Admin`; admin list berubah jadi **Terbaca**; siswa `GET` memuat balasan admin; `read_at` terisi dua arah (pesan siswa 11:25, balasan admin 11:26 WIB). Semua endpoint career **200**; `npm run build` ✓.
+- **Stage 4 selesai — menu Career Center di panel admin (`backend-admin/`), tiga fitur sekaligus.** Semua file baru, **tanpa migration baru**.
+  - **Model baru (mirror `backend/`, tanpa `HasFactory`):** `app/Models/Lowongan.php` (`lamarans()`), `app/Models/Lamaran.php` (konstanta `STATUSES`, relasi `user`/`lowongan`/`statusHistories`), `app/Models/LamaranStatusHistory.php`.
+  - **Kelola Lowongan (CRUD):** `app/Http/Controllers/LowonganController.php` — `index` (filter cari/tipe/status + `withCount('lamarans')`, 15/halaman), `create`, `store`, `edit`, `update`, `toggle` (aktif/nonaktif), `destroy`, `statistik`, privat `validated()` (`type` in Magang/Kerja/BKK, `work_arrangement` in onsite/hybrid/remote). View `resources/views/lowongan/index.blade.php` + `form.blade.php`.
+  - **Daftar Pelamar:** `app/Http/Controllers/LamaranController.php` — `index` (filter lowongan/status/cari nama-NISN-email), `show`, `updateStatus` (menulis `lamaran_status_histories` bila status berubah), `downloadCv` (stream dari disk `public`, tidak butuh `storage:link`). View `resources/views/lamaran/index.blade.php` + `show.blade.php` (data pelamar, surat lamaran, unduh CV, form ubah status, riwayat status).
+  - **Statistik Karir admin:** `GET /career-statistik` → `LowonganController@statistik`; view `resources/views/lowongan/statistik.blade.php` (kartu total lowongan/aktif/lamaran/diterima, bar lamaran per status, lowongan per tipe & jurusan, 10 lowongan paling diminati, tren lamaran 6 bulan). Tren dihitung di PHP supaya sqlite-safe.
+  - **Sidebar:** link datar "Pesan Karir" diganti grup collapsible **Career Center** (`careerGroup`) berisi Lowongan / Pelamar / Statistik / Pesan; JS `toggleSidebarGroup(id)` ditambahkan (generik) tanpa mengubah `toggleKoperasi()`. Halaman baru memakai design system admin yang sudah ada lewat `@include('koperasi._kop-style')` — tidak ada CSS baru.
+  - **Guard hapus lowongan:** `destroy` menolak bila sudah ada pelamar (FK `lamarans.lowongan_id` cascade → akan menghapus riwayat pelamar). Pesan arahkan ke nonaktifkan.
+  - **Verifikasi nyata (curl + `php artisan serve`):** `php -l` semua file baru ok; `view:cache` ok; `route:list` memuat 12 route baru; `/lowongan` **200** (16 baris) & filter `?search=Database` **200** 1 cocok; `/lowongan/create` **200**; `POST /lowongan` **302** (total 25→26); `/lowongan/26/edit` **200** judul terisi; `PUT` **302** judul berubah; `PATCH toggle` **302** `is_active=0`; `DELETE` **302** (26→25); `/career-statistik` **200** (4 panel); `/lamaran` **200**, `/lamaran/6` **200** (4 seksi); `PATCH /lamaran/6/status` **302** → `status=diterima`, **1 baris riwayat**, catatan tersimpan; `/lamaran/6/cv` tanpa berkas **302** (redirect + pesan error); guard hapus lowongan berpelamar → **302** + pesan, lowongan tetap ada; lowongan buatan admin **muncul di siswa** (`total=1`), setelah dinonaktifkan **hilang** (`total=0`). Tidak ada perubahan frontend → tidak perlu `npm run build`.
 - **Verifikasi:** `npm run build` sukses (KoperasiView 16.21 kB, KoperasiRiwayatView 3.38 kB); `php -l` semua file PHP berubah bersih; `route:list` kedua backend benar; `php artisan view:cache` sukses. **Test `KoperasiControllerTest` (5 kasus) belum bisa dijalankan di mesin Linux ini** — tanpa `pdo_sqlite` (quirk lama). Jalankan `composer test` di mesin Windows untuk konfirmasi.
 - **Catatan:** butuh `php artisan storage:link` bila admin upload gambar produk (disimpan di disk `public`). Migration baru belum dijalankan (tanpa `.env` DB lokal) — jalankan `cd backend; php artisan migrate` di mesin ber-DB.
 

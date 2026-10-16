@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             LowonganSeeder::class,
             SppAnjarSeeder::class,
             KoperasiProductSeeder::class,
+            CareerCenterSeeder::class,
         ]);
     }
 }

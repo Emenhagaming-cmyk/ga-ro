@@ -20,7 +20,8 @@ class BeritaController extends Controller
     public function index()
     {
         $beritas = Berita::orderByDesc('published_at')->orderByDesc('created_at')->paginate(20);
-        return view('berita.index', compact('beritas'));
+        $categories = array_keys(self::CATEGORY_COLORS);
+        return view('berita.index', compact('beritas', 'categories'));
     }
 
     public function create()

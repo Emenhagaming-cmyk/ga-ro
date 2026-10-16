@@ -87,13 +87,6 @@
                 </tbody>
             </table>
         </div>
-
-        {{-- Pagination --}}
-        @if ($siswa->hasPages())
-        <div style="padding:16px 20px;border-top:1px solid #f0f3f0;">
-            {{ $siswa->appends(request()->query())->links() }}
-        </div>
-        @endif
     </div>
 </div>
 

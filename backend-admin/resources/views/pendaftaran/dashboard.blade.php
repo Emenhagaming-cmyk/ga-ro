@@ -41,6 +41,32 @@
         </div>
     </div>
 
+    @if (isset($koperasi))
+    <div class="form-section" style="margin-bottom:24px;">
+        <h2 style="font-size:17px;font-weight:800;color:#1c2a23;margin:0 0 14px;">Ringkasan Koperasi</h2>
+        <div class="stats-grid" style="margin-bottom:0;">
+            <div class="stat-card stat-card-gold">
+                <div class="stat-label">Menunggu Bayar</div>
+                <div class="stat-value">{{ $koperasi['pending'] }}</div>
+                <div class="stat-foot">Pesanan belum dibayar</div>
+            </div>
+            <div class="stat-card stat-card-blue">
+                <div class="stat-label">Siap Diambil</div>
+                <div class="stat-value">{{ $koperasi['siap'] }}</div>
+                <div class="stat-foot">Di ruang TU</div>
+            </div>
+            <div class="stat-card stat-card-green">
+                <div class="stat-label">Omzet Hari Ini</div>
+                <div class="stat-value">{{ number_format($koperasi['omzet_hari_ini'], 0, ',', '.') }}</div>
+                <div class="stat-foot">Sudah dibayar</div>
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <a href="{{ route('koperasi.index') }}" class="btn btn-secondary" style="text-decoration:none;">Buka Kelola Koperasi</a>
+        </div>
+    </div>
+    @endif
+
     <div id="newDataBanner" style="display:none;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-radius:14px;padding:14px 18px;font-weight:700;">
         🔔 Data pendaftaran baru masuk — <button id="reloadNow" class="btn btn-primary" style="margin-left:8px;font-size:12px;padding:6px 14px;">Muat Ulang</button>
     </div>
