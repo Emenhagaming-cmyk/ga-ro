@@ -1,14 +1,13 @@
 <template>
   <div class="timeline">
-    <div class="timeline-item" v-for="(item, index) in timelineSteps" :key="index">
+    <div class="timeline-item" v-for="(item, index) in steps" :key="item.key">
       <div class="timeline-step">
-        <div class="step-indicator" :class="{ active: isCurrent(item.status) }">
+        <div class="step-indicator" :class="{ active: index === 0 }">
           <i :class="stepIcon(item.status)"></i>
         </div>
         <div class="step-content">
           <h4 class="step-title">{{ stepLabel(item.status) }}</h4>
-          <span class="step-status">{{ statusLabel(item.status) }}</span>
-          <span class="step-date">{{ formatDate(item.created_at) }}</span>
+          <span v-if="item.created_at" class="step-date">{{ formatDate(item.created_at) }}</span>
           <p v-if="item.catatan" class="step-note">{{ item.catatan }}</p>
           <p v-if="item.actionBy" class="step-actor">oleh {{ item.actionBy?.name || 'Admin' }}</p>
         </div>
@@ -18,6 +17,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   histories: {
     type: Array,
@@ -25,13 +26,26 @@ const props = defineProps({
   }
 })
 
-const timelineSteps = [
-  { status: 'pending', label: 'Lamaran Terkirim', icon: 'fa-paper-plane' },
-  { status: 'pending', label: 'Diproses', icon: 'fa-clock' },
-  { status: 'diterima', label: 'Diterima', icon: 'fa-check-circle' },
-  { status: 'ditolak', label: 'Ditolak', icon: 'fa-xmark-circle' },
-  { status: 'dibatalkan', label: 'Dibatalkan', icon: 'fa-ban' },
-]
+// Satu baris per perubahan status asli (terbaru dulu). Histori kosong = lamaran
+// baru masuk dan belum disentuh admin, jadi tampilkan satu baris "diproses".
+const steps = computed(() => {
+  const rows = props.histories
+    .slice()
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .map((h) => ({
+      key: `h${h.id}`,
+      status: h.status_to,
+      created_at: h.created_at,
+      catatan: h.catatan,
+      actionBy: h.actionBy,
+    }))
+
+  if (rows.length === 0) {
+    rows.push({ key: 'baru', status: 'pending', catatan: 'Menunggu ditinjau BKK sekolah.' })
+  }
+
+  return rows
+})
 
 function stepIcon(status) {
   switch (status) {
@@ -43,16 +57,6 @@ function stepIcon(status) {
   }
 }
 
-function statusLabel(status) {
-  const map = {
-    pending: 'Pending',
-    diterima: 'Diterima',
-    ditolak: 'Ditolak',
-    dibatalkan: 'Dibatalkan'
-  }
-  return map[status] || status
-}
-
 function stepLabel(status) {
   const map = {
     pending: 'Dalam Proses',
@@ -61,12 +65,6 @@ function stepLabel(status) {
     dibatalkan: 'Dibatalkan'
   }
   return map[status] || status
-}
-
-function isCurrent(status) {
-  if (!props.histories || props.histories.length === 0) return false
-  const latest = props.histories[0]
-  return latest.status_to === status
 }
 
 function formatDate(dateStr) {
@@ -140,14 +138,6 @@ function formatDate(dateStr) {
   font-weight: 700;
   color: #1c2a23;
   margin: 0 0 4px;
-}
-
-.step-status {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
 }
 
 .step-date {

@@ -4,75 +4,55 @@
 @section('page-title', 'Percakapan')
 
 @section('content')
-<div class="kop-page">
-    @include('koperasi._kop-style')
+@if (session('success'))
+    <div class="alert alert-success">✓ {{ session('success') }}</div>
+@endif
 
-    <div class="kop-header">
-        <div>
-            <p class="kop-kicker">Pesan Karir</p>
-            <h1 class="kop-title">{{ $user->name }}</h1>
-            <p class="kop-subtitle">{{ $user->username ?? '' }} · {{ $user->email ?? '' }}</p>
-        </div>
-        <div class="kop-header-actions">
-            <a href="{{ route('career.pesan.index') }}" class="kop-btn kop-btn-ghost">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                Kembali
-            </a>
+<div class="wa-page">
+    {{-- Header ala WhatsApp: kembali + avatar + identitas siswa --}}
+    <div class="wa-head">
+        <a href="{{ route('career.pesan.index') }}" class="wa-back" aria-label="Kembali ke daftar percakapan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </a>
+        <div class="wa-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</div>
+        <div class="wa-peer">
+            <span class="wa-peer-name">{{ $user->name }}</span>
+            <span class="wa-peer-sub">{{ $user->username ?? $user->email }} · {{ $messages->count() }} pesan</span>
         </div>
     </div>
 
-    @if (session('success'))
-        <div class="alert alert-success">✓ {{ session('success') }}</div>
-    @endif
-
-    <div class="kop-panel">
-        <div class="kop-panel-head">
-            <div>
-                <h2 class="kop-panel-title">Percakapan</h2>
-                <p class="kop-panel-sub">{{ $messages->count() }} pesan</p>
+    <div class="wa-thread" id="waThread">
+        @forelse ($messages as $msg)
+            @php $fromAdmin = $msg->sender === 'admin'; @endphp
+            <div class="wa-row {{ $fromAdmin ? 'wa-out' : 'wa-in' }}">
+                <div class="wa-bubble">
+                    <span class="wa-text">{{ $msg->body }}</span>
+                    <span class="wa-meta" title="{{ $msg->created_at->format('d/m/Y H:i') }}">{{ $msg->created_at->format('H:i') }}</span>
+                </div>
             </div>
-        </div>
-        <div class="kop-panel-body" style="max-height:60vh;overflow-y:auto;">
-            @forelse ($messages as $msg)
-                @php $fromAdmin = $msg->sender === 'admin'; @endphp
-                <div class="bubble-row" style="{{ $fromAdmin ? 'justify-content:flex-end;' : '' }}">
-                    <div class="bubble" style="border-color:{{ $fromAdmin ? 'var(--kop-primary)' : 'var(--kop-border)' }};background:{{ $fromAdmin ? 'var(--kop-primary)' : '#fff' }};color:{{ $fromAdmin ? '#fff' : 'var(--kop-text)' }};">
-                        <div class="bubble-author">{{ $fromAdmin ? 'BKK / Admin' : $user->name }}</div>
-                        <div class="bubble-body">{{ $msg->body }}</div>
-                        <div class="bubble-time">{{ $msg->created_at->format('d/m/Y H:i') }}</div>
-                    </div>
-                </div>
-            @empty
-                <div class="kop-empty">
-                    <div class="kop-empty-icon">💬</div>
-                    <h3>Belum ada pesan.</h3>
-                </div>
-            @endforelse
-        </div>
+        @empty
+            <p class="wa-empty">Belum ada pesan. Tulis balasan pertama untuk {{ $user->name }}.</p>
+        @endforelse
     </div>
 
-    <div class="kop-panel">
-        <div class="kop-panel-head">
-            <div>
-                <h2 class="kop-panel-title">Balas</h2>
-                <p class="kop-panel-sub">Balasan tampil di halaman Pesan milik siswa.</p>
-            </div>
-        </div>
-        <div class="kop-panel-body">
-            <form action="{{ route('career.pesan.store', $user) }}" method="POST">
-                @csrf
-                <div class="form-field">
-                    <label for="replyBody">Balasan untuk {{ $user->name }}</label>
-                    <textarea id="replyBody" name="body" rows="4" class="kop-input" required maxlength="2000" placeholder="Tulis balasan...">{{ old('body') }}</textarea>
-                    @error('body')
-                        <span class="form-error">{{ $message }}</span>
-                    @enderror
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="kop-btn kop-btn-primary">Kirim Balasan</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @error('body')
+        <p class="form-error wa-error">{{ $message }}</p>
+    @enderror
+
+    <form action="{{ route('career.pesan.store', $user) }}" method="POST" class="wa-composer">
+        @csrf
+        <input type="text" name="body" id="replyBody" class="wa-input" value="{{ old('body') }}"
+               placeholder="Tulis balasan..." maxlength="2000" required autocomplete="off"
+               aria-label="Balasan untuk {{ $user->name }}">
+        <button type="submit" class="wa-send" aria-label="Kirim balasan">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+    </form>
 </div>
+
+<script>
+    // Buka percakapan langsung di pesan terbaru.
+    var waThread = document.getElementById('waThread');
+    if (waThread) { waThread.scrollTop = waThread.scrollHeight; }
+</script>
 @endsection

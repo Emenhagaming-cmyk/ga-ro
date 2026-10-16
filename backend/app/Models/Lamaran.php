@@ -17,12 +17,6 @@ class Lamaran extends Model
         'nama_lengkap', 'email', 'nisn', 'jurusan_pilihan',
     ];
 
-    protected $casts = [
-        'catatan_admin' => 'nullable',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

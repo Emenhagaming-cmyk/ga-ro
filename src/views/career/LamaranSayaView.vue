@@ -4,6 +4,12 @@
       <i class="fas fa-spinner fa-spin"></i> Memuat lamaran...
     </div>
 
+    <div v-else-if="error" class="empty-state">
+      <i class="fas fa-triangle-exclamation"></i>
+      <h3>Gagal memuat lamaran</h3>
+      <p>Pastikan Anda masih login, lalu muat ulang halaman.</p>
+    </div>
+
     <div v-else-if="lamarans.length === 0" class="empty-state">
       <i class="fas fa-file-lines"></i>
       <h3>Belum ada lamaran</h3>
@@ -60,12 +66,15 @@ import LamaranTimeline from '@/components/career/LamaranTimeline.vue'
 const { BACKEND } = useAuthSession()
 const lamarans = ref([])
 const loading = ref(true)
+const error = ref(false)
 const expandedId = ref(null)
 
 async function fetchLamarans() {
   loading.value = true
+  error.value = false
   try {
     const res = await fetchJson(`${BACKEND}/lamaran/saya`)
+    if (!res.ok) throw new Error('gagal')
     const data = await res.json()
     lamarans.value = data.map(l => ({
       ...l,
@@ -73,6 +82,7 @@ async function fetchLamarans() {
     }))
   } catch (e) {
     lamarans.value = []
+    error.value = true
   } finally {
     loading.value = false
   }

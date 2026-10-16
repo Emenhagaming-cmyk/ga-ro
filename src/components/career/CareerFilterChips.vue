@@ -5,7 +5,7 @@
       :key="chip"
       class="chip"
       :class="{ active: modelValue === chip }"
-      @click="$emit('update:modelValue', modelValue === chip ? '' : chip)"
+      @click="$emit('update:modelValue', chip)"
     >
       {{ chip }}
     </button>

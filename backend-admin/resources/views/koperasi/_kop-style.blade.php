@@ -59,6 +59,7 @@
 .kop-panel-sub{ font-size:12px; color:var(--kop-muted); margin:2px 0 0; }
 .kop-panel-body{ padding:16px 20px; }
 .kop-panel-foot{ padding:14px 20px; border-top:1px solid var(--kop-border); display:flex; justify-content:flex-end; }
+.kop-panel-foot .pagination{ margin-top:0; }
 .kop-table-wrap{ overflow-x:auto; }
 .kop-table{ width:100%; border-collapse:collapse; }
 .kop-table thead th{

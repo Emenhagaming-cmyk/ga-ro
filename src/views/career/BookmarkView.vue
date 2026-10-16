@@ -9,6 +9,12 @@
       <i class="fas fa-spinner fa-spin"></i> Memuat bookmark...
     </div>
 
+    <div v-else-if="error" class="empty-state">
+      <i class="fas fa-triangle-exclamation"></i>
+      <h3>Gagal memuat bookmark</h3>
+      <p>Pastikan Anda masih login, lalu muat ulang halaman.</p>
+    </div>
+
     <div v-else-if="bookmarks.length === 0" class="empty-state">
       <i class="fas fa-bookmark"></i>
       <h3>Belum ada lowongan tersimpan</h3>
@@ -70,15 +76,19 @@ import ApplyModal from '@/components/career/ApplyModal.vue'
 const { BACKEND } = useAuthSession()
 const bookmarks = ref([])
 const loading = ref(true)
+const error = ref(false)
 const applyJobSelected = ref(null)
 
 async function fetchBookmarks() {
   loading.value = true
+  error.value = false
   try {
     const res = await fetchJson(`${BACKEND}/bookmarks`)
+    if (!res.ok) throw new Error('gagal')
     bookmarks.value = await res.json()
   } catch (e) {
     bookmarks.value = []
+    error.value = true
   } finally {
     loading.value = false
   }

@@ -146,7 +146,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.96);
+            background: #ffffff;
             border-bottom: 1px solid rgba(223, 228, 221, 0.95);
             box-shadow: 0 8px 30px rgba(28, 42, 35, 0.06);
             padding: 0 32px;
@@ -864,6 +864,11 @@
             border-color: #3a6450;
         }
 
+        /* Prev/Next nonaktif & pemisah "…" jangan tampak bisa diklik */
+        .pagination li.disabled span {
+            opacity: 0.45;
+        }
+
         /* ===== LOADING STATE ===== */
         .table-loading {
             display: flex;
@@ -921,7 +926,7 @@
                 margin-bottom: 8px;
                 text-align: center;
             }
-        }
+
             .sidebar {
                 transform: translateX(-100%);
             }
@@ -1047,10 +1052,161 @@
     .stack-2 { grid-template-columns: 1fr; }
 }
 
-/* ═══ Pesan Karir (thread siswa ↔ BKK) ═══ */
-.bubble-row { display: flex; margin-bottom: 12px; }
-.bubble { max-width: 70%; padding: 12px 16px; border-radius: 14px; border: 1px solid #dfe4dd; background: #fff; color: #1c2a23; }
-.bubble-author { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; margin-bottom: 4px; }
-.bubble-body { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
-.bubble-time { font-size: 11px; opacity: 0.7; margin-top: 6px; }
+/* ═══ Pesan Karir — tampilan chat (ala WhatsApp) ═══ */
+.wa-page {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e5e7e6;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* ---- Header percakapan ---- */
+.wa-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #f0f2f5;
+    border-bottom: 1px solid #e3e6ea;
+}
+
+.wa-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: #3a6450;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.wa-back:hover { background: rgba(58, 100, 80, 0.1); }
+.wa-back svg { width: 20px; height: 20px; }
+
+.wa-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #3a6450;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.wa-peer { display: flex; flex-direction: column; min-width: 0; }
+.wa-peer-name { font-size: 14.5px; font-weight: 800; color: #1c2a23; }
+.wa-peer-sub {
+    font-size: 12px;
+    color: #6b7a72;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Isi percakapan (background + pola khas WhatsApp) ---- */
+.wa-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: clamp(320px, calc(100vh - 300px), 720px);
+    overflow-y: auto;
+    padding: 18px 20px;
+    background-color: #efeae2;
+    background-image: radial-gradient(rgba(58, 100, 80, 0.07) 1.5px, transparent 1.5px);
+    background-size: 20px 20px;
+}
+
+.wa-row { display: flex; }
+.wa-row.wa-out { justify-content: flex-end; }
+
+.wa-bubble {
+    position: relative;
+    max-width: min(70%, 560px);
+    padding: 7px 12px 5px;
+    border-radius: 10px;
+    box-shadow: 0 1px 1px rgba(11, 20, 26, 0.13);
+}
+
+.wa-in .wa-bubble { background: #fff; border-top-left-radius: 0; }
+.wa-out .wa-bubble { background: #d9fdd3; border-top-right-radius: 0; }
+
+/* Ekor bubble, mengarah ke sisi pengirim */
+.wa-bubble::before { content: ''; position: absolute; top: 0; width: 8px; height: 9px; }
+.wa-in .wa-bubble::before { left: -7px; background: #fff; clip-path: polygon(100% 0, 100% 100%, 0 0); }
+.wa-out .wa-bubble::before { right: -7px; background: #d9fdd3; clip-path: polygon(0 0, 0 100%, 100% 0); }
+
+.wa-text {
+    display: block;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #111b21;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.wa-meta { display: block; margin-top: 2px; text-align: right; font-size: 11px; color: #667781; }
+
+.wa-empty {
+    margin: auto;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 13px;
+    color: #667781;
+    box-shadow: 0 1px 1px rgba(11, 20, 26, 0.1);
+}
+
+/* ---- Composer ---- */
+.wa-composer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: #f0f2f5;
+    border-top: 1px solid #e3e6ea;
+}
+
+.wa-input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff;
+    color: #111b21;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.wa-input::placeholder { color: #8696a0; }
+.wa-input:focus { outline: 2px solid rgba(58, 100, 80, 0.35); outline-offset: -1px; }
+
+.wa-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #3a6450;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.wa-send:hover { background: #2f5342; }
+.wa-send svg { width: 20px; height: 20px; }
+
+.wa-error { margin: 8px 16px 0; }
 .form-error { color: #c0392b; font-size: 12px; font-weight: 700; }

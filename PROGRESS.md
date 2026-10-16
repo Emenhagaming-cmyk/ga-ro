@@ -2,6 +2,45 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-16) — REDESAIN CHAT ADMIN ALA WHATSAPP
+
+- **Permintaan user:** halaman `career-pesan/show` (chat siswa ↔ BKK di panel admin) terlalu polos, dibuat menyerupai WhatsApp.
+- **View** `backend-admin/resources/views/career-pesan/show.blade.php` ditulis ulang: header percakapan (tombol kembali bulat + avatar inisial + nama/username siswa), thread tinggi penuh dengan latar `#efeae2` + pola titik, bubble keluar `#d9fdd3` / masuk putih dengan ekor `clip-path`, jam di dalam bubble (judul lengkap `d/m/Y H:i` saat di-hover), composer satu baris + tombol kirim bulat (ikon paper-plane), auto-scroll ke pesan terakhir. Panel "Balas" terpisah dihapus (form pindah ke composer).
+- **CSS** `backend-admin/public/css/admin.css`: blok `.bubble-*` lama (dipakai hanya oleh view ini) diganti blok `.wa-*` (`.wa-page/.wa-head/.wa-avatar/.wa-thread/.wa-bubble/.wa-composer/.wa-send`). `@include('koperasi._kop-style')` dihapus dari view karena tidak ada class `kop-*` yang dipakai lagi (`.alert` + `.form-error` sudah ada di admin.css).
+- **Verifikasi:** Blade dikompilasi lewat boot Laravel asli (skrip `/tmp/opencode/check_blade.php`) + `php -l` pada hasil kompilasi = bersih; brace admin.css 221/221 tanpa depth negatif; grep `bubble` lama = 0.
+- **Sengaja belum dibuat (butuh fitur backend):** lampiran/emoji, centang "terbaca" di sisi admin, pemisah tanggal (sekarang jam saja, tanggal lengkap di tooltip). Sisi siswa (`src/views/career/PesanView.vue`) belum diseragamkan — bilang kalau mau.
+
+## STATUS (2026-10-16) — FIX PAGINATION PANEL ADMIN (CHEVRON RAKSASA)
+
+- **Bug desain (semua halaman admin yang memakai `->links()`: pendaftaran/index, berita/index, koperasi/index, koperasi/products, lamaran/index, lowongan/index):** view pagination bawaan Laravel 12 = Tailwind, sedangkan panel admin tidak memuat Tailwind/Bootstrap. Akibatnya (lihat di halaman Lowongan): dua blok kontrol tampil bersamaan (`« Previous Next »` + `Showing 1 to 15 of 25 results`), chevron SVG tanpa ukuran jadi raksasa, nomor halaman jadi link polos (ungu kalau sudah dikunjungi). `admin.css` sebenarnya sudah punya `.pagination li a/span` tapi markup bawaan tidak pernah cocok dengan selektor itu.
+- **Fix:** `Paginator::useBootstrapFour()` di `backend-admin/app/Providers/AppServiceProvider::boot()` → markup `ul.pagination > li > a.page-link` yang persis distyle `admin.css` (`.pagination li a/span`, `.pagination li.active span`). Tanpa file view baru, tanpa dependency baru.
+- Tambahan kecil: `.pagination li.disabled span { opacity:.45 }` (Prev/Next nonaktif & pemisah "…" jangan tampak bisa diklik) + `.kop-panel-foot .pagination { margin-top:0 }` (dobel spasi di dalam panel footer).
+- **Bug desain 2:** `.topbar` sticky pakai `rgba(255,255,255,0.96)` → teks tabel yang di-scroll membayang di belakang topbar. Fix: `#ffffff`.
+- **Verifikasi:** `LengthAwarePaginator->links()` dirender lewat boot Laravel asli (skrip `/tmp/opencode/check_pager.php`) → `ul.pagination`=1, `page-link`=4, `w-5 h-5`=0, `Showing`=0. Brace `admin.css` 197/197 dan `_kop-style.blade.php` 147/147, tidak ada depth negatif.
+- **Data belum sinkron (bukan bug kode):** tabel Lowongan masih menampilkan `Jurusan = TKJ` + judul seed lama (`Network Admin Intern`, dst) karena `LowonganSeeder` versi RPL belum dijalankan di DB lokal/TiDB. Pilihan: (a) `UPDATE lowongans SET jurusan='RPL'` (paling minimal, tidak menghapus apa pun), atau (b) `cd backend && php artisan db:seed --class=LowonganSeeder` (menghapus 25 lowongan + cascade lamaran, termasuk lamaran demo id 6).
+
+## STATUS (2026-10-16) — FIX CSS ADMIN PANEL (SIDEBAR HILANG DI DESKTOP)
+
+- **Bug (regresi, seluruh panel admin):** `backend-admin/public/css/admin.css` — `@media (max-width: 900px)` yang dibuka di baris 889 ditutup kepagian (baris 924), sehingga semua aturan mobile baris 925–1002 berlaku juga di desktop: `.sidebar { transform: translateX(-100%) }` (sidebar admin hilang → panel tampak "tanpa CSS"), `.main { margin-left: 0 }`, `.hamburger { display: inline-flex }` (ikon hamburger muncul di topbar), `.btn { width: 100% }`, `input/select/textarea { font-size: 16px }`, `.hide-sm { display: none !important }` (kolom tabel Pendaftaran hilang), `.form-grid/.form-row/.stack-2` jadi satu kolom. File juga punya `}` berlebih (open 196 / close 197 → depth berakhir -1).
+- **Bukti intent:** di commit `6fb645d` aturan `.sidebar { transform: translateX(-100%) }` tepat berada di bawah `@media (max-width: 900px) {`; commit career-center sesudahnya menghilangkan pembuka `@media` + menyisipkan `}` nyasar.
+- **Fix:** hapus `}` nyasar baris 924 → kembali satu media query 889–1003. Verifikasi: open 196 / close 196, tidak ada depth negatif, `.sidebar`/`.hamburger`/`.hide-sm`/`input,select,textarea` ada di dalam media query.
+- **Catatan:** produksi (`paneladminsmkbu.vercel.app/css/admin.css`, 87 brace) masih versi lama jadi belum kena; bug hanya di lokal/HEAD yang belum dideploy. Belum diverifikasi visual (tidak ada browser MCP di sesi ini) — cukup hard refresh di localhost.
+
+## STATUS (2026-10-16) — AUDIT + FIX BUG CAREER CENTER
+
+- **Bug 1 (siswa, fungsional):** `src/components/career/LamaranTimeline.vue` meng-`v-for` array statis `timelineSteps`, bukan `props.histories` → tanggal, catatan, dan nama admin tidak pernah tampil (semua baris "-"). Fix: render histori asli (urut terbaru dulu, satu baris per perubahan status) + baris "Menunggu ditinjau BKK sekolah" saat histori kosong; `statusLabel`/`isCurrent`/CSS `.step-status` dihapus.
+- **Bug 2 (backend siswa):** `LamaranController@dashboard` menghitung `$upcomingDeadline` yang tidak dipakai (query mati) dan "Deadline Terdekat" diurutkan `created_at desc` = bookmark paling baru disimpan, bukan deadline terdekat. Fix: query mati dihapus, urut `sortBy(deadline)`, payload dapat `type`, `DB::raw('CURDATE()')` → `now()->toDateString()` (CURDATE() tidak jalan di sqlite), import `DB` dihapus.
+- **Bug 3 (UX):** `LamaranSayaView`, `BookmarkView`, `CariLowonganView` tidak memeriksa `res.ok` → sesi habis / gagal muat tampil seolah "Belum ada lamaran/bookmark/lowongan yang cocok". Fix: guard `res.ok` + state error.
+- **Bug 4 (UX):** `CareerFilterChips` mengosongkan pilihan saat chip aktif diklik ulang → tidak ada chip yang aktif. Fix: klik = set chip (toggle-off dihapus).
+- **Bug 5 (desain, dilaporkan user):** daftar Cari Lowongan tampil bertumpuk — `.jobs-grid` menyusun 3 kolom (`repeat(auto-fill, minmax(290px, 1fr))`) padahal `CareerJobCard` dirancang sebagai baris horizontal → judul bertindihan, tombol "Lamar" keluar kartu. Fix: `.jobs-grid` jadi satu kolom penuh (`flex column`, gap 12px) selaras dengan halaman Lowongan Tersimpan & Lamaran Saya; aturan `@media (max-width:640px) .jobs-grid { grid-template-columns: 1fr }` (jadi mati) dihapus.
+- **Nit:** `DashboardView` pakai `typeColor('onsite')` hardcoded (selalu hijau) → kini tipe asli dari payload; cast `catatan_admin => 'nullable'` (bukan cast valid) dihapus dari `backend/app/Models/Lamaran.php`.
+- **Verifikasi:** `npm run build` sukses; `php -l` OK. Repo tanpa vitest dan PHP mesin ini tanpa `pdo_sqlite` → test feature tidak bisa dijalankan di sini.
+- **Dilaporkan, belum diperbaiki (butuh keputusan):**
+  - Lowongan kedaluwarsa tetap tampil & masih bisa dilamar; kartu lowongan tidak menampilkan deadline. Filter deadline belum dipasang karena semua deadline seed sudah lewat (2026-08-25 … 2026-10-12) → daftar siswa akan kosong.
+  - `POST /lamaran` tidak mengecek `is_active`/deadline lowongan; `LowonganController@show` mengembalikan lowongan nonaktif.
+  - Belum ada penanda "sudah dilamar" di daftar lowongan (klik Lamar lagi → 422 "Anda sudah melamar di lowongan ini.").
+  - Checkbox `is_active` di `lowongan/form.blade.php` pakai `old()` → status uncheck hilang bila validasi gagal.
+
 ## STATUS TERAKHIR (2026-10-16) — UNIFIKASI STYLE CAREER ADMIN
 
 - Halaman `career-pesan/index` & `career-pesan/show` di backend-admin migrasi dari gaya lama (`dashboard-shell`/`panel`/`badge`) ke design system `kop-*` (via `@include('koperasi._kop-style')`) — sekarang 6 halaman career admin (lowongan index/form/statistik, lamaran index, pesan index/show) konsisten. Bubble chat tetap pakai class global `.bubble-*` dari admin.css; form balas pakai `kop-input` + `kop-btn-primary`.

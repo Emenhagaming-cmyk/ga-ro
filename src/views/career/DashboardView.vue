@@ -52,7 +52,7 @@
           v-if="stats.upcoming_deadline"
           class="upcoming-card"
         >
-          <div class="upcoming-logo" :style="{ background: typeColor('onsite') + '15', color: typeColor('onsite') }">
+          <div class="upcoming-logo" :style="{ background: typeColor(stats.upcoming_deadline.type) + '15', color: typeColor(stats.upcoming_deadline.type) }">
             {{ stats.upcoming_deadline.company?.charAt(0) || '?' }}
           </div>
           <div class="upcoming-info">

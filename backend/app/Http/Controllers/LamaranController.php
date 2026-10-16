@@ -8,7 +8,6 @@ use App\Models\Bookmark;
 use App\Models\Pendaftaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class LamaranController extends Controller
 {
@@ -22,22 +21,16 @@ class LamaranController extends Controller
             ->count();
         $bookmarkCount = Bookmark::where('user_id', $user->id)->count();
 
-        $upcomingDeadline = Lamaran::where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->whereHas('lowongan', function ($q) {
-                $q->where('deadline', '>=', DB::raw('CURDATE()'))
-                  ->where('is_active', true);
-            })
-            ->orderBy('created_at', 'desc')
-            ->first();
-
+        // Deadline terdekat = lowongan tersimpan dengan tanggal paling dekat,
+        // bukan yang paling baru disimpan.
         $upcomingBookmark = Bookmark::where('user_id', $user->id)
             ->whereHas('lowongan', function ($q) {
-                $q->where('deadline', '>=', DB::raw('CURDATE()'))
+                $q->where('deadline', '>=', now()->toDateString())
                   ->where('is_active', true);
             })
             ->with('lowongan')
-            ->orderBy('created_at', 'desc')
+            ->get()
+            ->sortBy(fn ($bookmark) => $bookmark->lowongan->deadline)
             ->first();
 
         $nearestDeadline = null;
@@ -45,6 +38,7 @@ class LamaranController extends Controller
             $nearestDeadline = [
                 'title' => $upcomingBookmark->lowongan->title,
                 'company' => $upcomingBookmark->lowongan->company,
+                'type' => $upcomingBookmark->lowongan->type,
                 'deadline' => $upcomingBookmark->lowongan->deadline,
             ];
         }

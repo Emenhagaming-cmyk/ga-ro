@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Panel admin tidak memuat Tailwind/Bootstrap, sedangkan view pagination
+        // bawaan Laravel memakai markup Tailwind (dua blok kontrol sekaligus +
+        // ikon SVG tanpa ukuran). Pakai view bootstrap-4: markup `ul.pagination`
+        // yang sudah distyle di public/css/admin.css (.pagination li a/span).
+        Paginator::useBootstrapFour();
+
         // Throttle POST /login (panel admin): per-IP + per-kredensial.
         // Kredensial di-lowercase supaya variasi huruf tidak menembus limit.
         RateLimiter::for('login', function (Request $request) {
