@@ -5,6 +5,7 @@ import { useAuthSession, BACKEND } from "../composable/useAuthSession";
 // selesai parse, jadi FCP/LCP nunggu satu round-trip extra ke chunk HomeView.
 // Semua route lain tetap lazy (hanyadimuat saat benar-benar dibuka).
 import HomeView from "../views/HomeView.vue";
+import LoginView from "../views/LoginView.vue";
 
 const routes = [
   {
@@ -13,21 +14,26 @@ const routes = [
   },
   {
     path: "/login",
-    component: { template: "<div></div>" },
-    beforeEnter: () => {
-      window.location.href = `${BACKEND}/login`;
-    },
+    component: LoginView,
   },
   {
     path: "/register",
     component: { template: "<div></div>" },
     beforeEnter: () => {
-      window.location.href = `${BACKEND}/register`;
+      window.location.href = import.meta.env.DEV
+        ? `${BACKEND}/register`
+        : "https://pendaftaranspmb.vercel.app/register";
     },
   },
   {
     path: "/spmb-info",
     component: () => import("../views/SpmbInfoView.vue"),
+  },
+  // Halaman kelulusan belum memiliki view/data source khusus.
+  // Fallback eksplisit mencegah link navbar berujung route kosong/404.
+  {
+    path: "/kelulusan",
+    redirect: "/spmb-info",
   },
   {
     path: "/chat",
