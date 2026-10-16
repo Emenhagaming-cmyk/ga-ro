@@ -29,12 +29,34 @@ class LowonganController extends Controller
             $query->where('jurusan', $request->jurusan);
         }
 
+        if ($request->filled('work_arrangement')) {
+            $query->where('work_arrangement', $request->work_arrangement);
+        }
+
+        if ($request->filled('location')) {
+            $query->where('location', $request->location);
+        }
+
         $sort = $request->get('sort', 'newest');
         if ($sort === 'company') $query->orderBy('company');
         elseif ($sort === 'type') $query->orderBy('type');
         else $query->latest();
 
-        return response()->json($query->get());
+        $lowongans = $query->paginate(12)->appends($request->query());
+
+        return response()->json([
+            'data' => $lowongans->items(),
+            'meta' => [
+                'current_page' => $lowongans->currentPage(),
+                'last_page' => $lowongans->lastPage(),
+                'per_page' => $lowongans->perPage(),
+                'total' => $lowongans->total(),
+            ],
+            'links' => [
+                'next' => $lowongans->nextPageUrl(),
+                'prev' => $lowongans->previousPageUrl(),
+            ],
+        ]);
     }
 
     public function show(Lowongan $lowongan)

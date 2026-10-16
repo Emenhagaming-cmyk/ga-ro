@@ -6,6 +6,8 @@ use App\Http\Controllers\BeritaApiController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\LamaranController;
+use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\CareerMessageController;
 use App\Http\Controllers\TabunganController;
 use App\Http\Controllers\TabunganTopupController;
 use App\Http\Controllers\SppController;
@@ -63,10 +65,20 @@ Route::get('/lowongan', [LowonganController::class, 'index']);
 Route::get('/lowongan/{lowongan}', [LowonganController::class, 'show']);
 
 Route::middleware('auth')->group(function () {
+    Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/bookmarks', [BookmarkController::class, 'store'])->name('bookmarks.store');
+    Route::delete('/bookmarks/{lowongan}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
+});
+
+Route::middleware('auth')->group(function () {
     Route::post('/lamaran', [LamaranController::class, 'store']);
     Route::get('/lamaran/saya', [LamaranController::class, 'myApplications']);
     Route::get('/lamaran/{lamaran}', [LamaranController::class, 'show']);
     Route::delete('/lamaran/{lamaran}', [LamaranController::class, 'cancel']);
+    Route::get('/career/dashboard', [LamaranController::class, 'dashboard'])->name('career.dashboard');
+    Route::get('/career/statistik', [LamaranController::class, 'statistik'])->name('career.statistik');
+    Route::get('/career/pesan', [CareerMessageController::class, 'index'])->name('career.pesan');
+    Route::post('/career/pesan', [CareerMessageController::class, 'store'])->name('career.pesan.store');
 });
 
 // Tabungan Siswa
@@ -115,11 +127,25 @@ Route::middleware(['auth', 'role:guru,admin'])->group(function () {
 Route::get('/berita', [BeritaApiController::class, 'index']);
 Route::get('/berita/{slug}', [BeritaApiController::class, 'show']);
 
-// Koperasi Siswa
+// Koperasi Siswa — katalog boleh dilihat publik, pesanan & pembayaran butuh login
+Route::get('/koperasi', [KoperasiController::class, 'index'])->name('koperasi.index');
+
 Route::middleware('auth')->group(function () {
-    Route::post('/koperasi/checkout', [KoperasiController::class, 'store'])->name('koperasi.checkout');
     Route::get('/koperasi/orders', [KoperasiController::class, 'myOrders'])->name('koperasi.orders');
 });
+
+Route::middleware(['auth', 'role:siswa'])->group(function () {
+    Route::post('/koperasi/checkout', [KoperasiController::class, 'store'])->name('koperasi.checkout');
+    Route::get('/koperasi/orders/{kode}', [KoperasiController::class, 'status'])->name('koperasi.order-status');
+    Route::post('/koperasi/orders/{kode}/verify', [KoperasiController::class, 'verify'])->name('koperasi.verify');
+    Route::post('/koperasi/orders/{kode}/pay-tabungan', [KoperasiController::class, 'payWithTabungan'])->name('koperasi.pay-tabungan');
+    Route::post('/koperasi/orders/{kode}/midtrans', [KoperasiController::class, 'createMidtrans'])->name('koperasi.midtrans');
+});
+
+// Webhook Midtrans koperasi — tanpa auth/CSRF, signature diverifikasi di controller
+Route::post('/koperasi/midtrans/notification', [KoperasiController::class, 'midtransNotification'])
+    ->middleware('throttle:120,1')
+    ->name('koperasi.midtrans.notification');
 
 // SPP (publik) link orang tua — tanpa akun, via signed URL
 Route::get('/spp/ortu/{user}', [SppController::class, 'ortuIndex'])->name('spp.ortu');

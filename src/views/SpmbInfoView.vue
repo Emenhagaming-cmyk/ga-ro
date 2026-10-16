@@ -15,7 +15,6 @@ import {
   ArrowRight,
   PhoneCall,
   Laptop,
-  Network,
   Calculator as CalcIcon,
   ShieldCheck,
   Clock,
@@ -287,7 +286,7 @@ const timelineSteps = [
 const reqGeneral = [
   "Lulusan SMP/MTs/Paket B atau sederajat (tahun lulus 2024, 2025 atau 2026).",
   "Berusia setinggi-tingginya 21 tahun pada awal tahun pelajaran baru.",
-  "Sehat jasmani dan rohani, tidak buta warna (khusus kejuruan RPL & TKJ).",
+  "Sehat jasmani dan rohani, tidak buta warna (khusus kejuruan RPL).",
   "Berkelakuan baik dan bersedia menaati seluruh tata tertib SMK Bahrul Ulum.",
 ];
 
@@ -319,7 +318,7 @@ const faqs = ref([
   },
   {
     q: "Apakah ada tes seleksi masuk di SMK Bahrul Ulum?",
-    a: "Tes yang dilakukan adalah Tes Minat Bakat dan Wawancara Kejuruan. Tes ini bertujuan untuk mencocokkan potensi siswa dengan jurusan (RPL, TKJ, atau AKL) yang dipilih.",
+    a: "Tes yang dilakukan adalah Tes Minat Bakat dan Wawancara Kejuruan. Tes ini bertujuan untuk mencocokkan potensi siswa dengan jurusan (RPL) yang dipilih.",
     open: false,
   },
   {
@@ -753,60 +752,6 @@ function toggleFaq(index) {
             </div>
           </div>
         </div>
-
-        <!-- <div class="major-card">
-          <div class="major-head">
-            <Network :size="28" class="m-icon" />
-            <div>
-              <span class="m-tag">Terakreditasi A</span>
-              <h3>Teknik Komputer &amp; Jaringan (TKJ)</h3>
-            </div>
-          </div>
-          <p class="m-desc">
-            Fokus pada perakitan komputer, instalasi jaringan Fiber Optic, routing MikroTik &amp; Cisco, cyber security dasar, dan administrasi server Linux/Cloud.
-          </p>
-          <div class="m-details">
-            <div class="m-stat">
-              <span>Daya Tampung:</span>
-              <strong>72 Siswa (2 Kelas)</strong>
-            </div>
-            <div class="m-stat">
-              <span>Mitra Industri:</span>
-              <strong>ISP Provider, PT Fiber Connect, Datacenter</strong>
-            </div>
-            <div class="m-stat">
-              <span>Prospek Karir:</span>
-              <strong>Network Engineer, IT Support, Fiber Tech, SysAdmin</strong>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- <div class="major-card">
-          <div class="major-head">
-            <CalcIcon :size="28" class="m-icon" />
-            <div>
-              <span class="m-tag">Terakreditasi A</span>
-              <h3>Akuntansi &amp; Keuangan Lembaga (AKL)</h3>
-            </div>
-          </div>
-          <p class="m-desc">
-            Menguasai pembukuan keuangan modern, software MYOB &amp; Accurate, pengelolaan kas mini bank sekolah, perpajakan e-Faktur, dan audit keuangan lembaga.
-          </p>
-          <div class="m-details">
-            <div class="m-stat">
-              <span>Daya Tampung:</span>
-              <strong>36 Siswa (1 Kelas)</strong>
-            </div>
-            <div class="m-stat">
-              <span>Mitra Industri:</span>
-              <strong>Bank Jatim, BMT Mitra, Kantor Akuntan Publik</strong>
-            </div>
-            <div class="m-stat">
-              <span>Prospek Karir:</span>
-              <strong>Staff Akunting, Teller Bank, Staff Pajak, Kasir</strong>
-            </div>
-          </div>
-        </div> -->
       </div>
     </section>
 

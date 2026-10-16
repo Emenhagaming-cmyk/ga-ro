@@ -71,8 +71,6 @@
               <select class="input-field" v-model="formJurusan">
                 <option value="">Pilih Jurusan</option>
                 <option value="RPL">RPL</option>
-                <option value="TKJ">TKJ</option>
-                <option value="AKL">AKL</option>
               </select>
             </div>
           </div>

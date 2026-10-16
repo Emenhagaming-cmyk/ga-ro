@@ -4,6 +4,20 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 
 ---
 
+## Koperasi (redesign 2026-10-16)
+
+Sistem koperasi dirombak dari prototipe (produk hardcode di frontend + pembayaran palsu) menjadi tuntas.
+
+**Tabel:** `koperasi_products` (name, slug unik, description, category, price, stock, image, emoji, is_active) dan `koperasi_orders` yang diperluas: `kode` (unik, `KOP-YYYYMMDD-XXXXX`), `pickup_code`, `snap_token`, `midtrans_order_id`, `picked_up_at`; enum status `pending|dibayar|diambil|batal|expired`, metode `qris|transfer|tabungan|midtrans`.
+
+**Alur:** siswa pilih produk → `POST /koperasi/checkout` (server ambil harga dari DB, bukan dari client) membuat order `pending` dengan `pickup_code` → bayar **saldo tabungan** (`POST /koperasi/orders/{kode}/pay-tabungan`, lock baris user + ledger `tabungan` `tarik` + kurangi stok) atau **Midtrans Snap** (`POST .../midtrans`, popup; kredit lewat `verify`/webhook `/koperasi/midtrans/notification`) → order `dibayar` → siswa bawa `pickup_code` ke **ruang TU** → admin tandai `diambil`. Jam operasional Senin–Sabtu 07.00–15.00 WIB.
+
+**Reuse:** pola saldo/debit dari `SppController@payWithTabungan`; pola Snap + `applyRemoteStatus` dari `TabunganTopupController`; toast `useToast`/`ToastStack`.
+
+**Admin (`backend-admin/`):** tab Pesanan (filter + tandai diambil) / Produk (CRUD + upload) / Laporan (omzet, produk terlaris, harian).
+
+---
+
 ## Arsitektur
 
 ```
@@ -133,7 +147,7 @@ Ringkasan teknis seluruh implementasi. File ini adalah **sumber utama** — `bac
 
 ### `pendaftarans` (~45 kolom)
 - **Identitas**: nama_lengkap, nama_panggilan, nisn, nik, tempat_lahir, tanggal_lahir, umur, agama, kewarnegaraan, kategori_pendaftar, jenis_kelamin, alamat, rt_rw, kode_pos, no_hp, email
-- **Sekolah**: asal_sekolah, gelombang, tahun_lulus, rata_rata_nilai, jurusan_pilihan (RPL/TKJ/AKL)
+- **Sekolah**: asal_sekolah, gelombang, tahun_lulus, rata_rata_nilai, jurusan_pilihan (RPL)
 - **Keluarga**: jumlah_saudara, anak_ke, status_keluarga, nama_ayah, pendidikan_ayah, pekerjaan_ayah, penghasilan_ayah, alamat_ayah, hp_ayah, nama_ibu, pendidikan_ibu, pekerjaan_ibu, penghasilan_ibu, alamat_ibu, hp_ibu, nama_wali, hubungan_wali, email_orang_tua
 - **Lain**: jenis_pembayaran, berkas_tambahan, foto_3x4, kk_file, ijazah_file, sktm_file
 - **Status**: status (baru/diproses/diterima/ditolak), data_confirmed, confirmed_at, status_updated_at, user_id (FK)

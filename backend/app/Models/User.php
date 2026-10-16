@@ -61,4 +61,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(SppBill::class);
     }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function lamarans(): HasMany
+    {
+        return $this->hasMany(Lamaran::class);
+    }
 }

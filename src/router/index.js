@@ -42,6 +42,7 @@ const routes = [
       { path: "/tabungan", name: "tabungan", component: () => import("../views/TabunganView.vue") },
       { path: "/spp", name: "spp", component: () => import("../views/SppView.vue") },
       { path: "/koperasi", name: "koperasi", component: () => import("../views/KoperasiView.vue") },
+      { path: "/koperasi-riwayat", name: "koperasi-riwayat", component: () => import("../views/KoperasiRiwayatView.vue") },
       { path: "/dashboard-siswa", name: "dashboard-siswa", component: () => import("../views/DashboardSiswaView.vue") },
       { path: "/profil", name: "profil", component: () => import("../views/ProfilView.vue") },
       {
@@ -50,11 +51,11 @@ const routes = [
         redirect: "/career-center/search",
         children: [
           { path: "search", name: "career-search", component: () => import("../views/career/CariLowonganView.vue") },
+          { path: "bookmark", name: "career-bookmark", component: () => import("../views/career/BookmarkView.vue") },
           { path: "dashboard", name: "career-dashboard", component: () => import("../views/career/DashboardView.vue") },
           { path: "applications", name: "career-applications", component: () => import("../views/career/LamaranSayaView.vue") },
           { path: "messages", name: "career-messages", component: () => import("../views/career/PesanView.vue") },
           { path: "statistics", name: "career-statistics", component: () => import("../views/career/StatistikView.vue") },
-          { path: "news", name: "career-news", component: () => import("../views/career/BeritaKarirView.vue") },
         ],
       },
     ],

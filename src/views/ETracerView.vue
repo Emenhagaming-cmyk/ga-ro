@@ -182,11 +182,11 @@
           </div>
           <div class="form-group">
             <label for="bidang">Bidang</label>
-            <input type="text" id="bidang" v-model="form.bidang" placeholder="Teknologi, Akuntansi, dll" />
+            <input type="text" id="bidang" v-model="form.bidang" placeholder="Teknologi, Desain, dll" />
           </div>
           <div class="form-group">
             <label for="jabatan">Jabatan</label>
-            <input type="text" id="jabatan" v-model="form.jabatan" placeholder="Software Engineer, Staff Accounting, dll" />
+            <input type="text" id="jabatan" v-model="form.jabatan" placeholder="Software Engineer, UI/UX Designer, dll" />
           </div>
           <div class="form-group">
             <label for="alamatPerusahaan">Alamat Perusahaan</label>

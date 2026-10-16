@@ -24,7 +24,7 @@
         </select>
         <select name="jurusan" style="max-width:160px;">
             <option value="">Semua Jurusan</option>
-            @foreach (['RPL', 'TKJ', 'AKL'] as $j)
+            @foreach (['RPL'] as $j)
             <option value="{{ $j }}" {{ request('jurusan') === $j ? 'selected' : '' }}>{{ $j }}</option>
             @endforeach
         </select>

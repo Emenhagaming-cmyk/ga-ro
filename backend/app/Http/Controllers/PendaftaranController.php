@@ -160,7 +160,7 @@ class PendaftaranController extends Controller
             'rata_rata_nilai' => 'nullable|string|max:20',
             'no_hp' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
-            'jurusan_pilihan' => 'required|in:RPL,TKJ,AKL',
+            'jurusan_pilihan' => 'required|in:RPL',
             'jumlah_saudara' => 'nullable|string|max:10',
             'anak_ke' => 'nullable|string|max:10',
             'status_keluarga' => 'nullable|string|max:50',

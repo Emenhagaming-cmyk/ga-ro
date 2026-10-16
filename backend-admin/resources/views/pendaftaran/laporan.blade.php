@@ -45,8 +45,6 @@
                 </thead>
                 <tbody>
                     <tr><td>RPL</td><td>{{ $stats['jurusan']['RPL'] }}</td></tr>
-                    <tr><td>TKJ</td><td>{{ $stats['jurusan']['TKJ'] }}</td></tr>
-                    <tr><td>AKL</td><td>{{ $stats['jurusan']['AKL'] }}</td></tr>
                 </tbody>
             </table>
         </div>

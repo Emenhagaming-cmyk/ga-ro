@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KoperasiOrder;
 use App\Models\Pendaftaran;
 use App\Models\User;
 use App\Services\RegistrationInsightService;
@@ -42,8 +43,6 @@ class PendaftaranController extends Controller
             'ditolak' => $rows->get('ditolak', 0),
             'jurusan' => [
                 'RPL' => $jRows->get('RPL', 0),
-                'TKJ' => $jRows->get('TKJ', 0),
-                'AKL' => $jRows->get('AKL', 0),
             ],
         ];
         self::$statsCacheTs = $now;
@@ -58,7 +57,17 @@ public function dashboard(RegistrationInsightService $insightService)
         $akunSiswa = User::where('role', '!=', 'admin')->latest()->take(5)->get();
         $insight = $insightService->generateSummary($stats);
 
-        return response()->view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa'));
+        // Ringkasan koperasi: pesanan menunggu, siap diambil, omzet hari ini (WIB).
+        $koperasi = [
+            'pending' => KoperasiOrder::where('status', 'pending')->count(),
+            'siap' => KoperasiOrder::where('status', 'dibayar')->count(),
+            'diambil' => KoperasiOrder::where('status', 'diambil')->count(),
+            'omzet_hari_ini' => (int) KoperasiOrder::whereIn('status', KoperasiOrder::PAID_STATUSES)
+                ->whereDate('paid_at', now('Asia/Jakarta')->toDateString())
+                ->sum('total'),
+        ];
+
+        return response()->view('pendaftaran.dashboard', compact('stats', 'insight', 'terbaru', 'akunSiswa', 'koperasi'));
     }
 
     public function index(Request $request)

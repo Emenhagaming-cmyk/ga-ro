@@ -74,6 +74,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { BACKEND } from "@/composable/useAuthSession";
 
 const route = useRoute();
 const router = useRouter();
@@ -86,6 +87,19 @@ async function loadNews(slug) {
   selectedNews.value = null;
   notFound.value = false;
   imageBroken = false;
+  // API dulu (berita yang diterbitkan admin), baru fallback ke data statis.
+  // Tanpa ini, berita buatan panel admin selalu "tidak ditemukan" di halaman detail.
+  try {
+    const res = await fetch(`${BACKEND}/berita/${encodeURIComponent(slug)}`, { credentials: "include" });
+    if (res.ok) {
+      const item = await res.json();
+      if (item && item.slug) {
+        selectedNews.value = item;
+        return;
+      }
+    }
+  } catch (_) { /* jatuh ke data statis */ }
+
   try {
     const res = await fetch("/data/news.json");
     const news = await res.json();

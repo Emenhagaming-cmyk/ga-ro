@@ -34,8 +34,13 @@
       <button class="btn-lamar" @click.stop="$emit('apply', job)">
         <i class="fas fa-paper-plane"></i> Lamar
       </button>
-      <button class="btn-bookmark" @click.stop="$emit('bookmark', job)">
-        <i class="far fa-bookmark"></i>
+      <button
+        class="btn-bookmark"
+        :class="{ active: bookmarked }"
+        @click.stop="toggleBookmark"
+        :title="bookmarked ? 'Hapus bookmark' : 'Simpan bookmark'"
+      >
+        <i :class="bookmarked ? 'fas fa-bookmark' : 'far fa-bookmark'"></i>
       </button>
     </div>
   </article>
@@ -44,8 +49,11 @@
 <script setup>
 import { computed } from 'vue'
 
-const props = defineProps({ job: { type: Object, required: true } })
-defineEmits(['apply', 'bookmark'])
+const props = defineProps({
+  job: { type: Object, required: true },
+  bookmarked: { type: Boolean, default: false }
+})
+const emit = defineEmits(['apply', 'toggle-bookmark'])
 
 const typeColor = computed(() => {
   switch (props.job.type) {
@@ -55,6 +63,10 @@ const typeColor = computed(() => {
     default: return '#3a6450'
   }
 })
+
+function toggleBookmark() {
+  emit('toggle-bookmark', props.job)
+}
 </script>
 
 <style scoped>
@@ -186,6 +198,11 @@ const typeColor = computed(() => {
 .btn-bookmark:hover {
   color: var(--primary, #3a6450);
   border-color: var(--primary, #3a6450);
+}
+.btn-bookmark.active {
+  color: #3a6450;
+  background: rgba(58, 100, 80, 0.08);
+  border-color: #3a6450;
 }
 
 @media (max-width: 900px) {

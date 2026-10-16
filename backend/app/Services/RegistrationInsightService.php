@@ -46,8 +46,6 @@ class RegistrationInsightService
     {
         $jurusan = $stats['jurusan'] ?? [];
         $rpl = $jurusan['RPL'] ?? 0;
-        $tkj = $jurusan['TKJ'] ?? 0;
-        $akl = $jurusan['AKL'] ?? 0;
 
         return <<<TEXT
 Berikut data pendaftaran sekolah:
@@ -56,7 +54,7 @@ Berikut data pendaftaran sekolah:
 - Diproses: {$stats['diproses']}
 - Diterima: {$stats['diterima']}
 - Ditolak: {$stats['ditolak']}
-- Jurusan: RPL {$rpl}, TKJ {$tkj}, AKL {$akl}
+- Jurusan: RPL {$rpl}
 
 Buat ringkasan singkat 3-4 kalimat dalam Bahasa Indonesia yang membantu admin memahami kondisi pendaftaran saat ini.
 TEXT;
@@ -75,7 +73,7 @@ TEXT;
 
         $max = max($jurusan);
         $top = array_filter($jurusan, fn ($value) => $value === $max);
-        ksort($top); // deterministic tie-breaking: AKL < RPL < TKJ
+        ksort($top); // deterministic tie-breaking
 
         return array_key_first($top) ?? 'belum ada data';
     }

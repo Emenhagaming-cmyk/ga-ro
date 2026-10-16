@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BeritaController;
+use App\Http\Controllers\CareerMessageController;
+use App\Http\Controllers\LamaranController;
+use App\Http\Controllers\LowonganController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\TabunganController;
@@ -60,12 +63,42 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/berita/{berita}', [BeritaController::class, 'update'])->name('berita.update');
     Route::delete('/berita/{berita}', [BeritaController::class, 'destroy'])->name('berita.destroy');
 
+    // Pesan Karir — chat siswa ↔ BKK/admin
+    Route::get('/career-pesan', [CareerMessageController::class, 'index'])->name('career.pesan.index');
+    Route::get('/career-pesan/{user}', [CareerMessageController::class, 'show'])->name('career.pesan.show');
+    Route::post('/career-pesan/{user}', [CareerMessageController::class, 'store'])->name('career.pesan.store');
+
+    // Career Center — kelola lowongan, pelamar, statistik
+    Route::get('/career-statistik', [LowonganController::class, 'statistik'])->name('career.statistik');
+    Route::get('/lowongan', [LowonganController::class, 'index'])->name('lowongan.index');
+    Route::get('/lowongan/create', [LowonganController::class, 'create'])->name('lowongan.create');
+    Route::post('/lowongan', [LowonganController::class, 'store'])->name('lowongan.store');
+    Route::get('/lowongan/{lowongan}/edit', [LowonganController::class, 'edit'])->name('lowongan.edit');
+    Route::put('/lowongan/{lowongan}', [LowonganController::class, 'update'])->name('lowongan.update');
+    Route::patch('/lowongan/{lowongan}/toggle', [LowonganController::class, 'toggle'])->name('lowongan.toggle');
+    Route::delete('/lowongan/{lowongan}', [LowonganController::class, 'destroy'])->name('lowongan.destroy');
+
+    Route::get('/lamaran', [LamaranController::class, 'index'])->name('lamaran.index');
+    Route::get('/lamaran/{lamaran}', [LamaranController::class, 'show'])->name('lamaran.show');
+    Route::patch('/lamaran/{lamaran}/status', [LamaranController::class, 'updateStatus'])->name('lamaran.status');
+    Route::get('/lamaran/{lamaran}/cv', [LamaranController::class, 'downloadCv'])->name('lamaran.cv');
+
     // Kelola Tabungan
     Route::get('/tabungan', [TabunganController::class, 'adminIndex'])->name('tabungan.index');
     Route::get('/tabungan/{user}', [TabunganController::class, 'adminShow'])->name('tabungan.show');
     Route::post('/tabungan', [TabunganController::class, 'adminStore'])->name('tabungan.store');
 
-    // Kelola Koperasi
+    // Kelola Koperasi — pesanan + pengambilan di ruang TU
     Route::get('/koperasi', [KoperasiController::class, 'adminIndex'])->name('koperasi.index');
+    Route::get('/koperasi/export', [KoperasiController::class, 'exportCsv'])->name('koperasi.export');
+    Route::get('/koperasi/laporan', [KoperasiController::class, 'laporan'])->name('koperasi.laporan');
+    Route::get('/koperasi/produk', [KoperasiController::class, 'products'])->name('koperasi.products');
+    Route::get('/koperasi/produk/create', [KoperasiController::class, 'productCreate'])->name('koperasi.product.create');
+    Route::post('/koperasi/produk', [KoperasiController::class, 'productStore'])->name('koperasi.product.store');
+    Route::get('/koperasi/produk/{product}/edit', [KoperasiController::class, 'productEdit'])->name('koperasi.product.edit');
+    Route::put('/koperasi/produk/{product}', [KoperasiController::class, 'productUpdate'])->name('koperasi.product.update');
+    Route::delete('/koperasi/produk/{product}', [KoperasiController::class, 'productDestroy'])->name('koperasi.product.destroy');
     Route::get('/koperasi/{order}', [KoperasiController::class, 'adminShow'])->name('koperasi.show');
+    Route::post('/koperasi/{order}/ambil', [KoperasiController::class, 'markPickedUp'])->name('koperasi.ambil');
+    Route::post('/koperasi/{order}/batal', [KoperasiController::class, 'cancelOrder'])->name('koperasi.batal');
 });

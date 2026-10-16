@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class CareerMessage extends Model
+{
+    public const SISWA = 'siswa';
+    public const ADMIN = 'admin';
+
+    protected $fillable = ['user_id', 'sender', 'body', 'read_at'];
+
+    protected $casts = [
+        'read_at' => 'datetime',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}
