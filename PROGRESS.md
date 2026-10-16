@@ -2,6 +2,28 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-16) — REDESIGN SISTEM KOPERASI (PRODUK DB + BAYAR SALDO/MIDTRANS + AMBIL DI RUANG TU)
+
+- **Konteks:** koperasi sebelumnya prototipe — 12 produk hardcode di `KoperasiView.vue`, harga dipercaya dari client (bisa dikirim 0), pembayaran palsu (QRIS CSS `Math.random()`, rekening hardcode), tidak ada riwayat, admin read-only, status hanya `pending|lunas|batal`.
+- **Keputusan user:** bayar via **saldo tabungan + Midtrans Snap**; produk dikelola **CRUD penuh di panel admin**; alur status **pending → dibayar → diambil**; plus **kurangi stok saat bayar, riwayat pesanan, keranjang persist, jam operasional, laporan/omzet**.
+- **DB** (migration identik di kedua backend):
+  - `2026_10_16_100000_create_koperasi_products_table` (name, slug unik, description, category, price, stock, image, emoji, is_active).
+  - `2026_10_16_100001_expand_koperasi_orders_table` — tambah `kode` (unik), `pickup_code`, `snap_token`, `midtrans_order_id`, `picked_up_at`; backfill `kode` order lama; MODIFY enum status → `pending|dibayar|diambil|batal|expired` (data `lunas` → `dibayar`) + metode → `qris|transfer|tabungan|midtrans`, **guard MySQL** (pola `2026_10_15_100000`).
+  - `KoperasiProduct` (model baru, auto-slug) + `KoperasiOrder` (const `PAID_STATUSES`, generator `kode`/`pickup_code`).
+- **API siswa (`backend/`)** — `KoperasiController` ditulis ulang:
+  - `GET /koperasi` (katalog + kategori + `open`/`hours` + saldo), `GET /koperasi/orders` (riwayat).
+  - `POST /koperasi/checkout` — **harga & nama selalu dari DB**, client kirim `product_id`+`qty` saja (fix akar fraud).
+  - `POST /koperasi/orders/{kode}/pay-tabungan` — lock baris user, cek saldo, tulis ledger `tabungans` (`tarik`) + `markPaid()` (kunci produk, kurangi stok) dalam satu transaksi.
+  - `POST /koperasi/orders/{kode}/midtrans` (Snap) + `.../verify` + webhook `POST /koperasi/midtrans/notification` (signature sha512, CSRF-exempt) → `applyRemoteStatus()` idempotent, tidak kurangi stok dua kali.
+  - Jam operasional Senin–Sabtu 07.00–15.00 WIB (`now('Asia/Jakarta')`); di luar jam pesanan ditolak.
+- **Panel admin (`backend-admin/`)** — `KoperasiController`: pesanan (filter status/cari, stats omzet/pending/siap/diambil, **tandai sudah diambil**, detail) + **CRUD produk** (index/create/store/edit/update/destroy + upload gambar) + **laporan** (omzet, produk terlaris, omzet harian). View baru: `_tabs`, `products`, `product-form`, `laporan`; `index`/`show` dirombak. Tab nav (Pesanan/Produk/Laporan) via `_tabs.blade.php`.
+- **Frontend** — `KoperasiView.vue` ditulis ulang: katalog dari API, keranjang persist `localStorage`, bayar **Saldo Tabungan / Midtrans (popup Snap)**, view sukses menampilkan **kode ambil + instruksi ke ruang TU**, banner tutup. `KoperasiRiwayatView.vue` baru + route `/koperasi-riwayat` + item sidebar `SiswaLayout`. Toast pakai `useToast`+`ToastStack` (bukan `.kop-toast` lama).
+- **Seeder** `KoperasiProductSeeder` (14 produk) + didaftarkan di `DatabaseSeeder`. Salinan ada di `backend-admin/database/seeders/` juga (DB lokal admin terpisah: `.env` admin menunjuk `ga-ro-admin`, sedangkan `backend/` menunjuk `ga-ro`).
+- **Sudah dijalankan (lokal):** `php artisan migrate` + `php artisan db:seed --class=KoperasiProductSeeder` di **kedua** backend → 14 produk di `ga-ro` dan `ga-ro-admin`.
+- **Verifikasi:** `npm run build` sukses (KoperasiView 16.21 kB, KoperasiRiwayatView 3.38 kB); `php -l` semua file PHP berubah bersih; `route:list` kedua backend benar; `php artisan view:cache` sukses. **Test `KoperasiControllerTest` (5 kasus) belum bisa dijalankan di mesin Linux ini** — tanpa `pdo_sqlite` (quirk lama). Jalankan `composer test` di mesin Windows untuk konfirmasi.
+- **Catatan:** butuh `php artisan storage:link` bila admin upload gambar produk (disimpan di disk `public`). Migration baru belum dijalankan (tanpa `.env` DB lokal) — jalankan `cd backend; php artisan migrate` di mesin ber-DB.
+
+
 ## STATUS TERAKHIR (2026-10-16) — FIX `DatabaseSeeder` GAGAL SEED
 
 - **Bug:** `php artisan db:seed` mati `TypeError: Seeder::call(): Argument #3 ($parameters) must be of type array, string given` di `backend/database/seeders/DatabaseSeeder.php:18`. Penyebab: seeder dipanggil `$this->call(AnjarSeeder::class, AdminSeeder::class, …)` — argumen ke-2 `$silent` (bool) dan ke-3 `$parameters` (array), jadi `AdminSeeder::class` masuk sebagai `$silent` dan `LowonganSeeder::class` sebagai `$parameters`.

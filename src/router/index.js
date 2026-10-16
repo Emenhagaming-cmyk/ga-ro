@@ -42,6 +42,7 @@ const routes = [
       { path: "/tabungan", name: "tabungan", component: () => import("../views/TabunganView.vue") },
       { path: "/spp", name: "spp", component: () => import("../views/SppView.vue") },
       { path: "/koperasi", name: "koperasi", component: () => import("../views/KoperasiView.vue") },
+      { path: "/koperasi-riwayat", name: "koperasi-riwayat", component: () => import("../views/KoperasiRiwayatView.vue") },
       { path: "/dashboard-siswa", name: "dashboard-siswa", component: () => import("../views/DashboardSiswaView.vue") },
       { path: "/profil", name: "profil", component: () => import("../views/ProfilView.vue") },
       {

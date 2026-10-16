@@ -115,11 +115,25 @@ Route::middleware(['auth', 'role:guru,admin'])->group(function () {
 Route::get('/berita', [BeritaApiController::class, 'index']);
 Route::get('/berita/{slug}', [BeritaApiController::class, 'show']);
 
-// Koperasi Siswa
+// Koperasi Siswa — katalog boleh dilihat publik, pesanan & pembayaran butuh login
+Route::get('/koperasi', [KoperasiController::class, 'index'])->name('koperasi.index');
+
 Route::middleware('auth')->group(function () {
-    Route::post('/koperasi/checkout', [KoperasiController::class, 'store'])->name('koperasi.checkout');
     Route::get('/koperasi/orders', [KoperasiController::class, 'myOrders'])->name('koperasi.orders');
 });
+
+Route::middleware(['auth', 'role:siswa'])->group(function () {
+    Route::post('/koperasi/checkout', [KoperasiController::class, 'store'])->name('koperasi.checkout');
+    Route::get('/koperasi/orders/{kode}', [KoperasiController::class, 'status'])->name('koperasi.order-status');
+    Route::post('/koperasi/orders/{kode}/verify', [KoperasiController::class, 'verify'])->name('koperasi.verify');
+    Route::post('/koperasi/orders/{kode}/pay-tabungan', [KoperasiController::class, 'payWithTabungan'])->name('koperasi.pay-tabungan');
+    Route::post('/koperasi/orders/{kode}/midtrans', [KoperasiController::class, 'createMidtrans'])->name('koperasi.midtrans');
+});
+
+// Webhook Midtrans koperasi — tanpa auth/CSRF, signature diverifikasi di controller
+Route::post('/koperasi/midtrans/notification', [KoperasiController::class, 'midtransNotification'])
+    ->middleware('throttle:120,1')
+    ->name('koperasi.midtrans.notification');
 
 // SPP (publik) link orang tua — tanpa akun, via signed URL
 Route::get('/spp/ortu/{user}', [SppController::class, 'ortuIndex'])->name('spp.ortu');

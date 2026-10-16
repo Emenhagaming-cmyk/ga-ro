@@ -65,7 +65,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/tabungan/{user}', [TabunganController::class, 'adminShow'])->name('tabungan.show');
     Route::post('/tabungan', [TabunganController::class, 'adminStore'])->name('tabungan.store');
 
-    // Kelola Koperasi
+    // Kelola Koperasi — pesanan + pengambilan di ruang TU
     Route::get('/koperasi', [KoperasiController::class, 'adminIndex'])->name('koperasi.index');
+    Route::get('/koperasi/laporan', [KoperasiController::class, 'laporan'])->name('koperasi.laporan');
+    Route::get('/koperasi/produk', [KoperasiController::class, 'products'])->name('koperasi.products');
+    Route::get('/koperasi/produk/create', [KoperasiController::class, 'productCreate'])->name('koperasi.product.create');
+    Route::post('/koperasi/produk', [KoperasiController::class, 'productStore'])->name('koperasi.product.store');
+    Route::get('/koperasi/produk/{product}/edit', [KoperasiController::class, 'productEdit'])->name('koperasi.product.edit');
+    Route::put('/koperasi/produk/{product}', [KoperasiController::class, 'productUpdate'])->name('koperasi.product.update');
+    Route::delete('/koperasi/produk/{product}', [KoperasiController::class, 'productDestroy'])->name('koperasi.product.destroy');
     Route::get('/koperasi/{order}', [KoperasiController::class, 'adminShow'])->name('koperasi.show');
+    Route::post('/koperasi/{order}/ambil', [KoperasiController::class, 'markPickedUp'])->name('koperasi.ambil');
 });

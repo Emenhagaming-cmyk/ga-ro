@@ -52,6 +52,16 @@
           <span>Koperasi</span>
         </router-link>
 
+        <router-link
+          to="/koperasi-riwayat"
+          class="sidebar-link"
+          :class="{ active: isActive('/koperasi-riwayat') }"
+          @click="sidebarOpen = false"
+        >
+          <History :size="18" :stroke-width="2.2" />
+          <span>Riwayat Koperasi</span>
+        </router-link>
+
         <button
           class="sidebar-link sidebar-group"
           :class="{ active: isActive('/career-center'), open: careerOpen }"
@@ -122,6 +132,7 @@ import {
   Wallet,
   Receipt,
   ShoppingBag,
+  History,
   Briefcase,
   User,
   Download,

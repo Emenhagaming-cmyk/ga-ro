@@ -9,103 +9,131 @@
         <div>
             <p class="dashboard-kicker">Koperasi Sekolah</p>
             <h1 class="form-title" fetchpriority="high">Pesanan Koperasi</h1>
-            <p class="form-subtitle">Pantau pembelian siswa di koperasi sekolah.</p>
+            <p class="form-subtitle">Pantau pesanan siswa, pembayaran, dan pengambilan di ruang TU.</p>
         </div>
     </div>
+
+    @include('koperasi._tabs', ['active' => 'orders'])
+
+    @if (session('success'))
+        <div class="alert alert-success">✓ {{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-error">{{ session('error') }}</div>
+    @endif
 
     <div class="stats-grid">
         <div class="stat-card stat-card-success">
-            <div class="stat-label">Total Pendapatan</div>
-            <div class="stat-value">{{ number_format($totalPendapatan ?? 0, 0, ',', '.') }}</div>
-            <div class="stat-foot">Status lunas</div>
+            <div class="stat-label">Total Omzet</div>
+            <div class="stat-value">{{ number_format($stats['omzet'], 0, ',', '.') }}</div>
+            <div class="stat-foot">Sudah dibayar</div>
         </div>
         <div class="stat-card stat-card-warning">
-            <div class="stat-label">Pending</div>
-            <div class="stat-value">{{ number_format($totalPending ?? 0, 0, ',', '.') }}</div>
-            <div class="stat-foot">Menunggu pembayaran</div>
+            <div class="stat-label">Menunggu Bayar</div>
+            <div class="stat-value">{{ $stats['pending'] }}</div>
+            <div class="stat-foot">Belum dibayar</div>
         </div>
         <div class="stat-card stat-card-info">
-            <div class="stat-label">Total Pesanan</div>
-            <div class="stat-value">{{ $orders->count() }}</div>
-            <div class="stat-foot">Semua transaksi</div>
+            <div class="stat-label">Siap Diambil</div>
+            <div class="stat-value">{{ $stats['siap'] }}</div>
+            <div class="stat-foot">Sudah dibayar, di ruang TU</div>
+        </div>
+        <div class="stat-card stat-card-primary">
+            <div class="stat-label">Sudah Diambil</div>
+            <div class="stat-value">{{ $stats['diambil'] }}</div>
+            <div class="stat-foot">Selesai</div>
         </div>
     </div>
 
-    <div class="filter-toolbar">
+    <form class="filter-toolbar" method="GET" action="{{ route('koperasi.index') }}">
         <div class="filter-group filter-search">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" class="filter-input" id="koperasiSearch" placeholder="Cari no. pesanan, nama siswa..." autocomplete="off">
+            <input type="text" name="q" value="{{ $q }}" class="filter-input" placeholder="Cari kode / kode ambil / nama siswa..." autocomplete="off">
         </div>
         <div class="filter-group">
-            <select class="filter-select" id="koperasiStatusFilter" onchange="applyKoperasiFilters()">
+            <select class="filter-select" name="status" onchange="this.form.submit()">
                 <option value="">Semua Status</option>
-                <option value="lunas">Lunas</option>
-                <option value="pending">Pending</option>
-                <option value="batal">Batal</option>
+                <option value="pending" @selected($status === 'pending')>Menunggu Bayar</option>
+                <option value="dibayar" @selected($status === 'dibayar')>Siap Diambil</option>
+                <option value="diambil" @selected($status === 'diambil')>Sudah Diambil</option>
+                <option value="batal" @selected($status === 'batal')>Dibatalkan</option>
+                <option value="expired" @selected($status === 'expired')>Kedaluwarsa</option>
             </select>
         </div>
-        <button type="button" class="btn btn-secondary" onclick="clearKoperasiFilters()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            Bersihkan Filter
-        </button>
-    </div>
+        <button type="submit" class="btn btn-secondary">Cari</button>
+        <a href="{{ route('koperasi.index') }}" class="btn btn-secondary" style="text-decoration:none;">Reset</a>
+    </form>
 
     <div class="form-section" style="padding:0;overflow:hidden;">
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th class="checkbox-col"><input type="checkbox" id="selectAllKoperasi" onchange="toggleAllKoperasi(this)"></th>
-                        <th>No. Pesanan</th>
+                        <th>Kode</th>
+                        <th class="hide-sm">Kode Ambil</th>
                         <th class="hide-sm">Siswa</th>
                         <th>Total</th>
-                        <th>Metode</th>
+                        <th class="hide-sm">Metode</th>
                         <th>Status</th>
-                        <th>Waktu</th>
+                        <th class="hide-sm">Waktu</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="koperasiTableBody">
-                    @if ($orders->isEmpty())
+                <tbody>
+                    @forelse ($orders as $order)
+                        @php
+                            $map = [
+                                'pending' => ['Menunggu Bayar', 'badge-warning'],
+                                'dibayar' => ['Siap Diambil', 'badge-info'],
+                                'diambil' => ['Sudah Diambil', 'badge-success'],
+                                'batal' => ['Dibatalkan', 'badge-danger'],
+                                'expired' => ['Kedaluwarsa', 'badge-danger'],
+                                'lunas' => ['Lunas', 'badge-success'],
+                            ];
+                            [$label, $badge] = $map[$order->status] ?? [ucfirst($order->status), 'badge-neutral'];
+                            $metodeLabel = match ($order->metode) {
+                                'tabungan' => 'Saldo Tabungan',
+                                'midtrans' => 'Midtrans',
+                                'qris' => 'QRIS',
+                                'transfer' => 'Transfer',
+                                default => '-',
+                            };
+                        @endphp
+                        <tr>
+                            <td><strong>{{ $order->kode }}</strong></td>
+                            <td class="hide-sm"><span style="font-family:monospace;font-weight:700;">{{ $order->pickup_code ?? '-' }}</span></td>
+                            <td class="hide-sm">
+                                <strong>{{ $order->user->name ?? 'Unknown' }}</strong>
+                                <div style="font-size:12px;color:#8a9890;">{{ $order->user->username ?? '' }}</div>
+                            </td>
+                            <td><strong>Rp {{ number_format($order->total, 0, ',', '.') }}</strong></td>
+                            <td class="hide-sm">{{ $metodeLabel }}</td>
+                            <td><span class="badge {{ $badge }}">{{ $label }}</span></td>
+                            <td class="hide-sm">{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ route('koperasi.show', $order->id) }}" class="action-btn action-btn-view">Detail</a>
+                                    @if ($order->status === 'dibayar')
+                                        <form action="{{ route('koperasi.ambil', $order->id) }}" method="POST" onsubmit="return confirm('Tandai pesanan {{ $order->kode }} sudah diambil?')">
+                                            @csrf
+                                            <button type="submit" class="action-btn action-btn-edit">Sudah Diambil</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
                         <tr>
                             <td colspan="8" class="empty-state" style="padding:60px 20px;">
                                 <div style="font-size:40px;margin-bottom:12px;">🛒</div>
                                 <div style="font-weight:700;">Belum ada pesanan koperasi</div>
                             </td>
                         </tr>
-                    @else
-                        @foreach ($orders as $order)
-                            <tr data-search="{{ strtolower('#' . $order->id . ' ' . ($order->user->name ?? '') . ' ' . ($order->user->username ?? '')) }}" data-status="{{ $order->status }}">
-                                <td class="checkbox-col"><input type="checkbox" class="rowCheckbox" value="{{ $order->id }}" onchange="updateKoperasiBulkActions()"></td>
-                                <td><strong>#{{ $order->id }}</strong></td>
-                                <td class="hide-sm">
-                                    <strong>{{ $order->user->name ?? 'Unknown' }}</strong>
-                                    <div style="font-size:12px;color:#8a9890;">{{ $order->user->username ?? '' }}</div>
-                                </td>
-                                <td><strong>{{ number_format($order->total, 0, ',', '.') }}</strong></td>
-                                <td>{{ $order->metode ? ucfirst($order->metode) : '-' }}</td>
-                                <td>
-                                    @php
-                                        $statusClass = match($order->status) {
-                                            'lunas' => 'badge-success',
-                                            'batal' => 'badge-danger',
-                                            default => 'badge-warning'
-                                        };
-                                    @endphp
-                                    <span class="badge {{ $statusClass }}">{{ ucfirst($order->status) }}</span>
-                                </td>
-                                <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                                <td>
-                                    <a href="{{ route('koperasi.show', $order->id) }}" class="action-btn action-btn-view">Detail</a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
+                    @endforelse
                 </tbody>
             </table>
         </div>
 
-        {{-- Pagination --}}
         @if ($orders->hasPages())
         <div style="padding:16px 20px;border-top:1px solid #f0f3f0;">
             {{ $orders->appends(request()->query())->links() }}
@@ -113,74 +141,4 @@
         @endif
     </div>
 </div>
-
-<script>
-    // Search + status filter
-    const searchInput = document.getElementById('koperasiSearch');
-    const statusFilter = document.getElementById('koperasiStatusFilter');
-    const tableBody = document.getElementById('koperasiTableBody');
-    const rows = tableBody ? tableBody.querySelectorAll('tbody tr[data-search]') : [];
-
-    function applyKoperasiFilters() {
-        const query = searchInput?.value.toLowerCase().trim() || '';
-        const status = statusFilter?.value || '';
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const searchText = row.getAttribute('data-search');
-            const rowStatus = row.getAttribute('data-status');
-            const matchesSearch = !query || searchText.includes(query);
-            const matchesStatus = !status || rowStatus === status;
-            const matches = matchesSearch && matchesStatus;
-            row.style.display = matches ? '' : 'none';
-            if (matches) visibleCount++;
-        });
-
-        const emptyRow = tableBody?.querySelector('.empty-state')?.closest('tr');
-        if (emptyRow) {
-            emptyRow.style.display = visibleCount === 0 && (query || status) ? '' : 'none';
-        }
-    }
-
-    searchInput?.addEventListener('input', applyKoperasiFilters);
-    statusFilter?.addEventListener('change', applyKoperasiFilters);
-
-    function clearKoperasiFilters() {
-        if (searchInput) searchInput.value = '';
-        if (statusFilter) statusFilter.value = '';
-        applyKoperasiFilters();
-    }
-
-    // Bulk actions
-    function toggleAllKoperasi(source) {
-        document.querySelectorAll('.rowCheckbox').forEach(cb => {
-            cb.checked = source.checked;
-            const row = cb.closest('tr');
-            if (row) row.classList.toggle('selected', source.checked);
-        });
-        updateKoperasiBulkActions();
-    }
-
-    function updateKoperasiBulkActions() {
-        const checked = document.querySelectorAll('.rowCheckbox:checked').length;
-        const bulkBar = document.getElementById('koperasiBulkBar');
-        if (bulkBar) {
-            bulkBar.classList.toggle('visible', checked > 0);
-            bulkBar.querySelector('.selected-count').textContent =
-                `${checked} item dipilih`;
-        }
-    }
-
-    const selectAll = document.getElementById('selectAllKoperasi');
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            document.querySelectorAll('.rowCheckbox').forEach(cb => {
-                cb.checked = this.checked;
-                const row = cb.closest('tr');
-                if (row) row.classList.toggle('selected', this.checked);
-            });
-            updateKoperasiBulkActions();
-        });
-    }
-</script>
 @endsection
