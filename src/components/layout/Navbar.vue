@@ -96,7 +96,7 @@
       <div class="nav-right">
         <a
           v-if="isLoggedIn"
-          :href="`${BACKEND}/profil`"
+          :href="frontendPath('/profil')"
           class="nav-profile-link"
           :title="'Profil ' + session.name"
         >
@@ -171,7 +171,7 @@
 	        <div class="mobile-bottom">
           <a
             v-if="isLoggedIn"
-            :href="`${BACKEND}/profil`"
+            :href="frontendPath('/profil')"
             class="mobile-profile"
             @click="closeMenu"
           >
@@ -200,7 +200,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
 
-const { session, spmbTarget, BACKEND } = useAuthSession();
+const { session, spmbTarget, frontendPath } = useAuthSession();
 
 const scrolled = ref(false);
 let scrollSentinel = null;
@@ -243,7 +243,7 @@ const closeTentangDropdown = () => {
 };
 
 const goSPMB = () => {
-  window.location.href = `${BACKEND}/login`;
+  window.location.href = frontendPath('/login');
   closeMenu();
 };
 

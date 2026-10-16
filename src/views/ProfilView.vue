@@ -151,7 +151,7 @@
         </template>
         <div v-else class="pf-card pf-card--empty">
           <p>Kamu belum mengisi formulir pendaftaran. Lengkapi data dulu supaya profil dan status pendaftaran bisa tampil di sini.</p>
-          <a class="pf-btn" :href="`${BACKEND}/pendaftaran/create`">Isi Formulir Pendaftaran</a>
+          <a class="pf-btn" :href="backendPagePath('/pendaftaran/create')">Isi Formulir Pendaftaran</a>
         </div>
       </div>
 
@@ -196,7 +196,7 @@
         </template>
         <div v-else class="pf-card pf-card--empty">
           <p>Data keluarga akan tampil di sini setelah formulir pendaftaran kamu diisi.</p>
-          <a class="pf-btn" :href="`${BACKEND}/pendaftaran/create`">Isi Formulir Pendaftaran</a>
+          <a class="pf-btn" :href="backendPagePath('/pendaftaran/create')">Isi Formulir Pendaftaran</a>
         </div>
       </div>
 
@@ -213,7 +213,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { fetchJson } from "@/services/fetchJson";
 import { getCsrfToken } from "@/services/csrf";
-import { useAuthSession, BACKEND } from "@/composable/useAuthSession";
+import { useAuthSession, BACKEND, backendPagePath } from "@/composable/useAuthSession";
 import { useToast } from "@/composable/useToast";
 
 const router = useRouter();

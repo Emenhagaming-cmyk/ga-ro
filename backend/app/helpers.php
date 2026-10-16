@@ -31,7 +31,7 @@ function frontendBaseUrl(): string
 {
     $localHosts = ['localhost', '127.0.0.1', '::1'];
     $isLocal = in_array(request()->getHost(), $localHosts, true) || app()->isLocal();
-    $default = $isLocal ? 'http://localhost:5174' : 'https://smkbu-sby.vercel.app';
+    $default = $isLocal ? 'http://localhost:5174' : 'https://smkbu-sby.my.id';
 
     return rtrim(env('FRONTEND_URL', $default), '/');
 }

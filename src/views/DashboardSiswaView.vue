@@ -17,7 +17,7 @@
       </div>
       <h3>Belum Ada Pendaftaran</h3>
       <p>Kamu belum mengisi formulir pendaftaran. Yuk mulai sekarang!</p>
-      <a :href="`${BACKEND}/pendaftaran/create`" class="btn-ds btn-ds-primary">Daftar Sekarang</a>
+      <a :href="backendPagePath('/pendaftaran/create')" class="btn-ds btn-ds-primary">Daftar Sekarang</a>
     </div>
 
     <template v-else-if="pendaftaran">
@@ -47,7 +47,7 @@
             <template v-else-if="pendaftaran.status === 'ditolak'">Maaf, pendaftaran Anda tidak diterima. Hubungi admin untuk info lebih lanjut.</template>
             <template v-else>Formulir kamu sedang diproses admin. Pantau status secara berkala.</template>
           </p>
-          <a v-if="pendaftaran.status === 'diterima'" :href="`${BACKEND}/pendaftaran/bukti`" class="btn-ds btn-ds-primary ds-announce-cta">
+          <a v-if="pendaftaran.status === 'diterima'" :href="backendPagePath('/pendaftaran/bukti')" class="btn-ds btn-ds-primary ds-announce-cta">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 0 0 1-2 2H5a2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Unduh Bukti Diterima
           </a>
@@ -206,7 +206,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { fetchJson } from "@/services/fetchJson";
 import { getCsrfToken } from "@/services/csrf";
-import { BACKEND } from "@/composable/useAuthSession";
+import { BACKEND, backendPagePath } from "@/composable/useAuthSession";
 import { useToast } from "@/composable/useToast";
 
 const { showToast } = useToast();

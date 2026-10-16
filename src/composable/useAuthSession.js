@@ -11,6 +11,17 @@ const BACKEND = /^https?:\/\//i.test(envBackend)
   : import.meta.env.DEV
     ? "http://localhost:8000"
     : PROD_BACKEND;
+// Halaman harus tetap berada di domain frontend. BACKEND hanya dipakai untuk
+// request API; jangan dipakai sebagai target navigasi karena itu mengekspos
+// hostname API di address bar.
+const frontendPath = (path = "/") => {
+  const normalized = `/${String(path).replace(/^\/+/, "")}`;
+  return import.meta.env.DEV ? `${window.location.origin}${normalized}` : normalized;
+};
+const backendPagePath = (path = "/") => {
+  const normalized = `/${String(path).replace(/^\/+/, "")}`;
+  return import.meta.env.DEV ? `${BACKEND}${normalized}` : normalized;
+};
 const STORAGE_KEY = "spmb_session_status";
 
 const GUEST = {
@@ -115,9 +126,9 @@ export function useAuthSession() {
   const spmbTarget = () => {
     // Sudah punya akun (pendaftar ATAU siswa) → dashboard, jangan lempar ke form pendaftaran lagi.
     if (session.value.logged_in) {
-      return `${BACKEND}/dashboard-siswa`;
+      return frontendPath("/dashboard-siswa");
     }
-    return `${BACKEND}/pendaftaran`;
+    return backendPagePath("/pendaftaran");
   };
 
   // Refresh di background + sesekali revalidate; render pakai cache instan.
@@ -131,7 +142,7 @@ export function useAuthSession() {
     bfcacheBound = true;
   }
 
-  return { session, loaded, fetchStatus, isSiswaLoggedIn, spmbTarget, clearSession, BACKEND };
+  return { session, loaded, fetchStatus, isSiswaLoggedIn, spmbTarget, clearSession, BACKEND, frontendPath, backendPagePath };
 }
 
-export { BACKEND };
+export { BACKEND, frontendPath, backendPagePath };

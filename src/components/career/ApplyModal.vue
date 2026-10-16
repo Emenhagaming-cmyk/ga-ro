@@ -40,7 +40,7 @@
           <div class="login-required">
             <i class="fas fa-lock"></i>
             <p>Anda harus login sebagai siswa untuk melamar.</p>
-            <a :href="`${BACKEND}/login`" class="btn-login">
+            <a :href="frontendPath('/login')" class="btn-login">
               <i class="fas fa-right-to-bracket"></i> Login Sekarang
             </a>
           </div>
@@ -155,7 +155,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submitted'])
 
-const { session, BACKEND } = useAuthSession()
+const { session, BACKEND, frontendPath } = useAuthSession()
 
 const coverLetter = ref('')
 const cvFile = ref(null)

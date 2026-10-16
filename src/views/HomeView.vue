@@ -33,16 +33,16 @@ onMounted(() => {
   }
 });
 
-const { session, BACKEND } = useAuthSession();
+const { session, frontendPath, backendPagePath } = useAuthSession();
 const showContact = ref(false);
 const showStudentCard = () =>
   session.value.logged_in && session.value.role === "siswa";
 const statusLabel = () => (session.value.status || "").toUpperCase();
 const isAccepted = () => session.value.status === "diterima";
 const scTarget = () => {
-  if (isAccepted()) return `${BACKEND}/pendaftaran/bukti`;
-  if (session.value.has_pendaftaran) return `${BACKEND}/dashboard-siswa`;
-  return `${BACKEND}/pendaftaran`;
+  if (isAccepted()) return backendPagePath("/pendaftaran/bukti");
+  if (session.value.has_pendaftaran) return frontendPath("/dashboard-siswa");
+  return backendPagePath("/pendaftaran");
 };
 const scLabel = () => {
   if (isAccepted()) return "Unduh Bukti Diterima";

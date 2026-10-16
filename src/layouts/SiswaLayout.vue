@@ -94,7 +94,7 @@
           <User :size="18" :stroke-width="2.2" />
           <span>Profil</span>
         </router-link>
-        <a v-if="isDiterima" :href="`${BACKEND}/pendaftaran/bukti`" class="sidebar-link">
+        <a v-if="isDiterima" :href="backendPagePath('/pendaftaran/bukti')" class="sidebar-link">
           <Download :size="18" :stroke-width="2.2" />
           <span>Bukti Diterima</span>
         </a>
@@ -143,7 +143,7 @@ import {
 import { useAuthSession } from "@/composable/useAuthSession";
 
 const route = useRoute();
-const { session, BACKEND } = useAuthSession();
+const { session, BACKEND, backendPagePath } = useAuthSession();
 
 const sidebarOpen = ref(false);
 const careerOpen = ref(route.path.startsWith("/career-center"));

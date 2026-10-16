@@ -1,12 +1,12 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
-const { BACKEND, session } = useAuthSession();
+const { session, frontendPath } = useAuthSession();
 
 // Ilustrasi 3D siswa naik podium, background transparan (WebP 41KB dari PNG 338KB).
 const heroVisual = "/hero-siswa.webp";
 
-const isSiswa = computed(() => session.value.role === "siswa");
+const isLoggedIn = computed(() => !!session.value.logged_in);
 
 const loginExpanded = ref(false);
 const toggleLogin = () => {
@@ -36,8 +36,8 @@ const toggleLogin = () => {
 
         <div class="buttons">
           <a
-            v-if="isSiswa"
-            :href="`${BACKEND}/dashboard-siswa`"
+            v-if="isLoggedIn"
+            :href="frontendPath('/dashboard-siswa')"
             class="primary btn-login"
           >
             Dashboard Siswa

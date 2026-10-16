@@ -70,6 +70,12 @@ class AuthController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $this->restorePendingDraft($request);
 
+        // Login dari frontend utama memakai fetch agar address bar tetap di
+        // smkbu-sby.my.id/login, bukan berpindah ke hostname API.
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true]);
+        }
+
         if ($user->role === 'kasir') {
             return redirect()->route('spp.kasir');
         }

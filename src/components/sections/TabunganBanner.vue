@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import { useAuthSession } from "@/composable/useAuthSession";
 
 const router = useRouter();
-const { session, isSiswaLoggedIn, BACKEND } = useAuthSession();
+const { session, isSiswaLoggedIn, BACKEND, frontendPath } = useAuthSession();
 
 const saldo = ref(0);
 
@@ -34,7 +34,7 @@ const goTabungan = () => {
   if (isSiswaLoggedIn()) {
     router.push("/tabungan");
   } else {
-    window.location.href = `${BACKEND}/login`;
+    window.location.href = frontendPath("/login");
   }
 };
 </script>

@@ -1,4 +1,4 @@
-import { BACKEND } from "@/composable/useAuthSession";
+import { BACKEND, frontendPath } from "@/composable/useAuthSession";
 
 // ponytail: satu titik buat fetch terautentikasi. Kirim `Accept: application/json`
 // supaya saat cookie sesi kedaluwarsa/tak terkirim backend balas 401 JSON (bukan
@@ -12,7 +12,7 @@ export async function fetchJson(url, options = {}) {
   });
 
   if (res.status === 401) {
-    window.location.assign(`${BACKEND}/login`);
+    window.location.assign(frontendPath("/login"));
     throw new Error("Sesi berakhir, silakan masuk kembali.");
   }
 
