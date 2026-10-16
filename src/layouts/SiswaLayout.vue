@@ -98,7 +98,13 @@
       </div>
     </aside>
 
-    <button class="sidebar-fab" type="button" aria-label="Buka menu siswa" @click="sidebarOpen = true">
+    <button
+      class="sidebar-fab"
+      :class="{ 'fab-hidden': sidebarOpen }"
+      type="button"
+      aria-label="Buka menu siswa"
+      @click="sidebarOpen = true"
+    >
       <Menu :size="20" :stroke-width="2.4" />
     </button>
 
@@ -157,6 +163,7 @@ watch(
   background: #f6f8f4;
 }
 
+/* ---------- Sidebar ---------- */
 .siswa-sidebar {
   width: 260px;
   background: #1c2a23;
@@ -178,20 +185,17 @@ watch(
   padding: 24px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
-
 .sidebar-brand img {
   height: 40px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
   padding: 3px;
 }
-
 .brand-name {
   font-size: 16px;
   font-weight: 800;
   color: #fff;
 }
-
 .brand-sub {
   font-size: 10px;
   font-weight: 700;
@@ -210,6 +214,8 @@ watch(
   gap: 6px;
   overflow-y: auto;
 }
+.sidebar-nav::-webkit-scrollbar { width: 5px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 999px; }
 
 .sidebar-link {
   display: flex;
@@ -228,28 +234,16 @@ watch(
   text-align: left;
   transition: background 0.2s ease, color 0.2s ease;
 }
-
-.sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-}
-
+.sidebar-link:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
 .sidebar-link.active {
   background: #3a6450;
   color: #fff;
+  box-shadow: inset 3px 0 0 #7db88d;
 }
 
-.sidebar-group span {
-  flex: 1;
-}
-
-.sidebar-group .chev {
-  transition: transform 0.2s ease;
-}
-
-.sidebar-group.open .chev {
-  transform: rotate(180deg);
-}
+.sidebar-group span { flex: 1; }
+.sidebar-group .chev { transition: transform 0.2s ease; }
+.sidebar-group.open .chev { transform: rotate(180deg); }
 
 .sidebar-sub {
   display: flex;
@@ -257,7 +251,6 @@ watch(
   gap: 2px;
   padding: 2px 0 2px 30px;
 }
-
 .sidebar-sublink {
   padding: 8px 12px;
   border-radius: 10px;
@@ -267,16 +260,8 @@ watch(
   font-weight: 600;
   transition: background 0.2s ease, color 0.2s ease;
 }
-
-.sidebar-sublink:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.sidebar-sublink.active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
-}
+.sidebar-sublink:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+.sidebar-sublink.active { color: #fff; background: rgba(255, 255, 255, 0.14); }
 
 .sidebar-divider {
   height: 1px;
@@ -289,31 +274,26 @@ watch(
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+/* ---------- Area konten ---------- */
 .siswa-main {
   margin-left: 260px;
   min-height: 100vh;
+  box-sizing: border-box;
+  /* KUNCI UTAMA: padding sisi yang menjaga konten maks 1120px & tetap center di layar lebar.
+     Ganti angka 1120 jika ingin semua halaman panel lebih lebar/sempit. */
+  padding: 28px max(32px, calc((100% - 260px - 1120px) / 2)) 64px;
 }
 
-.sidebar-fab {
-  display: none;
-}
+.sidebar-fab { display: none; }
+.siswa-backdrop { display: none; }
 
-.siswa-backdrop {
-  display: none;
-}
-
+/* ---------- Mobile ---------- */
 @media (max-width: 900px) {
-  .siswa-sidebar {
-    transform: translateX(-100%);
-  }
+  .siswa-sidebar { transform: translateX(-100%); }
+  .siswa-sidebar.open { transform: translateX(0); }
 
-  .siswa-sidebar.open {
-    transform: translateX(0);
-  }
-
-  .siswa-main {
-    margin-left: 0;
-  }
+  /* padding bawah besar agar konten tidak tertutup FAB */
+  .siswa-main { margin-left: 0; padding: 18px 16px 110px; }
 
   .sidebar-fab {
     display: inline-flex;
@@ -331,6 +311,12 @@ watch(
     color: #fff;
     cursor: pointer;
     box-shadow: 0 10px 24px rgba(28, 42, 35, 0.28);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .sidebar-fab.fab-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85);
   }
 
   .siswa-backdrop {
@@ -343,7 +329,6 @@ watch(
     pointer-events: none;
     transition: opacity 0.3s ease;
   }
-
   .siswa-backdrop.open {
     opacity: 1;
     pointer-events: auto;

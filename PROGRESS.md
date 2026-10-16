@@ -2,6 +2,13 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-16) — FIX `DatabaseSeeder` GAGAL SEED
+
+- **Bug:** `php artisan db:seed` mati `TypeError: Seeder::call(): Argument #3 ($parameters) must be of type array, string given` di `backend/database/seeders/DatabaseSeeder.php:18`. Penyebab: seeder dipanggil `$this->call(AnjarSeeder::class, AdminSeeder::class, …)` — argumen ke-2 `$silent` (bool) dan ke-3 `$parameters` (array), jadi `AdminSeeder::class` masuk sebagai `$silent` dan `LowonganSeeder::class` sebagai `$parameters`.
+- **Fix:** bungkus jadi array `$this->call([...])`.
+- **Verifikasi:** `php artisan db:seed` sukses — AnjarSeeder, AdminSeeder, LowonganSeeder, SppAnjarSeeder semua DONE.
+- **Tidak diubah:** `backend-admin/database/seeders/DatabaseSeeder.php` (tidak punya `call()` yang salah; seeder lain memang hanya ada di `backend/`).
+
 ## STATUS TERAKHIR (2026-10-15) — NOTIFIKASI TOAST DISATUKAN + KLAUSIFIASI "700 vs 885"
 
 - **Diagnosa (bukan bug):** user melihat "saldo SPP 700, tabungan 885". Ternyata **700.000 = sisa tagihan belum dibayar** (2026-09 + 2026-10 × Rp350.000) di kartu ringkasan, **885.000 = saldo tabungan** (setor 1.085.000 − tarik SPP 200.000) yang tampil di panel dalam flow bayar. Rekonsiliasi DB bersih: total top up `paid` = total ledger `setor` = Rp1.085.000 (tidak ada kredit ganda/hilang); 6 order `pending` tak dicredit (5 token expired, 1 belum dibayar). Kedua endpoint (`GET /tabungan`, `GET /spp`) pakai formula identik. Catatan: **backend production `api.smkbu-sby.my.id` belum punya `POST /spp/pay-tabungan` (404) → belum di-deploy** — angka di layar production bisa menyesatkan sampai deploy.
