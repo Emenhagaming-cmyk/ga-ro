@@ -24,6 +24,11 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+.env.local-mysql.bak
+
+# Sertifikat CA TiDB untuk koneksi lokal — jangan di-commit
+backend/certs/
+*.pem
 
 test-results
 playwright-report

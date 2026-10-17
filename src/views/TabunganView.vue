@@ -1,7 +1,5 @@
 <template>
   <div class="tabungan-root">
-    <ToastStack />
-
     <div class="wrap">
       <div class="layout">
 
@@ -187,7 +185,6 @@ import { useAuthSession } from "@/composable/useAuthSession";
 import { fetchJson } from "@/services/fetchJson";
 import { getCsrfToken } from "@/services/csrf";
 import { useToast } from "@/composable/useToast";
-import ToastStack from "@/components/ToastStack.vue";
 
 const { session, BACKEND } = useAuthSession();
 

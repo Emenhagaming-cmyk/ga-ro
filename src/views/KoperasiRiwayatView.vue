@@ -1,7 +1,5 @@
 <template>
   <section class="riwayat-page">
-    <ToastStack />
-
     <header class="riwayat-head">
       <div>
         <h1>Riwayat Koperasi</h1>
@@ -68,7 +66,6 @@ import { RefreshCw, Loader2, ShoppingBag, Ticket, Info } from "lucide-vue-next";
 import { useAuthSession } from "@/composable/useAuthSession";
 import { fetchJson } from "@/services/fetchJson";
 import { useToast } from "@/composable/useToast";
-import ToastStack from "@/components/ToastStack.vue";
 
 const { BACKEND } = useAuthSession();
 const { showToast } = useToast();

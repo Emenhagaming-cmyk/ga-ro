@@ -1,7 +1,5 @@
 <template>
   <section class="koperasi-page">
-    <ToastStack />
-
     <!-- ═══ SHOP ═══ -->
     <div v-if="view === 'shop'">
       <header class="kop-topbar">
@@ -308,7 +306,6 @@ import { useAuthSession } from "@/composable/useAuthSession";
 import { fetchJson } from "@/services/fetchJson";
 import { getCsrfToken } from "@/services/csrf";
 import { useToast } from "@/composable/useToast";
-import ToastStack from "@/components/ToastStack.vue";
 
 const { BACKEND } = useAuthSession();
 const { showToast } = useToast();

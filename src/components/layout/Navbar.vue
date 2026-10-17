@@ -22,14 +22,24 @@
               <span class="di-title">SPMB Online</span>
             </span>
           </a>
+          <a href="/koperasi" class="dropdown-item" @click="guardSiswa">
+            <span class="di-text">
+              <span class="di-title">Koperasi</span>
+            </span>
+          </a>
           <a href="/produk-siswa" class="dropdown-item">
             <span class="di-text">
               <span class="di-title">Karya Siswa</span>
             </span>
           </a>
-          <a v-if="isSiswa" href="/tabungan" class="dropdown-item">
+          <a href="/spp" class="dropdown-item" @click="guardSiswa">
             <span class="di-text">
-              <span class="di-title">Panel Siswa</span>
+              <span class="di-title">SPP</span>
+            </span>
+          </a>
+          <a href="/career-center" class="dropdown-item" @click="guardSiswa">
+            <span class="di-text">
+              <span class="di-title">Career Center</span>
             </span>
           </a>
         </div>
@@ -96,7 +106,7 @@
       <div class="nav-right">
         <a
           v-if="isLoggedIn"
-          :href="frontendPath('/profil')"
+          :href="profilHref"
           class="nav-profile-link"
           :title="'Profil ' + session.name"
         >
@@ -139,8 +149,10 @@
           </button>
           <div class="mobile-dropdown-items" :class="{ open: layananOpen }">
             <a v-if="!isLoggedIn" :href="spmbTarget()" @click="closeMenu">SPMB Online</a>
+            <a href="/koperasi" @click="guardSiswa(); closeMenu()">Koperasi</a>
             <a href="/produk-siswa" @click="closeMenu()">Karya Siswa</a>
-            <a v-if="isSiswa" href="/tabungan" @click="closeMenu()">Panel Siswa</a>
+            <a href="/spp" @click="guardSiswa(); closeMenu()">SPP</a>
+            <a href="/career-center" @click="guardSiswa(); closeMenu()">Career Center</a>
           </div>
         </div>
         <div class="mobile-dropdown">
@@ -171,7 +183,7 @@
 	        <div class="mobile-bottom">
           <a
             v-if="isLoggedIn"
-            :href="frontendPath('/profil')"
+            :href="profilHref"
             class="mobile-profile"
             @click="closeMenu"
           >
@@ -199,8 +211,10 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useAuthSession } from "@/composable/useAuthSession";
+import { useToast } from "@/composable/useToast";
 
-const { session, spmbTarget, frontendPath } = useAuthSession();
+const { session, spmbTarget, fetchStatus, BACKEND } = useAuthSession();
+const { showToast } = useToast();
 
 const scrolled = ref(false);
 let scrollSentinel = null;
@@ -216,8 +230,13 @@ const dropdownRef = ref(null);
 const informasiDropdownRef = ref(null);
 const tentangDropdownRef = ref(null);
 
+// ponytail: isLoggedIn (role apa pun selain guest) dipakai untuk chip profil +
+// tombol SPMB — pakai isSiswa di sini bikin user yang sudah login (mis. pendaftar
+// yang belum diterima) masih melihat tombol "SPMB" seolah belum login.
 const isLoggedIn = computed(() => !!session.value.logged_in);
 const isSiswa = computed(() => session.value.role === "siswa");
+// Pendaftar belum punya panel Vue (route requiresSiswa) → profilnya di backend.
+const profilHref = computed(() => (isSiswa.value ? "/profil" : `${BACKEND}/profil`));
 const roleLabel = computed(() => (isSiswa.value ? "Siswa" : "Pendaftar"));
 const initial = computed(() => (session.value.name || "?").trim().charAt(0).toUpperCase());
 const avatarBroken = ref(false);
@@ -243,8 +262,22 @@ const closeTentangDropdown = () => {
 };
 
 const goSPMB = () => {
-  window.location.href = frontendPath('/login');
+  window.location.href = `${BACKEND}/login`;
   closeMenu();
+};
+
+const guardSiswa = async (event) => {
+  if (session.value.role !== "siswa") {
+    await fetchStatus();
+    if (session.value.role !== "siswa") {
+      event.preventDefault();
+      showToast(
+        session.value.logged_in
+          ? "Fitur ini khusus siswa SMK Bahrul Ulum"
+          : "Khusus siswa, silakan login terlebih dahulu"
+      );
+    }
+  }
 };
 
 const scrollToSection = (id) => {

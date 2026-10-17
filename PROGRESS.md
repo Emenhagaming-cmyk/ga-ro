@@ -2,6 +2,46 @@
 
 Update file ini setiap akhir sesi agar sesi berikutnya langsung lanjut tanpa perlu menjelaskan ulang.
 
+## STATUS TERAKHIR (2026-10-17) — UNIFIKASI DB: BACKEND LOKAL PINDAH KE TiDB CLOUD
+
+- **Keluhan user:** (a) akun/pendaftaran baru tidak muncul di dashboard admin, (b) login gagal terus padal credential benar, (c) "kenapa pakai DB lokal? katanya di md TiDB", (d) mau lihat password siswa yang lupa.
+- **Akar masalah (Bukan bug login):** DB terbelah dua ("split-brain"). Backend **production** + panel admin production baca **TiDB Cloud**; backend **lokal** (`localhost:8000`) menulis ke **MySQL XAMPP lokal** (`127.0.0.1:3306`). Karena user pakai keduanya campur: daftar di lokal → akun masuk MySQL lokal → admin (TiDB) tak melihatnya; login di production → akun tak ada di TiDB → "gagal padahal benar". Login sudah diverifikasi benar via curl.
+- **Keputusan user:** samakan ke **TiDB Cloud** (satu DB untuk lokal & production).
+- **Fix:** `backend/.env` diarahkan ke TiDB (`gateway01...:4000`, db `pendaftaran_db`) dengan kredensial yang sama seperti `backend-admin/vercel.json`. CA cert **ISRG Root X1** di-download ke `backend/certs/isrgrootx1.pem` (1939 byte) + `MYSQL_ATTR_SSL_CA` di-set absolut (Vercel pakai `/var/task/...`, lokal butuh path sendiri). Backup konfigurasi MySQL lama di `backend/.env.local-mysql.bak`. **`backend/certs/*.pem` & backup jangan di-commit.**
+- **Verifikasi (semua sukses):** tes TCP port 4000 TiDB terjangkau; `php artisan tinker` konek OK (21 user, 5 pendaftaran terbaca); kolom `plain_password` **sudah tidak ada** di TiDB (drop migration jalan); `db:seed --class=AdminSeeder --force` aman (hanya updateOrCreate admin+siswa, tak menghapus data lain); smoke curl `POST /login` `siswa`/`siswa123` → `{"ok":true}` + `auth-status` `role:siswa`; **uji alur penuh** registrasi `uniftest20261017114208` via `localhost:8000` → masuk TiDB (id 1994643, role pendaftar, hash `$2y$12$`); **reset password** via logika `resetUserPassword` → password baru di-generate + login dgn password baru → `{"ok":true}`.
+- **Catatan penting untuk user:**
+  - **Password siswa TIDAK BISA dilihat** — disimpan sebagai hash bcrypt, kolom `plain_password` sudah dihapus demi keamanan. Untuk siswa lupa password: pakai **fitur reset di panel admin** (`POST /admin/akun/{user}/reset-password`) → generate password baru & tampilkan sekali di banner dashboard. Sudah diverifikasi berfungsi.
+  - Setelah unifikasi, data test MySQL lokal lama (user `za`, dll.) tidak ikut & tidak tampil — itu normal. Akun demo yang di-seed di TiDB: `admin`/`admin123` & `siswa`/`siswa123`.
+  - Server lokal dev: `php artisan serve --host=127.0.0.1 --port=8000` dari `backend/` (perlu restart agar baca `.env` baru).
+
+## STATUS TERAKHIR (2026-10-17) — FIX SISA BUG LOGIN: NAVIGASI GAGAL + TOMBOL LOGIN MUNCUL LAGI
+
+- **Keluhan user:** setelah login masih ada tombol login/SPMB, fitur tidak bisa dipencet, dan kadang "Login gagal terhubung ke server".
+- **Verifikasi backend:** backend lokal sudah benar-benar sehat (sesi sebelumnya sudah fix `.env`+`APP_KEY`+MySQL); smoke test curl `POST /login` (`siswa`/`siswa123`) → `{"ok":true}` + `auth-status` → `role:siswa`. Username demo = **`siswa`**, bukan `siswa123` (password-nya `siswa123`) — kalau salah ketik username memang sengaja gagal.
+- **Bug 3 (login Vue nyangkut):** `LoginView.vue` navigasi pakai `router.push(frontendPath("/"))` — di DEV `frontendPath()` menghasilkan URL absolut `http://localhost:5174/`, di-resolve vue-router jadi path ngawur → navigasi gagal, user tetap di halaman login. **Fix:** `router.push("/")` (path relatif) + panggil `fetchStatus()` setelahnya supaya ref session bersama (Navbar/Hero) langsung sinkron, bukan nunggu interval 30 dtk.
+- **Bug 4 (tombol SPMB muncul lagi setelah login):** `Navbar.vue` memakai `isSiswa` (`role === 'siswa'`) untuk chip profil & tombol SPMB — user login sebagai `pendaftar` (belum diterima) dianggap bukan siswa → tombol SPMB tetap tampil seolah belum login. **Fix:** tambah `isLoggedIn` (`!!logged_in`) untuk chip profil + tombol SPMB + item "SPMB Online"; `isSiswa` dipertahankan hanya untuk `guardSiswa` (Koperasi/SPP/Career Center). Profil pendaftar diarahkan ke `${BACKEND}/profil` (route backend mengizinkan `siswa,pendaftar`), siswa tetap ke `/profil` Vue. Label role kembali dinamis (Siswa/Pendaftar).
+- **Guard toast:** `guardSiswa` sekarang membedakan pesan — belum login → "Khusus siswa, silakan login terlebih dahulu"; sudah login tapi bukan siswa → "Fitur ini khusus siswa SMK Bahrul Ulum". Toast-nya sendiri sudah jalan sejak fix `ToastStack` di sesi sebelumnya.
+- **Verifikasi:** `npm.cmd run build` sukses. Belum deploy.
+
+## STATUS TERAKHIR (2026-10-17) — FIX LOGIN MATI TOTAL + TOAST GLOBAL RUSAK
+
+- **Keluhan user:** login sama sekali tidak bisa + "fitur-fitur pada ga bisa dipencet".
+- **Bug 1 (akar login mati):** `backend/.env` **tidak ada** (fresh clone / belum pernah disetup di mesin ini) → `APP_KEY` kosong → `MissingAppKeyException` → **semua route backend 500** (`/csrf-token`, `/login`, `/auth-status`) → fetch login di `LoginView.vue` selalu kena catch → "Login gagal terhubung ke server". Backend dev `php -S 127.0.0.1:8000` (XAMPP PHP) jalan tapi percuma tanpa `.env`.
+- **Fix Bug 1:** `copy .env.example .env` + set MySQL (`DB_CONNECTION=mysql`, `127.0.0.1:3306`, db `pendaftaran_db`, root, password kosong) + `FRONTEND_URL=http://localhost:5174` + `php artisan key:generate` + `CREATE DATABASE pendaftaran_db` + `php artisan migrate --force` (33 migration beres; 3 migration MySQL-only akhirnya jalan karena sekarang driver mysql) + `db:seed --class=AdminSeeder` (admin id 1, siswa demo id 2). MySQL XAMPP (`C:\xampp\mysql\bin\mysqld.exe`) dimulai manual karena service-nya tidak auto-start.
+- **Bug 2 (toast tampil mati = fitur "ga bisa dipencet"):** `src/App.vue` masih pakai API **lama** `useToast()` → `const { message, visible }`, tapi `useToast.js` sekarang return `{ toasts, showToast, dismissToast }` → `visible` selalu undefined → **toast global tidak pernah render**. Akibatnya semua guard toast (Navbar `guardSiswa`, SpmbBanner, KoperasiPreview: "Khusus siswa, silakan login terlebih dahulu") senyap — user klik Koperasi/SPP/Career Center tanpa login → navigasi di-`preventDefault` tapi tidak ada feedback → terasa "ga bisa dipencet".
+- **Fix Bug 2:** `App.vue` ditulis ulang jadi `<RouterView /> + <ToastStack />` global (hapus toast lama + style-nya). `<ToastStack />` + import dihapus dari 4 view yang memasangnya lokal (`KoperasiView`, `KoperasiRiwayatView`, `SppView`, `TabunganView`) supaya tidak dobel.
+- **Verifikasi:** smoke test curl — `csrf-token` → 200 JSON, `POST /login` siswa/siswa123 → `{"ok":true}`, `auth-status` → `logged_in:true, role:siswa`, `GET /login` Blade → 200. `npm.cmd run build` sukses (node di `C:\Program Files\nodejs\`, bukan `C:\nvm4w\` — path AGENTS.md lama salah untuk mesin ini).
+- **Catatan:** `.env` backend lokal (berisi MySQL kosong-sandi) sengaja tidak di-commit (sudah di-gitignore). Navbar.vue masih punya perubahan uncommitted dari sesi sebelumnya (dropdown Koperasi/SPP/Career Center + `guardSiswa`). Belum deploy ke produksi.
+
+## STATUS TERAKHIR (2026-10-17) — REDESAIN HALAMAN LOGIN VUE (SAMAKAN DENGAN BLADE AUTH)
+
+- **Permintaan user:** halaman login frontend (Vue) harus meniru desain halaman login backend (`api.smkbu-sby.my.id/login`): gradient hijau tua + blob organik + glassmorphic card + doodle selfie di kanan.
+- **File diubah:** `src/views/LoginView.vue` ditulis ulang total (template + style scoped), logic `submitLogin` (csrf + fetch + auth-status + sessionStorage + router.push) **tidak diubah**. Perubahan: (a) layout 2-kolom (form area + doodle) dengan 4 blob dekoratif; (b) brand logo + "SMK Bahrul Ulum" di atas card; (c) card glassmorphic `rgba(255,255,255,0.28)` blur 20px radius 24px; (d) input bericon user/lock + tombol toggle password (Vue ref, bukan JS inline); (e) label uppercase 12px letter-spacing; (f) tombol gradient hijau radius 14px; (g) error alert merah konsisten dengan Blade `.alert-error`; (h) doodle float animation, hidden < 768px.
+- **Asset:** `backend/public/images/doodle-selfie.png` (30 KB) disalin ke `public/images/doodle-selfie.png` (frontend `public/images/` sebelumnya tidak ada). Logo pakai `/logo.png` (sudah ada).
+- **Link:** "Lupa kata sandi?" → `frontendPath('/forgot-password')` (route backend; di produksi SPA fallback menanganinya), "Daftar dulu ya!" → `frontendPath('/register')` (redirect ke backend lewat router).
+- **Verifikasi:** `npm.cmd run build` (node 24 di `C:\Program Files\nodejs\`) sukses — `dist/assets/` berisi chunk baru. Warning lama `%VITE_BACKEND_URL% is not defined` di index.html tetap ada (by design, sudah dikomentari).
+- **Belum dideploy:** belum ada instruksi deploy ke produksi (`smkbu-sby.my.id` = VPS Webuzo, bukan Vercel — tidak ada script deploy VPS di repo). Navbar.vue masih punya perubahan uncommitted dari sesi sebelumnya.
+
 ## STATUS TERAKHIR (2026-10-16) — REDESAIN CHAT ADMIN ALA WHATSAPP
 
 - **Permintaan user:** halaman `career-pesan/show` (chat siswa ↔ BKK di panel admin) terlalu polos, dibuat menyerupai WhatsApp.

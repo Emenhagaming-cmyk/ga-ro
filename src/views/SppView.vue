@@ -8,7 +8,6 @@ import { useAuthSession } from "@/composable/useAuthSession";
 import { fetchJson } from "@/services/fetchJson";
 import { getCsrfToken } from "@/services/csrf";
 import { useToast } from "@/composable/useToast";
-import ToastStack from "@/components/ToastStack.vue";
 
 const { session, BACKEND } = useAuthSession();
 const { showToast } = useToast();
@@ -228,8 +227,6 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="spp-page">
-    <ToastStack />
-
     <div class="wrap">
       <div class="layout">
 

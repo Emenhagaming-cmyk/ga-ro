@@ -58,8 +58,13 @@ meskipun `vercel whoami` normal, karena ketiga project Vercel ada di **team**
 `zakkys-projects-99c4bf23` sedangkan CLI default ke scope personal. Perintah:
 `& "C:\nvm4w\nodejs\vercel.cmd" deploy --prod --yes --scope zakkys-projects-99c4bf23`.
 
-Isi `.env` lokal: DB harus **MySQL** Laragon (`DB_CONNECTION=mysql`, db `pendaftaran_db`,
-`127.0.0.1:3306`, user `root`, password kosong) + `FRONTEND_URL=http://localhost:5174`.
+Isi `.env` lokal: arahkan ke **TiDB Cloud** (satu DB dengan backend & panel admin production,
+`pendaftaran_db`). Host `gateway01...:4000`, kredensial = salin dari `backend-admin/vercel.json`
+(env `DB_*`). Wajib juga set `MYSQL_ATTR_SSL_CA` ke path absolut file CA **ISRG Root X1**
+(download ke `backend/certs/isrgrootx1.pem`; Vercel pakai `/var/task/...`, lokal butuh path
+sendiri). Backup konfigurasi MySQL lama (kalau ada) di `backend/.env.local-mysql.bak`.
+`FRONTEND_URL=http://localhost:5174`. **Jangan** pakai MySQL XAMPP lokal lagi — itu pernah
+membuat DB terbelah (daftar di lokal tak muncul di admin, login production gagal).
 `.env.example` default-nya `sqlite` **dan `APP_KEY` kosong**. `FRONTEND_URL` /
 `NINEROUTER_*` tidak ada di `.env.example` → set manual.
 
