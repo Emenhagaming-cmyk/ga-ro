@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    plugins: [vue(), chatApiPlugin()],
+    plugins: [vue(), chatApiPlugin(), agentApiPlugin()],
 
     server: {
       port: 5174,
@@ -74,6 +74,32 @@ function chatApiPlugin() {
         }
 
         const mod = await import("./api/chat.js")
+        mod.default(req, res)
+      })
+    }
+  }
+}
+function agentApiPlugin() {
+  return {
+    name: 'chat-agent-api',
+    configureServer(server) {
+      server.middlewares.use('/api/chat-agent', async (req, res, next) => {
+        if (req.url !== '/api/chat-agent' && !req.url.startsWith('/api/chat-agent?')) return next()
+        if (req.method !== 'POST') return next()
+        let body = ''
+        for await (const chunk of req) body += chunk
+        let parsed
+        try {
+          parsed = JSON.parse(body || '{}')
+        } catch {
+          res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json')
+          return res.end(JSON.stringify({ reply: 'Bad JSON body' }))
+        }
+        req.body = parsed
+        res.status = (code) => { res.statusCode = code; return res }
+        res.json = (data) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)) }
+        const mod = await import('./api/chat-agent.js')
         mod.default(req, res)
       })
     }

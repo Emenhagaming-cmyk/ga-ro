@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "api/chat-agent.js": {
+      "maxDuration": 30,
+      "memory": 1024,
+      "includeFiles": [
+        "src/server/agent/data/**",
+        "public/data/**",
+        "api/knowledge/data/**"
+      ]
+    }
+  },
   "redirects": [
     { "source": "/login", "destination": "https://pendaftaranspmb.vercel.app/login" },
     { "source": "/register", "destination": "https://pendaftaranspmb.vercel.app/register" }
